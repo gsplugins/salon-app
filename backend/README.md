@@ -7,6 +7,12 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Salon API (this repo)
+
+Authentication is implemented in `routes/api.php` under **`/api/auth/*`**. See [`../docs/FEATURES.md`](../docs/FEATURES.md) for endpoints. **SMS** uses `SMS_DRIVER=log` by default (OTP appears in `storage/logs/laravel.log`); set `JWT_SECRET` in `.env` for production. Copy [`.env.example`](./.env.example) to `.env`, run `php artisan key:generate`, then **`php artisan migrate`**.
+
+The Next.js site on Vercel rewrites `/api/*` to this app via `BACKEND_URL`; **native mobile apps** should call this API **directly** (HTTPS, Bearer tokens), not through the Next.js host.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
