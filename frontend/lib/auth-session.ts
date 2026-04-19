@@ -1,0 +1,16 @@
+import type { AuthMePayload } from "@/lib/auth-api";
+
+export function getPrimaryDashboardPath(me: AuthMePayload): string {
+  if (me.is_super_admin || me.role === "super_admin") return "/admin/dashboard";
+  if (me.is_shop_owner || me.role === "shop_owner") return "/owner/dashboard";
+  if (me.role === "barber") return "/barber/schedule";
+  return "/dashboard";
+}
+
+export function getRoleLabel(me: AuthMePayload): string {
+  if (me.is_super_admin || me.role === "super_admin") return "Super admin";
+  if (me.is_shop_owner || me.role === "shop_owner") return "Shop owner";
+  if (me.role === "barber") return "Salon staff";
+  if (me.role === "customer") return "Customer";
+  return me.role || "Account";
+}

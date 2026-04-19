@@ -70,6 +70,10 @@ class JwtTokenService
             return null;
         }
 
+        if ($user->is_locked) {
+            return null;
+        }
+
         $row->forceFill(['revoked_at' => now()])->save();
 
         $access = $this->issueAccessToken($user);

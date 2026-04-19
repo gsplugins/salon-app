@@ -57,3 +57,5 @@ $RECYCLE.BIN/
 *.crt
 *.key
 *.p12
+
+.agents

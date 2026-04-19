@@ -59,3 +59,6 @@ Implementation detail: the Next.js app uses `NEXT_PUBLIC_STAFF_LOGIN_URL` (see `
 ## Revision
 
 Update this file when auth flows, URLs, or hosting split (e.g. separate `app.` subdomain) change.
+
+SuperAdmin : 5550000000
+pass : password

@@ -3,13 +3,53 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { authJson, formatApiError, type ApiErrorBody } from "@/lib/auth-api";
+import { broadcastSalonAuthChange } from "@/lib/auth-events";
+import { SalonBookingAdmin } from "./salon-booking-admin";
+import { SystemSuperAdmin } from "./system-super-admin";
 
 const LS_ACCESS = "salon_access_token";
 const LS_REFRESH = "salon_refresh_token";
 
-type Me = { id: number; name: string; mobile: string; is_admin: boolean };
+type Me = {
+  id: number;
+  name: string;
+  mobile: string;
+  is_admin: boolean;
+  role?: string;
+  is_super_admin?: boolean;
+  is_barber?: boolean;
+  shop?: {
+    id: number;
+    name: string;
+    slug: string;
+    description: string | null;
+    is_active: boolean;
+  } | null;
+  subscription?: {
+    status: string;
+    plan_key: string;
+    trial_ends_at: string | null;
+    current_period_end: string | null;
+  } | null;
+};
 
 type Tab = "login" | "register" | "forgot" | "reset" | "session";
+
+type RegisterMode = "customer" | "shop";
+
+/** Match backend MobileNormalizer: digits only for login/register payloads. */
+function normalizeMobileInput(raw: string): string {
+  return raw.replace(/\D/g, "");
+}
+
+function slugifyShopSlug(input: string): string {
+  return input
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+}
 
 export function AuthPortal() {
   const [tab, setTab] = useState<Tab>("login");
@@ -28,6 +68,11 @@ export function AuthPortal() {
   const [regMobile, setRegMobile] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regPassword2, setRegPassword2] = useState("");
+  const [registerMode, setRegisterMode] = useState<RegisterMode>("customer");
+  const [shopName, setShopName] = useState("");
+  const [shopSlug, setShopSlug] = useState("");
+  const [shopSlugTouched, setShopSlugTouched] = useState(false);
+  const [shopDescription, setShopDescription] = useState("");
   const [forgotMobile, setForgotMobile] = useState("");
   const [resetMobile, setResetMobile] = useState("");
   const [resetOtp, setResetOtp] = useState("");
@@ -42,17 +87,26 @@ export function AuthPortal() {
     else localStorage.removeItem(LS_ACCESS);
     if (refresh) localStorage.setItem(LS_REFRESH, refresh);
     else localStorage.removeItem(LS_REFRESH);
+    broadcastSalonAuthChange();
   }, []);
 
   useEffect(() => {
     const a = localStorage.getItem(LS_ACCESS);
     const r = localStorage.getItem(LS_REFRESH);
     if (a && r) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- restore session from localStorage
       setAccessToken(a);
       setRefreshToken(r);
       setTab("session");
     }
   }, []);
+
+  useEffect(() => {
+    if (registerMode !== "shop" || shopSlugTouched) return;
+    const s = slugifyShopSlug(shopName);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- keep slug in sync with shop name until user edits slug
+    setShopSlug(s);
+  }, [shopName, registerMode, shopSlugTouched]);
 
   const loadMe = useCallback(async (token: string) => {
     const res = await authJson<Me>("/auth/me", { accessToken: token });
@@ -68,6 +122,7 @@ export function AuthPortal() {
   }, [persistTokens]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- load /auth/me when session tab active
     if (tab === "session" && accessToken) void loadMe(accessToken);
   }, [tab, accessToken, loadMe]);
 
@@ -85,7 +140,7 @@ export function AuthPortal() {
     }>("/auth/login", {
       method: "POST",
       body: JSON.stringify({
-        mobile: loginMobile,
+        mobile: normalizeMobileInput(loginMobile),
         password: loginPassword,
       }),
     });
@@ -115,7 +170,7 @@ export function AuthPortal() {
       method: "POST",
       body: JSON.stringify({
         ...(regName.trim() !== "" ? { name: regName.trim() } : {}),
-        mobile: regMobile,
+        mobile: normalizeMobileInput(regMobile),
         password: regPassword,
         password_confirmation: regPassword2,
       }),
@@ -132,13 +187,53 @@ export function AuthPortal() {
     setRegPassword2("");
   }
 
+  async function handleRegisterShop(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setNotice(null);
+    const slug = slugifyShopSlug(shopSlug || shopName);
+    const res = await authJson<{
+      access_token: string;
+      refresh_token: string;
+      expires_in: number;
+    }>("/auth/register-barber", {
+      method: "POST",
+      body: JSON.stringify({
+        ...(regName.trim() !== "" ? { name: regName.trim() } : {}),
+        mobile: normalizeMobileInput(regMobile),
+        password: regPassword,
+        password_confirmation: regPassword2,
+        shop_name: shopName.trim(),
+        shop_slug: slug,
+        ...(shopDescription.trim() !== "" ? { description: shopDescription.trim() } : {}),
+      }),
+    });
+    setBusy(false);
+    if (!res.ok) {
+      showErr(res.body);
+      return;
+    }
+    persistTokens(res.data.access_token, res.data.refresh_token);
+    setTab("session");
+    setNotice({
+      type: "ok",
+      text: "Shop created with a trial subscription. You are signed in as owner — open Owner dashboard to manage bookings.",
+    });
+    setRegPassword("");
+    setRegPassword2("");
+    setShopName("");
+    setShopSlug("");
+    setShopSlugTouched(false);
+    setShopDescription("");
+  }
+
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setNotice(null);
     const res = await authJson<{ message: string }>("/auth/forgot-password", {
       method: "POST",
-      body: JSON.stringify({ mobile: forgotMobile }),
+      body: JSON.stringify({ mobile: normalizeMobileInput(forgotMobile) }),
     });
     setBusy(false);
     if (!res.ok) {
@@ -155,7 +250,7 @@ export function AuthPortal() {
     const res = await authJson<{ message: string }>("/auth/reset-password", {
       method: "POST",
       body: JSON.stringify({
-        mobile: resetMobile,
+        mobile: normalizeMobileInput(resetMobile),
         otp: resetOtp,
         password: resetPassword,
         password_confirmation: resetPassword2,
@@ -230,13 +325,16 @@ export function AuthPortal() {
 
   return (
     <div className="w-full max-w-lg">
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        All requests use <code className="rounded bg-zinc-100 px-1 text-xs dark:bg-zinc-800">/api/auth/*</code>{" "}
-        (proxied to Laravel). Mobile numbers are stored as digits only.
-      </p>
+      <div className="rounded-2xl border border-rose-100/80 bg-gradient-to-br from-white to-rose-50/40 p-5 dark:border-zinc-800 dark:from-zinc-900/60 dark:to-zinc-950/80">
+        <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Welcome</h2>
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          Customers book visits and track loyalty. Shop owners register a business, manage services, staff, and the
+          calendar. Mobile login uses your phone number (digits only — spaces and dashes are stripped).
+        </p>
+      </div>
 
       <div
-        className="mt-4 flex flex-wrap gap-2 border-b border-rose-100/80 pb-3 dark:border-zinc-800"
+        className="mt-6 flex flex-wrap gap-2 border-b border-rose-100/80 pb-3 dark:border-zinc-800"
         role="tablist"
         aria-label="Authentication"
       >
@@ -314,15 +412,101 @@ export function AuthPortal() {
         )}
 
         {tab === "register" && (
-          <form onSubmit={handleRegister} className="space-y-4">
+          <form
+            onSubmit={registerMode === "customer" ? handleRegister : handleRegisterShop}
+            className="space-y-4"
+          >
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Create account</h2>
-            <p className="text-xs text-zinc-500">Email is not required.</p>
+            <div className="inline-flex rounded-full border border-zinc-200 p-1 dark:border-zinc-700">
+              <button
+                type="button"
+                onClick={() => {
+                  setRegisterMode("customer");
+                  setNotice(null);
+                }}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                  registerMode === "customer"
+                    ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
+                    : "text-zinc-600 dark:text-zinc-400"
+                }`}
+              >
+                Customer
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setRegisterMode("shop");
+                  setNotice(null);
+                }}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                  registerMode === "shop"
+                    ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
+                    : "text-zinc-600 dark:text-zinc-400"
+                }`}
+              >
+                Shop / salon owner
+              </button>
+            </div>
+            <p className="text-xs text-zinc-500">
+              {registerMode === "customer"
+                ? "Book appointments and earn loyalty points. No email required."
+                : "Creates your business, a public booking link, and a trial subscription so you can run the full dashboard."}
+            </p>
+
+            {registerMode === "shop" ? (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-zinc-500">Business name</label>
+                  <input
+                    className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                    value={shopName}
+                    onChange={(e) => setShopName(e.target.value)}
+                    required
+                    placeholder="Lumière Studio"
+                    autoComplete="organization"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-zinc-500">Public URL slug</label>
+                  <input
+                    className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                    value={shopSlug}
+                    onChange={(e) => {
+                      setShopSlugTouched(true);
+                      setShopSlug(e.target.value);
+                    }}
+                    required
+                    pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+                    title="Lowercase letters, numbers, and single hyphens only"
+                    placeholder="lumiere-studio"
+                  />
+                  <p className="mt-1 text-[11px] text-zinc-500">
+                    Booking link: <span className="font-mono">/s/{shopSlug || "your-slug"}/book</span>
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-zinc-500">Description (optional)</label>
+                  <textarea
+                    rows={2}
+                    className="mt-1 w-full resize-none rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                    value={shopDescription}
+                    onChange={(e) => setShopDescription(e.target.value)}
+                    placeholder="What makes your salon special…"
+                  />
+                </div>
+              </>
+            ) : null}
+
             <div>
-              <label className="block text-xs font-medium text-zinc-500">Name (optional)</label>
+              <label className="block text-xs font-medium text-zinc-500">
+                Your name {registerMode === "shop" ? "" : "(optional)"}
+              </label>
               <input
                 className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
                 value={regName}
                 onChange={(e) => setRegName(e.target.value)}
+                required={registerMode === "shop"}
+                autoComplete="name"
               />
             </div>
             <div>
@@ -333,10 +517,11 @@ export function AuthPortal() {
                 onChange={(e) => setRegMobile(e.target.value)}
                 required
                 autoComplete="tel"
+                inputMode="tel"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-zinc-500">Password</label>
+              <label className="block text-xs font-medium text-zinc-500">Password (min 8 characters)</label>
               <input
                 type="password"
                 className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -363,7 +548,7 @@ export function AuthPortal() {
               disabled={busy}
               className="w-full rounded-full bg-zinc-900 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-900"
             >
-              {busy ? "…" : "Register"}
+              {busy ? "…" : registerMode === "shop" ? "Create shop & sign in" : "Register"}
             </button>
           </form>
         )}
@@ -467,7 +652,25 @@ export function AuthPortal() {
                       <dd className="font-mono text-zinc-900 dark:text-white">{me.mobile}</dd>
                     </div>
                     <div className="flex justify-between gap-4">
-                      <dt className="text-zinc-500">Admin</dt>
+                      <dt className="text-zinc-500">Role</dt>
+                      <dd className="capitalize">{me.role?.replace("_", " ") ?? "—"}</dd>
+                    </div>
+                    {me.shop ? (
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-zinc-500">Shop</dt>
+                        <dd className="text-right font-medium">{me.shop.name}</dd>
+                      </div>
+                    ) : null}
+                    {me.subscription ? (
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-zinc-500">Subscription</dt>
+                        <dd>
+                          {me.subscription.plan_key} ({me.subscription.status})
+                        </dd>
+                      </div>
+                    ) : null}
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-zinc-500">Staff / admin UI</dt>
                       <dd>{me.is_admin ? "Yes" : "No"}</dd>
                     </div>
                   </dl>
@@ -475,6 +678,14 @@ export function AuthPortal() {
                   <p className="text-sm text-zinc-500">Loading profile…</p>
                 )}
                 <div className="flex flex-wrap gap-2">
+                  {me?.role === "shop_owner" && me.shop ? (
+                    <Link
+                      href="/owner/dashboard"
+                      className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                    >
+                      Owner dashboard
+                    </Link>
+                  ) : null}
                   <button
                     type="button"
                     onClick={() => void handleRefresh()}
@@ -497,6 +708,21 @@ export function AuthPortal() {
                   <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">localStorage</code> for this demo. Use
                   secure storage in production mobile apps.
                 </p>
+                {me?.is_barber && me.shop ? (
+                  <>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                      Public booking URL:{" "}
+                      <Link
+                        href={`/s/${me.shop.slug}/book`}
+                        className="font-medium text-rose-800 underline dark:text-rose-200"
+                      >
+                        /s/{me.shop.slug}/book
+                      </Link>
+                    </p>
+                    <SalonBookingAdmin accessToken={accessToken} shopSlug={me.shop.slug} />
+                  </>
+                ) : null}
+                {me?.is_super_admin ? <SystemSuperAdmin accessToken={accessToken} /> : null}
               </>
             )}
           </div>

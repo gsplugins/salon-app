@@ -25,6 +25,10 @@ class AuthenticateJwt
             return response()->json(['message' => 'Invalid or expired token.'], 401);
         }
 
+        if ($user->is_locked) {
+            return response()->json(['message' => 'Account is locked.'], 403);
+        }
+
         $request->setUserResolver(static fn () => $user);
 
         return $next($request);

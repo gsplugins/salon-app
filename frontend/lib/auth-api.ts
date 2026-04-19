@@ -23,13 +23,46 @@ export async function authJson<T = unknown>(
       : {}),
     ...init?.headers,
   };
-  const { accessToken: _a, ...rest } = init ?? {};
+  const { accessToken, ...rest } = (init ?? {}) as RequestInit & { accessToken?: string };
+  void accessToken;
   const res = await fetch(url, { ...rest, headers });
   const data = (await res.json().catch(() => ({}))) as T | ApiErrorBody;
   if (!res.ok) {
     return { ok: false, status: res.status, body: data as ApiErrorBody };
   }
   return { ok: true, status: res.status, data: data as T };
+}
+
+/** Shape returned by `GET /api/auth/me` (see Laravel AuthController::me). */
+export type AuthMePayload = {
+  id: number;
+  name: string;
+  mobile: string;
+  role: string;
+  loyalty_points?: number;
+  is_super_admin: boolean;
+  is_shop_owner: boolean;
+  is_barber: boolean;
+  is_admin: boolean;
+  shop: {
+    id: number;
+    name: string;
+    slug: string;
+    description: string | null;
+    is_active: boolean;
+  } | null;
+  subscription: {
+    status: string;
+    plan_key: string;
+    trial_ends_at: string | null;
+    current_period_end: string | null;
+  } | null;
+};
+
+export async function fetchAuthMe(
+  accessToken: string
+): Promise<{ ok: true; data: AuthMePayload } | { ok: false; status: number; body: ApiErrorBody }> {
+  return authJson<AuthMePayload>("/auth/me", { accessToken });
 }
 
 export function formatApiError(body: ApiErrorBody): string {

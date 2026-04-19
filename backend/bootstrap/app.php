@@ -15,6 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'auth.jwt' => AuthenticateJwt::class,
+            'auth.jwt.optional' => \App\Http\Middleware\OptionalAuthenticateJwt::class,
+            'super_admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
+            'barber' => \App\Http\Middleware\EnsureBarber::class,
+            'customer' => \App\Http\Middleware\EnsureCustomer::class,
+            'staff_barber' => \App\Http\Middleware\EnsureStaffBarber::class,
+            'subscription' => \App\Http\Middleware\EnsureBarberSubscriptionActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

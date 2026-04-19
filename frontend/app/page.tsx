@@ -1,10 +1,8 @@
 import { headers } from "next/headers";
 import Link from "next/link";
-
-const staffLoginHref =
-  process.env.NEXT_PUBLIC_STAFF_LOGIN_URL?.replace(/\/$/, "") ?? "/app";
-const staffLoginIsExternal =
-  staffLoginHref.startsWith("http://") || staffLoginHref.startsWith("https://");
+import { Calendar, Search, Sparkles } from "lucide-react";
+import { FeaturedShopsSection } from "@/components/marketing/featured-shops-section";
+import { PublicHeader } from "@/components/public-header";
 
 const directApiBase =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
@@ -81,48 +79,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-[#faf8f6] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
-      <header className="sticky top-0 z-20 border-b border-rose-100/80 bg-[#faf8f6]/90 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/90">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <a href="#" className="font-semibold tracking-tight text-zinc-900 dark:text-white">
-            Lumière Salon
-          </a>
-          <nav
-            className="flex flex-wrap items-center justify-end gap-x-6 gap-y-2 text-sm font-medium text-zinc-600 dark:text-zinc-300"
-            aria-label="Primary"
-          >
-            <a href="#services" className="hover:text-rose-700 dark:hover:text-rose-300">
-              Services
-            </a>
-            <a href="#visit" className="hover:text-rose-700 dark:hover:text-rose-300">
-              Visit
-            </a>
-            <a href="#account" className="hover:text-rose-700 dark:hover:text-rose-300">
-              Account
-            </a>
-            {staffLoginIsExternal ? (
-              <a
-                href={staffLoginHref}
-                className="hover:text-rose-700 dark:hover:text-rose-300"
-              >
-                Staff login
-              </a>
-            ) : (
-              <Link
-                href={staffLoginHref}
-                className="hover:text-rose-700 dark:hover:text-rose-300"
-              >
-                Staff login
-              </Link>
-            )}
-            <a
-              href="#book"
-              className="rounded-full bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-800 dark:bg-rose-100 dark:text-zinc-900 dark:hover:bg-white"
-            >
-              Book
-            </a>
-          </nav>
-        </div>
-      </header>
+      <PublicHeader showMarketingNav />
 
       <main>
         <section
@@ -148,18 +105,87 @@ export default async function Home() {
               around you. Book your next appointment and leave with hair you love.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
-              <a
-                href="#book"
+              <Link
+                href="/shops"
                 className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 dark:bg-rose-100 dark:text-zinc-900 dark:hover:bg-white"
               >
-                Schedule an appointment
-              </a>
+                Find a shop
+              </Link>
               <a
                 href="#services"
                 className="inline-flex items-center justify-center rounded-full border border-zinc-300 bg-white/60 px-6 py-3 text-sm font-semibold text-zinc-800 backdrop-blur hover:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-900/60 dark:text-zinc-100 dark:hover:border-zinc-500"
               >
                 Explore services
               </a>
+            </div>
+          </div>
+        </section>
+
+        <FeaturedShopsSection />
+
+        <section
+          className="border-y border-rose-100/80 bg-white/80 dark:border-zinc-800 dark:bg-zinc-900/20"
+          aria-labelledby="how-heading"
+        >
+          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
+            <h2
+              id="how-heading"
+              className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white"
+            >
+              How it works
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
+              Book in minutes — pick a verified shop, choose your service and stylist, then show up on time.
+            </p>
+            <ol className="mt-10 grid gap-6 md:grid-cols-3">
+              {[
+                {
+                  step: "1",
+                  title: "Browse & compare",
+                  text: "Search salons by name or area and read services, staff, and reviews.",
+                  Icon: Search,
+                },
+                {
+                  step: "2",
+                  title: "Book a slot",
+                  text: "Select a service, optional stylist, and a time that fits your calendar.",
+                  Icon: Calendar,
+                },
+                {
+                  step: "3",
+                  title: "Enjoy your visit",
+                  text: "Get reminders, join the live queue if you walk in, and earn loyalty points.",
+                  Icon: Sparkles,
+                },
+              ].map(({ step, title, text, Icon }) => (
+                <li
+                  key={step}
+                  className="rounded-2xl border border-rose-100/80 bg-[#faf8f6] p-6 dark:border-zinc-800 dark:bg-zinc-900/40"
+                >
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-100 text-rose-900 dark:bg-rose-950/60 dark:text-rose-100">
+                    <Icon className="h-5 w-5" strokeWidth={1.75} />
+                  </div>
+                  <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-rose-800/90 dark:text-rose-200/90">
+                    Step {step}
+                  </p>
+                  <h3 className="mt-1 text-lg font-semibold text-zinc-900 dark:text-white">{title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{text}</p>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-10 flex flex-wrap gap-4">
+              <Link
+                href="/shops"
+                className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 dark:bg-rose-100 dark:text-zinc-900 dark:hover:bg-white"
+              >
+                Browse shops
+              </Link>
+              <Link
+                href="/app"
+                className="inline-flex items-center justify-center rounded-full border border-zinc-300 bg-white px-6 py-3 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+              >
+                Customer sign-in
+              </Link>
             </div>
           </div>
         </section>
@@ -277,17 +303,23 @@ export default async function Home() {
           </ul>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
+              href="/platform"
+              className="inline-flex items-center justify-center rounded-full bg-rose-700 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-rose-800 dark:bg-rose-200 dark:text-zinc-900 dark:hover:bg-white"
+            >
+              View all platform pages
+            </Link>
+            <Link
               href="/app"
               className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 dark:bg-rose-100 dark:text-zinc-900 dark:hover:bg-white"
             >
               Open account &amp; staff demo
             </Link>
-            <a
-              href="#book"
+            <Link
+              href="/book"
               className="inline-flex items-center justify-center rounded-full border border-zinc-300 bg-white/60 px-6 py-3 text-sm font-semibold text-zinc-800 backdrop-blur hover:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-900/60 dark:text-zinc-100"
             >
               Book an appointment
-            </a>
+            </Link>
           </div>
         </section>
 
@@ -304,13 +336,19 @@ export default async function Home() {
               Ready for your next appointment?
             </h2>
             <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-zinc-300">
-              Call or message us to find a time that works. We will confirm details and
+              Book online in a few steps, or call or message us if you prefer. We will confirm details and
               anything we should know before you arrive.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Link
+                href="/book"
+                className="inline-flex w-full max-w-xs items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-zinc-900 hover:bg-rose-50 sm:w-auto"
+              >
+                Book online
+              </Link>
               <a
                 href="tel:+15035550128"
-                className="inline-flex w-full max-w-xs items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-zinc-900 hover:bg-rose-50 sm:w-auto"
+                className="inline-flex w-full max-w-xs items-center justify-center rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 sm:w-auto"
               >
                 (503) 555-0128
               </a>

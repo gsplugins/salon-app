@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { AuthHeaderProfile } from "@/components/auth-header-profile";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthPortal } from "./auth-portal";
 
 export const metadata = {
@@ -20,12 +22,19 @@ export default function StaffAppPage() {
               Lumière — staff &amp; API demo
             </h1>
           </div>
-          <Link
-            href="/"
-            className="shrink-0 text-sm font-medium text-rose-800 hover:underline dark:text-rose-200"
-          >
-            Home
-          </Link>
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-3 text-sm font-medium">
+            <Link href="/owner/dashboard" className="hidden text-zinc-600 hover:text-rose-800 sm:inline dark:text-zinc-400">
+              Owner
+            </Link>
+            <Link href="/platform" className="text-rose-800 hover:underline dark:text-rose-200">
+              Site map
+            </Link>
+            <Link href="/" className="text-zinc-600 hover:text-rose-800 dark:text-zinc-400">
+              Home
+            </Link>
+            <AuthHeaderProfile variant="compact" />
+            <ThemeToggle />
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">

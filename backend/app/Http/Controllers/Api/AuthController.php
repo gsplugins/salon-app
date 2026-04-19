@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\SubscriptionStatus;
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\PasswordResetOtp;
+use App\Models\Shop;
+use App\Models\Subscription;
 use App\Models\User;
 use App\Services\JwtTokenService;
 use App\Services\Sms\SmsSender;
 use App\Support\MobileNormalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -47,7 +53,67 @@ class AuthController extends Controller
             'mobile' => $mobile,
             'password' => $data['password'],
             'is_admin' => false,
+            'role' => UserRole::Customer,
         ]);
+
+        return response()->json($this->buildTokenBody($user), 201);
+    }
+
+    public function registerBarber(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'mobile' => ['required', 'string', 'min:8', 'max:32'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'name' => ['nullable', 'string', 'max:255'],
+            'shop_name' => ['required', 'string', 'max:255'],
+            'shop_slug' => ['required', 'string', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 'max:64', Rule::unique('shops', 'slug')],
+            'description' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $mobile = MobileNormalizer::normalize($data['mobile']);
+        if ($mobile === '') {
+            throw ValidationException::withMessages([
+                'mobile' => ['Invalid mobile number.'],
+            ]);
+        }
+
+        if (User::query()->where('mobile', $mobile)->exists()) {
+            throw ValidationException::withMessages([
+                'mobile' => ['This mobile number is already registered.'],
+            ]);
+        }
+
+        $user = DB::transaction(function () use ($data, $mobile) {
+            $user = User::query()->create([
+                'name' => $data['name'] ?? 'Shop owner',
+                'email' => null,
+                'mobile' => $mobile,
+                'password' => $data['password'],
+                'is_admin' => false,
+                'role' => UserRole::ShopOwner,
+            ]);
+
+            $shop = Shop::query()->create([
+                'user_id' => $user->id,
+                'name' => $data['shop_name'],
+                'slug' => $data['shop_slug'],
+                'description' => $data['description'] ?? null,
+                'is_active' => true,
+                'settings' => null,
+            ]);
+
+            Subscription::query()->create([
+                'shop_id' => $shop->id,
+                'plan_key' => 'starter',
+                'status' => SubscriptionStatus::Trialing,
+                'trial_ends_at' => now()->addDays(14),
+                'current_period_end' => now()->addDays(14),
+                'stripe_customer_id' => null,
+                'stripe_subscription_id' => null,
+            ]);
+
+            return $user;
+        });
 
         return response()->json($this->buildTokenBody($user), 201);
     }
@@ -64,6 +130,10 @@ class AuthController extends Controller
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
             return response()->json(['message' => 'Invalid credentials.'], 401);
+        }
+
+        if ($user->is_locked) {
+            return response()->json(['message' => 'Account is locked. Contact support.'], 403);
         }
 
         return response()->json($this->buildTokenBody($user));
@@ -115,11 +185,34 @@ class AuthController extends Controller
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
+        $user->loadMissing(['shops.subscription', 'staffProfile.shop.subscription']);
+
+        $shop = $user->primaryShop();
+        $sub = $shop?->subscription;
+
         return response()->json([
             'id' => $user->id,
             'name' => $user->name,
             'mobile' => $user->mobile,
-            'is_admin' => (bool) $user->is_admin,
+            'role' => $user->role?->value ?? 'customer',
+            'loyalty_points' => $user->loyalty_points ?? 0,
+            'is_super_admin' => $user->isSuperAdmin(),
+            'is_shop_owner' => $user->isShopOwner(),
+            'is_barber' => $user->isBarber(),
+            'is_admin' => $user->isBarber() || $user->isSuperAdmin(),
+            'shop' => $shop ? [
+                'id' => $shop->id,
+                'name' => $shop->name,
+                'slug' => $shop->slug,
+                'description' => $shop->description,
+                'is_active' => $shop->is_active,
+            ] : null,
+            'subscription' => $sub ? [
+                'status' => $sub->status->value,
+                'plan_key' => $sub->plan_key,
+                'trial_ends_at' => $sub->trial_ends_at?->toIso8601String(),
+                'current_period_end' => $sub->current_period_end?->toIso8601String(),
+            ] : null,
         ]);
     }
 
