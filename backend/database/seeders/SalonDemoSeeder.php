@@ -2,11 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Enums\ShopRole;
 use App\Enums\SubscriptionStatus;
 use App\Enums\UserRole;
 use App\Models\SalonService;
 use App\Models\SalonStaff;
 use App\Models\Shop;
+use App\Models\ShopMember;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -47,6 +49,27 @@ class SalonDemoSeeder extends Seeder
                 'is_active' => true,
                 'settings' => null,
             ]
+        );
+
+        ShopMember::query()->updateOrCreate(
+            ['user_id' => $owner->id, 'shop_id' => $shop->id],
+            ['role' => ShopRole::Owner, 'is_active' => true]
+        );
+
+        $manager = User::query()->updateOrCreate(
+            ['mobile' => '5550000002'],
+            [
+                'name' => 'Shop Manager',
+                'email' => null,
+                'password' => Hash::make('password'),
+                'is_admin' => false,
+                'role' => UserRole::Manager,
+            ]
+        );
+
+        ShopMember::query()->updateOrCreate(
+            ['user_id' => $manager->id, 'shop_id' => $shop->id],
+            ['role' => ShopRole::Manager, 'is_active' => true]
         );
 
         Subscription::query()->updateOrCreate(

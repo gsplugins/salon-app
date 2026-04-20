@@ -1,43 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { authJson, formatApiError, type ApiErrorBody } from "@/lib/auth-api";
+import { ArrowRight, Eye, EyeOff, Sparkles, Store } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { authJson, formatApiError, type ApiErrorBody, type AuthMePayload } from "@/lib/auth-api";
 import { broadcastSalonAuthChange } from "@/lib/auth-events";
-import { SalonBookingAdmin } from "./salon-booking-admin";
-import { SystemSuperAdmin } from "./system-super-admin";
+import { getPrimaryDashboardPath, getRoleLabel } from "@/lib/auth-session";
+import { canAccessBarberStaffRoutes, canAccessCustomerPortal, canAccessSalonManagement } from "@/lib/role-access";
 
 const LS_ACCESS = "salon_access_token";
 const LS_REFRESH = "salon_refresh_token";
 
-type Me = {
-  id: number;
-  name: string;
-  mobile: string;
-  is_admin: boolean;
-  role?: string;
-  is_super_admin?: boolean;
-  is_barber?: boolean;
-  shop?: {
-    id: number;
-    name: string;
-    slug: string;
-    description: string | null;
-    is_active: boolean;
-  } | null;
-  subscription?: {
-    status: string;
-    plan_key: string;
-    trial_ends_at: string | null;
-    current_period_end: string | null;
-  } | null;
-};
-
-type Tab = "login" | "register" | "forgot" | "reset" | "session";
-
+type Tab = "login" | "register" | "forgot" | "reset";
 type RegisterMode = "customer" | "shop";
 
-/** Match backend MobileNormalizer: digits only for login/register payloads. */
 function normalizeMobileInput(raw: string): string {
   return raw.replace(/\D/g, "");
 }
@@ -51,17 +27,29 @@ function slugifyShopSlug(input: string): string {
     .slice(0, 64);
 }
 
+function SectionCard(props: { title: string; subtitle: string; children: React.ReactNode }) {
+  const { title, subtitle, children } = props;
+  return (
+    <section className="rounded-2xl border border-zinc-200/90 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
+      <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">{title}</h2>
+      <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{subtitle}</p>
+      <div className="mt-5">{children}</div>
+    </section>
+  );
+}
+
 export function AuthPortal() {
   const [tab, setTab] = useState<Tab>("login");
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState<{ type: "ok" | "err"; text: string } | null>(
-    null
-  );
-  const [me, setMe] = useState<Me | null>(null);
+  const [notice, setNotice] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [me, setMe] = useState<AuthMePayload | null>(null);
 
-  // forms
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegPassword, setShowRegPassword] = useState(false);
+  const [showRegPassword2, setShowRegPassword2] = useState(false);
+
   const [loginMobile, setLoginMobile] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [regName, setRegName] = useState("");
@@ -97,37 +85,38 @@ export function AuthPortal() {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- restore session from localStorage
       setAccessToken(a);
       setRefreshToken(r);
-      setTab("session");
     }
   }, []);
 
   useEffect(() => {
     if (registerMode !== "shop" || shopSlugTouched) return;
     const s = slugifyShopSlug(shopName);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- keep slug in sync with shop name until user edits slug
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- keep slug synced until user edits
     setShopSlug(s);
   }, [shopName, registerMode, shopSlugTouched]);
 
-  const loadMe = useCallback(async (token: string) => {
-    const res = await authJson<Me>("/auth/me", { accessToken: token });
-    if (res.ok) setMe(res.data);
-    else {
+  const loadMe = useCallback(
+    async (token: string) => {
+      const res = await authJson<AuthMePayload>("/auth/me", { accessToken: token });
+      if (res.ok) {
+        setMe(res.data);
+        return;
+      }
       setMe(null);
       if (res.status === 401) {
         persistTokens(null, null);
-        setTab("login");
         setNotice({ type: "err", text: "Session expired. Sign in again." });
       }
-    }
-  }, [persistTokens]);
+    },
+    [persistTokens]
+  );
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load /auth/me when session tab active
-    if (tab === "session" && accessToken) void loadMe(accessToken);
-  }, [tab, accessToken, loadMe]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch profile for role-aware dashboard card
+    if (accessToken) void loadMe(accessToken);
+  }, [accessToken, loadMe]);
 
-  const showErr = (body: ApiErrorBody) =>
-    setNotice({ type: "err", text: formatApiError(body) });
+  const showErr = (body: ApiErrorBody) => setNotice({ type: "err", text: formatApiError(body) });
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -145,27 +134,22 @@ export function AuthPortal() {
       }),
     });
     setBusy(false);
-    if (!res.ok) {
-      showErr(res.body);
-      return;
-    }
+    if (!res.ok) return showErr(res.body);
     persistTokens(res.data.access_token, res.data.refresh_token);
-    setTab("session");
     setNotice({
       type: "ok",
-      text: `Signed in. Access token expires in ${Math.round(res.data.expires_in / 86400)} days (default).`,
+      text: `Signed in. Access token expires in ${Math.round(res.data.expires_in / 86400)} days.`,
     });
     setLoginPassword("");
   }
 
-  async function handleRegister(e: React.FormEvent) {
+  async function handleRegisterCustomer(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setNotice(null);
     const res = await authJson<{
       access_token: string;
       refresh_token: string;
-      expires_in: number;
     }>("/auth/register", {
       method: "POST",
       body: JSON.stringify({
@@ -176,13 +160,9 @@ export function AuthPortal() {
       }),
     });
     setBusy(false);
-    if (!res.ok) {
-      showErr(res.body);
-      return;
-    }
+    if (!res.ok) return showErr(res.body);
     persistTokens(res.data.access_token, res.data.refresh_token);
-    setTab("session");
-    setNotice({ type: "ok", text: "Account created. You are signed in." });
+    setNotice({ type: "ok", text: "Customer account created and signed in." });
     setRegPassword("");
     setRegPassword2("");
   }
@@ -195,7 +175,6 @@ export function AuthPortal() {
     const res = await authJson<{
       access_token: string;
       refresh_token: string;
-      expires_in: number;
     }>("/auth/register-barber", {
       method: "POST",
       body: JSON.stringify({
@@ -209,22 +188,15 @@ export function AuthPortal() {
       }),
     });
     setBusy(false);
-    if (!res.ok) {
-      showErr(res.body);
-      return;
-    }
+    if (!res.ok) return showErr(res.body);
     persistTokens(res.data.access_token, res.data.refresh_token);
-    setTab("session");
-    setNotice({
-      type: "ok",
-      text: "Shop created with a trial subscription. You are signed in as owner — open Owner dashboard to manage bookings.",
-    });
+    setNotice({ type: "ok", text: "Shop account created with trial subscription. You're signed in as owner." });
     setRegPassword("");
     setRegPassword2("");
     setShopName("");
     setShopSlug("");
-    setShopSlugTouched(false);
     setShopDescription("");
+    setShopSlugTouched(false);
   }
 
   async function handleForgot(e: React.FormEvent) {
@@ -236,10 +208,7 @@ export function AuthPortal() {
       body: JSON.stringify({ mobile: normalizeMobileInput(forgotMobile) }),
     });
     setBusy(false);
-    if (!res.ok) {
-      showErr(res.body);
-      return;
-    }
+    if (!res.ok) return showErr(res.body);
     setNotice({ type: "ok", text: res.data.message });
   }
 
@@ -257,14 +226,11 @@ export function AuthPortal() {
       }),
     });
     setBusy(false);
-    if (!res.ok) {
-      showErr(res.body);
-      return;
-    }
+    if (!res.ok) return showErr(res.body);
     persistTokens(null, null);
     setMe(null);
     setTab("login");
-    setNotice({ type: "ok", text: `${res.data.message} Sign in with your new password.` });
+    setNotice({ type: "ok", text: `${res.data.message} Please sign in with your new password.` });
     setResetPassword("");
     setResetPassword2("");
   }
@@ -276,7 +242,6 @@ export function AuthPortal() {
     const res = await authJson<{
       access_token: string;
       refresh_token: string;
-      expires_in: number;
     }>("/auth/refresh", {
       method: "POST",
       body: JSON.stringify({ refresh_token: refreshToken }),
@@ -285,11 +250,10 @@ export function AuthPortal() {
     if (!res.ok) {
       showErr(res.body);
       persistTokens(null, null);
-      setTab("login");
       return;
     }
     persistTokens(res.data.access_token, res.data.refresh_token);
-    setNotice({ type: "ok", text: "Tokens rotated (new access + refresh)." });
+    setNotice({ type: "ok", text: "Session refreshed." });
     void loadMe(res.data.access_token);
   }
 
@@ -298,442 +262,436 @@ export function AuthPortal() {
     setBusy(true);
     const res = await authJson("/auth/logout", {
       method: "POST",
-      accessToken: accessToken,
-      body: JSON.stringify(
-        refreshToken ? { refresh_token: refreshToken } : {}
-      ),
+      accessToken,
+      body: JSON.stringify(refreshToken ? { refresh_token: refreshToken } : {}),
     });
     setBusy(false);
     if (!res.ok) showErr(res.body);
     persistTokens(null, null);
     setMe(null);
-    setTab("login");
     setNotice({ type: "ok", text: "Signed out." });
   }
 
-  const tabs = useMemo(
-    () =>
-      [
-        { id: "login" as const, label: "Login" },
-        { id: "register" as const, label: "Register" },
-        { id: "forgot" as const, label: "Forgot password" },
-        { id: "reset" as const, label: "Reset with OTP" },
-        { id: "session" as const, label: "Session" },
-      ] satisfies { id: Tab; label: string }[],
-    []
-  );
+  const roleLabel = me ? getRoleLabel(me) : null;
+  const primaryPath = me ? getPrimaryDashboardPath(me) : null;
+  const featureChips = me
+    ? canAccessSalonManagement(me)
+      ? ["Bookings & queue", "Staff & services", "Reports & reviews"]
+      : canAccessCustomerPortal(me)
+        ? ["Quick booking", "Loyalty & history", "Visit tracking"]
+        : ["Role-based access"]
+    : [];
+
+  const tabs: { id: Tab; label: string }[] = [
+    { id: "login", label: "Login" },
+    { id: "register", label: "Register" },
+    { id: "forgot", label: "Forgot password" },
+    { id: "reset", label: "Reset OTP" },
+  ];
 
   return (
-    <div className="w-full max-w-lg">
-      <div className="rounded-2xl border border-rose-100/80 bg-gradient-to-br from-white to-rose-50/40 p-5 dark:border-zinc-800 dark:from-zinc-900/60 dark:to-zinc-950/80">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Welcome</h2>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Customers book visits and track loyalty. Shop owners register a business, manage services, staff, and the
-          calendar. Mobile login uses your phone number (digits only — spaces and dashes are stripped).
+    <div className="w-full space-y-6">
+      <section className="rounded-2xl border border-rose-100/80 bg-gradient-to-br from-white via-rose-50/40 to-amber-50/30 p-6 shadow-sm dark:border-zinc-800 dark:from-zinc-900/80 dark:via-zinc-950/70 dark:to-zinc-950">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-800 dark:text-rose-200">Lumière account</p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">Sign in or create your account</h1>
+        <p className="mt-2 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
+          Modern role-based access for customers, owners, managers, and staff. Customers can register directly; salon staff
+          accounts are usually created by owner/manager.
         </p>
-      </div>
+      </section>
 
-      <div
-        className="mt-6 flex flex-wrap gap-2 border-b border-rose-100/80 pb-3 dark:border-zinc-800"
-        role="tablist"
-        aria-label="Authentication"
-      >
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === t.id}
-            onClick={() => {
-              setTab(t.id);
-              setNotice(null);
-            }}
-            className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
-              tab === t.id
-                ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
-                : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      {accessToken && me ? (
+        <section className="rounded-2xl border border-zinc-200/90 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-800 dark:text-rose-200">Signed in</p>
+              <h2 className="mt-1 text-lg font-semibold text-zinc-900 dark:text-white">
+                {me.name} · {roleLabel}
+              </h2>
+              <p className="text-xs text-zinc-500">{me.mobile}</p>
+            </div>
+            {primaryPath ? (
+              <Link
+                href={primaryPath}
+                className="inline-flex min-h-10 items-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+              >
+                Open dashboard
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : null}
+          </div>
+          <ul className="mt-4 grid gap-2 sm:grid-cols-3">
+            {featureChips.map((chip) => (
+              <li key={chip} className="rounded-xl border border-zinc-200 bg-zinc-50/80 px-3 py-2 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-950/40 dark:text-zinc-300">
+                {chip}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void handleRefresh()}
+              disabled={busy || !refreshToken}
+              className="min-h-10 rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium disabled:opacity-60 dark:border-zinc-600"
+            >
+              Refresh token
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleLogout()}
+              disabled={busy}
+              className="min-h-10 rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium disabled:opacity-60 dark:border-zinc-600"
+            >
+              Sign out
+            </button>
+          </div>
+          {canAccessBarberStaffRoutes(me) ? (
+            <p className="mt-3 text-xs text-zinc-500">Staff profile/settings are available in staff routes.</p>
+          ) : null}
+        </section>
+      ) : null}
 
-      {notice && (
+      {notice ? (
         <div
-          className={`mt-4 rounded-xl border px-3 py-2 text-sm ${
+          className={`rounded-xl border px-3 py-2 text-sm ${
             notice.type === "ok"
               ? "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100"
               : "border-red-200 bg-red-50 text-red-950 dark:border-red-900 dark:bg-red-950/40 dark:text-red-100"
           }`}
-          role="status"
         >
           {notice.text}
         </div>
-      )}
+      ) : null}
 
-      <div className="mt-6 rounded-2xl border border-rose-100/80 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-        {tab === "login" && (
-          <form onSubmit={handleLogin} className="space-y-4">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Sign in</h2>
-            <div>
+      <div className="rounded-2xl border border-zinc-200/90 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60 sm:p-6">
+        <div className="mb-5 flex flex-wrap gap-2 border-b border-zinc-100 pb-4 dark:border-zinc-800" role="tablist" aria-label="Auth tabs">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => {
+                setTab(t.id);
+                setNotice(null);
+              }}
+              className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                tab === t.id
+                  ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
+                  : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {tab === "login" ? (
+          <SectionCard
+            title="Sign in"
+            subtitle="Use your mobile and password. Role-based features unlock automatically after login."
+          >
+            <form onSubmit={handleLogin} className="space-y-4">
               <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 Mobile number
+                <input
+                  className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={loginMobile}
+                  onChange={(e) => setLoginMobile(e.target.value)}
+                  autoComplete="tel"
+                  inputMode="tel"
+                  placeholder="e.g. 01711 000000"
+                  required
+                />
               </label>
-              <input
-                className="mt-1 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-                value={loginMobile}
-                onChange={(e) => setLoginMobile(e.target.value)}
-                autoComplete="tel"
-                required
-              />
-            </div>
-            <div>
               <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 Password
+                <div className="relative mt-1">
+                  <input
+                    type={showLoginPassword ? "text" : "password"}
+                    className="w-full rounded-xl border border-zinc-200 bg-white py-2.5 pl-3 pr-11 text-sm shadow-sm dark:border-zinc-700 dark:bg-zinc-950"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                    onClick={() => setShowLoginPassword((v) => !v)}
+                    aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                  >
+                    {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </label>
-              <input
-                type="password"
-                className="mt-1 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                autoComplete="current-password"
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-full rounded-full bg-zinc-900 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-900 dark:hover:bg-white"
-            >
-              {busy ? "…" : "Sign in"}
-            </button>
-          </form>
-        )}
+              <button
+                type="submit"
+                disabled={busy}
+                className="w-full rounded-full bg-zinc-900 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-900 dark:hover:bg-white"
+              >
+                {busy ? "Signing in..." : "Sign in"}
+              </button>
+              <p className="text-center text-xs text-zinc-500">
+                New here?{" "}
+                <button
+                  type="button"
+                  className="font-medium text-rose-800 underline dark:text-rose-200"
+                  onClick={() => {
+                    setTab("register");
+                    setRegisterMode("customer");
+                    setNotice(null);
+                  }}
+                >
+                  Create an account
+                </button>
+              </p>
+            </form>
+          </SectionCard>
+        ) : null}
 
-        {tab === "register" && (
-          <form
-            onSubmit={registerMode === "customer" ? handleRegister : handleRegisterShop}
-            className="space-y-4"
+        {tab === "register" ? (
+          <SectionCard
+            title="Create account"
+            subtitle="Customers can self-register. Shop owners can register business accounts with booking URL."
           >
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Create account</h2>
-            <div className="inline-flex rounded-full border border-zinc-200 p-1 dark:border-zinc-700">
-              <button
-                type="button"
-                onClick={() => {
-                  setRegisterMode("customer");
-                  setNotice(null);
-                }}
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                  registerMode === "customer"
-                    ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
-                    : "text-zinc-600 dark:text-zinc-400"
-                }`}
-              >
-                Customer
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setRegisterMode("shop");
-                  setNotice(null);
-                }}
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                  registerMode === "shop"
-                    ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
-                    : "text-zinc-600 dark:text-zinc-400"
-                }`}
-              >
-                Shop / salon owner
-              </button>
-            </div>
-            <p className="text-xs text-zinc-500">
-              {registerMode === "customer"
-                ? "Book appointments and earn loyalty points. No email required."
-                : "Creates your business, a public booking link, and a trial subscription so you can run the full dashboard."}
-            </p>
+            <form onSubmit={registerMode === "shop" ? handleRegisterShop : handleRegisterCustomer} className="space-y-5">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setRegisterMode("customer")}
+                  className={`rounded-2xl border px-4 py-4 text-left transition ${
+                    registerMode === "customer"
+                      ? "border-rose-400 bg-rose-50/90 ring-1 ring-rose-200 dark:border-rose-700 dark:bg-rose-950/40 dark:ring-rose-800"
+                      : "border-zinc-200 bg-white hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-950/40"
+                  }`}
+                >
+                  <Sparkles className="h-6 w-6 text-rose-600 dark:text-rose-300" aria-hidden />
+                  <p className="mt-2 font-semibold text-zinc-900 dark:text-white">Customer</p>
+                  <p className="mt-1 text-xs text-zinc-500">Book visits and track loyalty.</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRegisterMode("shop")}
+                  className={`rounded-2xl border px-4 py-4 text-left transition ${
+                    registerMode === "shop"
+                      ? "border-rose-400 bg-rose-50/90 ring-1 ring-rose-200 dark:border-rose-700 dark:bg-rose-950/40 dark:ring-rose-800"
+                      : "border-zinc-200 bg-white hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-950/40"
+                  }`}
+                >
+                  <Store className="h-6 w-6 text-rose-600 dark:text-rose-300" aria-hidden />
+                  <p className="mt-2 font-semibold text-zinc-900 dark:text-white">Shop owner</p>
+                  <p className="mt-1 text-xs text-zinc-500">Create business and booking link.</p>
+                </button>
+              </div>
 
-            {registerMode === "shop" ? (
-              <>
-                <div>
-                  <label className="block text-xs font-medium text-zinc-500">Business name</label>
+              {registerMode === "shop" ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="text-xs font-medium text-zinc-500 sm:col-span-2">
+                    Business name
+                    <input
+                      className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                      value={shopName}
+                      onChange={(e) => setShopName(e.target.value)}
+                      required
+                      autoComplete="organization"
+                      placeholder="Lumière Studio"
+                    />
+                  </label>
+                  <label className="text-xs font-medium text-zinc-500 sm:col-span-2">
+                    Public shop slug
+                    <input
+                      className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                      value={shopSlug}
+                      onChange={(e) => {
+                        setShopSlugTouched(true);
+                        setShopSlug(e.target.value);
+                      }}
+                      required
+                      pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+                      title="Lowercase letters, numbers and hyphen only"
+                      placeholder="lumiere-studio"
+                    />
+                    <p className="mt-1 text-[11px] text-zinc-500">
+                      Booking URL preview: <span className="font-mono">/s/{shopSlug || "your-slug"}/book</span>
+                    </p>
+                  </label>
+                  <label className="text-xs font-medium text-zinc-500 sm:col-span-2">
+                    Shop description (optional)
+                    <textarea
+                      rows={2}
+                      className="mt-1 w-full resize-none rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                      value={shopDescription}
+                      onChange={(e) => setShopDescription(e.target.value)}
+                      placeholder="What makes your salon special?"
+                    />
+                  </label>
+                </div>
+              ) : null}
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="text-xs font-medium text-zinc-500">
+                  Your name {registerMode === "customer" ? "(optional)" : ""}
                   <input
                     className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-                    value={shopName}
-                    onChange={(e) => setShopName(e.target.value)}
-                    required
-                    placeholder="Lumière Studio"
-                    autoComplete="organization"
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    required={registerMode === "shop"}
+                    autoComplete="name"
                   />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-zinc-500">Public URL slug</label>
+                </label>
+                <label className="text-xs font-medium text-zinc-500">
+                  Mobile
                   <input
-                    className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
-                    value={shopSlug}
-                    onChange={(e) => {
-                      setShopSlugTouched(true);
-                      setShopSlug(e.target.value);
-                    }}
+                    className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                    value={regMobile}
+                    onChange={(e) => setRegMobile(e.target.value)}
                     required
-                    pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-                    title="Lowercase letters, numbers, and single hyphens only"
-                    placeholder="lumiere-studio"
+                    autoComplete="tel"
+                    inputMode="tel"
                   />
-                  <p className="mt-1 text-[11px] text-zinc-500">
-                    Booking link: <span className="font-mono">/s/{shopSlug || "your-slug"}/book</span>
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-zinc-500">Description (optional)</label>
-                  <textarea
-                    rows={2}
-                    className="mt-1 w-full resize-none rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-                    value={shopDescription}
-                    onChange={(e) => setShopDescription(e.target.value)}
-                    placeholder="What makes your salon special…"
-                  />
-                </div>
-              </>
-            ) : null}
-
-            <div>
-              <label className="block text-xs font-medium text-zinc-500">
-                Your name {registerMode === "shop" ? "" : "(optional)"}
-              </label>
-              <input
-                className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-                value={regName}
-                onChange={(e) => setRegName(e.target.value)}
-                required={registerMode === "shop"}
-                autoComplete="name"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-500">Mobile</label>
-              <input
-                className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-                value={regMobile}
-                onChange={(e) => setRegMobile(e.target.value)}
-                required
-                autoComplete="tel"
-                inputMode="tel"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-500">Password (min 8 characters)</label>
-              <input
-                type="password"
-                className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-                value={regPassword}
-                onChange={(e) => setRegPassword(e.target.value)}
-                required
-                minLength={8}
-                autoComplete="new-password"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-500">Confirm password</label>
-              <input
-                type="password"
-                className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-                value={regPassword2}
-                onChange={(e) => setRegPassword2(e.target.value)}
-                required
-                autoComplete="new-password"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-full rounded-full bg-zinc-900 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-900"
-            >
-              {busy ? "…" : registerMode === "shop" ? "Create shop & sign in" : "Register"}
-            </button>
-          </form>
-        )}
-
-        {tab === "forgot" && (
-          <form onSubmit={handleForgot} className="space-y-4">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">SMS OTP</h2>
-            <p className="text-xs text-zinc-500">
-              Sends a 6-digit code to the registered number. With <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">SMS_DRIVER=log</code>, check Laravel logs.
-            </p>
-            <div>
-              <label className="block text-xs font-medium text-zinc-500">Mobile</label>
-              <input
-                className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-                value={forgotMobile}
-                onChange={(e) => setForgotMobile(e.target.value)}
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-full rounded-full border border-zinc-300 py-2.5 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800"
-            >
-              {busy ? "…" : "Send OTP"}
-            </button>
-          </form>
-        )}
-
-        {tab === "reset" && (
-          <form onSubmit={handleReset} className="space-y-4">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Set new password</h2>
-            <div>
-              <label className="block text-xs font-medium text-zinc-500">Mobile</label>
-              <input
-                className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-                value={resetMobile}
-                onChange={(e) => setResetMobile(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-500">6-digit OTP</label>
-              <input
-                className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm tracking-widest dark:border-zinc-700 dark:bg-zinc-950"
-                value={resetOtp}
-                onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                required
-                maxLength={6}
-                inputMode="numeric"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-500">New password</label>
-              <input
-                type="password"
-                className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-                value={resetPassword}
-                onChange={(e) => setResetPassword(e.target.value)}
-                required
-                minLength={8}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-500">Confirm password</label>
-              <input
-                type="password"
-                className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-                value={resetPassword2}
-                onChange={(e) => setResetPassword2(e.target.value)}
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-full rounded-full bg-zinc-900 py-2.5 text-sm font-semibold text-white disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-900"
-            >
-              {busy ? "…" : "Update password"}
-            </button>
-          </form>
-        )}
-
-        {tab === "session" && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">JWT session</h2>
-            {!accessToken ? (
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                Sign in or register to see your profile and token actions.
-              </p>
-            ) : (
-              <>
-                {me ? (
-                  <dl className="space-y-2 rounded-xl bg-zinc-50 p-4 text-sm dark:bg-zinc-800/50">
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-zinc-500">Name</dt>
-                      <dd className="font-medium text-zinc-900 dark:text-white">{me.name}</dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-zinc-500">Mobile</dt>
-                      <dd className="font-mono text-zinc-900 dark:text-white">{me.mobile}</dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-zinc-500">Role</dt>
-                      <dd className="capitalize">{me.role?.replace("_", " ") ?? "—"}</dd>
-                    </div>
-                    {me.shop ? (
-                      <div className="flex justify-between gap-4">
-                        <dt className="text-zinc-500">Shop</dt>
-                        <dd className="text-right font-medium">{me.shop.name}</dd>
-                      </div>
-                    ) : null}
-                    {me.subscription ? (
-                      <div className="flex justify-between gap-4">
-                        <dt className="text-zinc-500">Subscription</dt>
-                        <dd>
-                          {me.subscription.plan_key} ({me.subscription.status})
-                        </dd>
-                      </div>
-                    ) : null}
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-zinc-500">Staff / admin UI</dt>
-                      <dd>{me.is_admin ? "Yes" : "No"}</dd>
-                    </div>
-                  </dl>
-                ) : (
-                  <p className="text-sm text-zinc-500">Loading profile…</p>
-                )}
-                <div className="flex flex-wrap gap-2">
-                  {me?.role === "shop_owner" && me.shop ? (
-                    <Link
-                      href="/owner/dashboard"
-                      className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                </label>
+                <label className="text-xs font-medium text-zinc-500">
+                  Password (min 8 chars)
+                  <div className="relative mt-1">
+                    <input
+                      type={showRegPassword ? "text" : "password"}
+                      className="w-full rounded-xl border border-zinc-200 py-2.5 pl-3 pr-11 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
+                      required
+                      minLength={8}
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                      onClick={() => setShowRegPassword((v) => !v)}
+                      aria-label={showRegPassword ? "Hide password" : "Show password"}
                     >
-                      Owner dashboard
-                    </Link>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={() => void handleRefresh()}
-                    disabled={busy || !refreshToken}
-                    className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-900"
-                  >
-                    Refresh tokens
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleLogout()}
-                    disabled={busy}
-                    className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold dark:border-zinc-600"
-                  >
-                    Logout
-                  </button>
-                </div>
-                <p className="text-xs text-zinc-500">
-                  Access token (JWT) and refresh token are kept in{" "}
-                  <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">localStorage</code> for this demo. Use
-                  secure storage in production mobile apps.
-                </p>
-                {me?.is_barber && me.shop ? (
-                  <>
-                    <p className="text-xs text-zinc-600 dark:text-zinc-400">
-                      Public booking URL:{" "}
-                      <Link
-                        href={`/s/${me.shop.slug}/book`}
-                        className="font-medium text-rose-800 underline dark:text-rose-200"
-                      >
-                        /s/{me.shop.slug}/book
-                      </Link>
-                    </p>
-                    <SalonBookingAdmin accessToken={accessToken} shopSlug={me.shop.slug} />
-                  </>
-                ) : null}
-                {me?.is_super_admin ? <SystemSuperAdmin accessToken={accessToken} /> : null}
-              </>
-            )}
-          </div>
-        )}
+                      {showRegPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </label>
+                <label className="text-xs font-medium text-zinc-500">
+                  Confirm password
+                  <div className="relative mt-1">
+                    <input
+                      type={showRegPassword2 ? "text" : "password"}
+                      className="w-full rounded-xl border border-zinc-200 py-2.5 pl-3 pr-11 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                      value={regPassword2}
+                      onChange={(e) => setRegPassword2(e.target.value)}
+                      required
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                      onClick={() => setShowRegPassword2((v) => !v)}
+                      aria-label={showRegPassword2 ? "Hide password" : "Show password"}
+                    >
+                      {showRegPassword2 ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                disabled={busy}
+                className="w-full rounded-full bg-zinc-900 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-900"
+              >
+                {busy ? "Please wait..." : registerMode === "shop" ? "Create shop account" : "Create customer account"}
+              </button>
+            </form>
+          </SectionCard>
+        ) : null}
+
+        {tab === "forgot" ? (
+          <SectionCard title="Forgot password" subtitle="Request OTP by SMS for your registered mobile number.">
+            <form onSubmit={handleForgot} className="space-y-4">
+              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                Mobile
+                <input
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={forgotMobile}
+                  onChange={(e) => setForgotMobile(e.target.value)}
+                  required
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={busy}
+                className="w-full rounded-full border border-zinc-300 py-2.5 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800"
+              >
+                {busy ? "Sending..." : "Send OTP"}
+              </button>
+            </form>
+          </SectionCard>
+        ) : null}
+
+        {tab === "reset" ? (
+          <SectionCard title="Reset password with OTP" subtitle="Enter mobile, 6-digit OTP, and your new password.">
+            <form onSubmit={handleReset} className="space-y-4">
+              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                Mobile
+                <input
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={resetMobile}
+                  onChange={(e) => setResetMobile(e.target.value)}
+                  required
+                />
+              </label>
+              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                OTP
+                <input
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm tracking-widest dark:border-zinc-700 dark:bg-zinc-950"
+                  value={resetOtp}
+                  onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  required
+                  maxLength={6}
+                  inputMode="numeric"
+                />
+              </label>
+              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                New password
+                <input
+                  type="password"
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={resetPassword}
+                  onChange={(e) => setResetPassword(e.target.value)}
+                  minLength={8}
+                  required
+                />
+              </label>
+              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                Confirm password
+                <input
+                  type="password"
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={resetPassword2}
+                  onChange={(e) => setResetPassword2(e.target.value)}
+                  required
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={busy}
+                className="w-full rounded-full bg-zinc-900 py-2.5 text-sm font-semibold text-white disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-900"
+              >
+                {busy ? "Updating..." : "Update password"}
+              </button>
+            </form>
+          </SectionCard>
+        ) : null}
       </div>
 
-      <p className="mt-6 text-center text-xs text-zinc-500">
+      <p className="text-center text-xs text-zinc-500">
         <Link href="/" className="font-medium text-rose-800 hover:underline dark:text-rose-200">
-          ← Marketing site
+          Back to marketing site
         </Link>
       </p>
+
     </div>
   );
 }

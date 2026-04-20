@@ -7,6 +7,7 @@ use App\Models\SalonService;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class BarberServiceCatalogController extends Controller
 {
@@ -25,6 +26,7 @@ class BarberServiceCatalogController extends Controller
     public function store(Request $request): JsonResponse
     {
         $shop = $this->shop($request);
+        $this->assertCanManageCatalog($request);
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -52,6 +54,7 @@ class BarberServiceCatalogController extends Controller
     public function update(Request $request, int $serviceId): JsonResponse
     {
         $shop = $this->shop($request);
+        $this->assertCanManageCatalog($request);
 
         $service = SalonService::query()
             ->where('shop_id', $shop->id)
@@ -77,6 +80,7 @@ class BarberServiceCatalogController extends Controller
     public function destroy(Request $request, int $serviceId): JsonResponse
     {
         $shop = $this->shop($request);
+        $this->assertCanManageCatalog($request);
 
         $service = SalonService::query()
             ->where('shop_id', $shop->id)
@@ -125,5 +129,17 @@ class BarberServiceCatalogController extends Controller
         }
 
         return $shop;
+    }
+
+    private function assertCanManageCatalog(Request $request): void
+    {
+        $user = $request->user();
+        if (! $user instanceof User) {
+            abort(401);
+        }
+        if ($user->isSuperAdmin() || $user->isShopOwner() || $user->isManager()) {
+            return;
+        }
+        throw new HttpException(403, 'Only owner or manager can manage services.');
     }
 }

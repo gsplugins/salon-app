@@ -139,12 +139,15 @@ export async function patchCustomerBooking(
 }
 
 export async function fetchAdminBookings(
-  fromIsoDate: string,
-  toIsoDate: string,
-  accessToken: string
+  accessToken: string,
+  opts?: { from?: string; to?: string; status?: string }
 ): Promise<{ ok: true; data: BookingRow[] } | { ok: false; body: ApiErrorBody }> {
-  const q = new URLSearchParams({ from: fromIsoDate, to: toIsoDate });
-  const res = await authJson<{ data: BookingRow[] }>(`/my/shop/bookings?${q.toString()}`, {
+  const q = new URLSearchParams();
+  if (opts?.from) q.set("from", opts.from);
+  if (opts?.to) q.set("to", opts.to);
+  if (opts?.status) q.set("status", opts.status);
+  const qs = q.toString();
+  const res = await authJson<{ data: BookingRow[] }>(`/my/shop/bookings${qs ? `?${qs}` : ""}`, {
     accessToken,
   });
   if (!res.ok) return { ok: false, body: res.body };
@@ -240,6 +243,12 @@ export type ShopProfile = {
   address: string | null;
   is_active: boolean;
   settings: Record<string, unknown>;
+  permissions?: {
+    can_edit_shop_basics?: boolean;
+    can_edit_business_hours?: boolean;
+    can_edit_booking_rules?: boolean;
+    can_edit_currency?: boolean;
+  };
 };
 
 export type ShopStats = {
@@ -270,7 +279,21 @@ export type CatalogServiceRow = {
 
 export type CatalogStaffRow = {
   id: number;
+  user_id?: number | null;
+  /** True when this row is linked to a user account (barber login). */
+  has_staff_login?: boolean;
   name: string;
+  position_title?: string | null;
+  staff_role?: string | null;
+  bio?: string | null;
+  specialties?: string[];
+  address?: string | null;
+  age?: number | null;
+  experience_years?: number | null;
+  work_mobile?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+  login_mobile?: string | null;
   is_active: boolean;
   sort_order: number;
   services: { id: number; name: string }[];
@@ -406,6 +429,16 @@ export async function createStaffCatalog(
   accessToken: string,
   body: {
     name: string;
+    position_title?: string | null;
+    staff_role?: string | null;
+    bio?: string | null;
+    specialties?: string[];
+    address?: string | null;
+    age?: number | null;
+    experience_years?: number | null;
+    work_mobile?: string | null;
+    emergency_contact_name?: string | null;
+    emergency_contact_phone?: string | null;
     is_active?: boolean;
     sort_order?: number;
     service_ids?: number[];
@@ -420,11 +453,56 @@ export async function createStaffCatalog(
   return { ok: true, data: res.data.data };
 }
 
+/** Shop owner only: create staff + barber login (same mobile/password as customer auth). */
+export async function createStaffWithAccount(
+  accessToken: string,
+  body: {
+    name: string;
+    mobile: string;
+    password: string;
+    password_confirmation: string;
+    position_title?: string | null;
+    staff_role?: string | null;
+    bio?: string | null;
+    specialties?: string[];
+    address?: string | null;
+    age?: number | null;
+    experience_years?: number | null;
+    work_mobile?: string | null;
+    emergency_contact_name?: string | null;
+    emergency_contact_phone?: string | null;
+    is_active?: boolean;
+    sort_order?: number;
+    service_ids?: number[];
+  }
+): Promise<{ ok: true; data: CatalogStaffRow } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson<{ data: CatalogStaffRow }>("/my/shop/staff-with-account", {
+    method: "POST",
+    accessToken,
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
 export async function updateStaffCatalog(
   accessToken: string,
   staffId: number,
   body: Partial<{
     name: string;
+    position_title: string | null;
+    staff_role: string | null;
+    bio: string | null;
+    specialties: string[];
+    address: string | null;
+    age: number | null;
+    experience_years: number | null;
+    work_mobile: string | null;
+    emergency_contact_name: string | null;
+    emergency_contact_phone: string | null;
+    mobile: string;
+    password: string;
+    password_confirmation: string;
     is_active: boolean;
     sort_order: number;
     service_ids: number[];
@@ -466,6 +544,8 @@ export type SystemShopRow = {
   name: string;
   slug: string;
   is_active: boolean;
+  approval_status?: "pending" | "approved" | "rejected" | string;
+  staff_limit?: number;
   created_at?: string;
   owner?: {
     id: number;
@@ -481,6 +561,13 @@ export type SystemShopRow = {
     plan_key: string;
     trial_ends_at: string | null;
     current_period_end: string | null;
+  };
+  payment_summary?: {
+    total_paid_paisa: number;
+    payments_count: number;
+    last_payment_at: string | null;
+    last_payment_amount_paisa: number | null;
+    last_payment_status: string | null;
   };
 };
 
@@ -597,12 +684,31 @@ export async function createBkashPayment(
 export async function patchSystemShop(
   accessToken: string,
   shopId: number,
-  body: { is_active?: boolean; name?: string; slug?: string }
+  body: {
+    is_active?: boolean;
+    name?: string;
+    slug?: string;
+    description?: string | null;
+    approval_status?: "pending" | "approved" | "rejected";
+    staff_limit?: number;
+  }
 ): Promise<{ ok: true } | { ok: false; body: ApiErrorBody }> {
   const res = await authJson(`/system/shops/${shopId}`, {
     method: "PATCH",
     accessToken,
     body: JSON.stringify(body),
+  });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true };
+}
+
+export async function deleteSystemShop(
+  accessToken: string,
+  shopId: number
+): Promise<{ ok: true } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson(`/system/shops/${shopId}`, {
+    method: "DELETE",
+    accessToken,
   });
   if (!res.ok) return { ok: false, body: res.body };
   return { ok: true };

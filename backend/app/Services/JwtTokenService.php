@@ -11,6 +11,11 @@ use Illuminate\Support\Str;
 
 class JwtTokenService
 {
+    /**
+     * Access tokens are HS256 JWTs with subject = user id only.
+     * Per-shop roles are not embedded here (avoid stale claims); resolve via GET /auth/me or DB on each request.
+     * If you adopt NextAuth.js v5 later, keep Laravel as the source of truth and sync session from /auth/me.
+     */
     public function issueAccessToken(User $user): string
     {
         $now = new DateTimeImmutable;

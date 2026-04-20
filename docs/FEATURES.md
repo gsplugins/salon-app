@@ -62,3 +62,12 @@ Update this file when auth flows, URLs, or hosting split (e.g. separate `app.` s
 
 SuperAdmin : 5550000000
 pass : password
+
+customer : 01762933844
+pass: customer@@@123
+
+shop: 01762933800
+pass : shop@@@123
+
+staff: 01762933822
+pass: 1762933822staff

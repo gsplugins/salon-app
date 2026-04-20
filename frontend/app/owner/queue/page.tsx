@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { OwnerQueueClient } from "./owner-queue-client";
+import { RedirectToOwnerShop } from "@/components/auth/redirect-to-owner-shop";
 
 export const metadata: Metadata = {
-  title: "Queue — Shop owner",
+  title: "Redirect — Queue",
 };
 
-export default function OwnerQueuePage() {
-  return <OwnerQueueClient />;
+export default function OwnerQueueRedirectPage() {
+  return <RedirectToOwnerShop segment="queue" />;
 }

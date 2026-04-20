@@ -4,26 +4,26 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function BarberLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
-      <header className="border-b border-zinc-200 bg-white/90 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/90">
-        <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+    <div className="min-h-[100dvh] bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+      <header className="border-b border-zinc-200/80 bg-zinc-50/95 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex min-w-0 items-center gap-4">
-            <Link href="/" className="text-xs font-semibold uppercase tracking-wider text-rose-800 dark:text-rose-200">
+            <Link href="/" className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-800 dark:text-rose-200">
               Lumière
             </Link>
-            <span className="hidden text-xs text-zinc-400 sm:inline">Barber</span>
+            <span className="hidden text-xs text-zinc-400 sm:inline">Staff workspace</span>
           </div>
-          <nav className="flex flex-wrap items-center gap-3 text-sm font-medium">
-            <Link href="/barber/schedule" className="hover:text-rose-800 dark:hover:text-rose-200">
+          <nav className="flex flex-wrap items-center gap-2 text-sm font-medium">
+            <Link href="/barber/schedule" className="rounded-lg px-2 py-1 hover:bg-zinc-100 hover:text-rose-800 dark:hover:bg-zinc-800 dark:hover:text-rose-200">
               Today
             </Link>
-            <Link href="/barber/history" className="hover:text-rose-800 dark:hover:text-rose-200">
+            <Link href="/barber/history" className="rounded-lg px-2 py-1 hover:bg-zinc-100 hover:text-rose-800 dark:hover:bg-zinc-800 dark:hover:text-rose-200">
               History
             </Link>
-            <Link href="/app" className="text-zinc-600 hover:text-rose-800 dark:text-zinc-400 dark:hover:text-rose-200">
-              Calendar
+            <Link href="/app" className="rounded-lg px-2 py-1 text-zinc-600 hover:bg-zinc-100 hover:text-rose-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-rose-200">
+              Account
             </Link>
-            <Link href="/platform" className="text-rose-800 hover:underline dark:text-rose-200">
+            <Link href="/platform" className="rounded-lg px-2 py-1 text-rose-800 hover:bg-rose-50 dark:text-rose-200 dark:hover:bg-rose-950/30">
               Site map
             </Link>
             <AuthHeaderProfile variant="compact" />
@@ -31,7 +31,7 @@ export default function BarberLayout({ children }: { children: React.ReactNode }
           </nav>
         </div>
       </header>
-      <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">{children}</div>
+      <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6">{children}</div>
     </div>
   );
 }

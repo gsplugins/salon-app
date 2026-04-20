@@ -20,9 +20,9 @@ class EnsureBarber
             return $next($request);
         }
 
-        if (! $user->isBarber()) {
+        if (! $user->hasSalonManagementAccess()) {
             return response()->json([
-                'message' => 'Salon management access only. Use a shop owner or salon staff account.',
+                'message' => 'Salon management access only. Use a shop owner, manager, or salon staff account.',
             ], 403);
         }
 

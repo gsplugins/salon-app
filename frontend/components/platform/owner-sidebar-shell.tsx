@@ -15,7 +15,7 @@ import { SidebarLayout, type NavItem } from "@/components/platform/sidebar-layou
 
 const items: NavItem[] = [
   { href: "/owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/app", label: "Calendar & bookings", icon: Calendar },
+  { href: "/app", label: "Account & shop", icon: Calendar },
   { href: "/owner/services", label: "Services", icon: Scissors },
   { href: "/owner/staff", label: "Staff", icon: Users },
   { href: "/owner/shops", label: "Branches", icon: Store },

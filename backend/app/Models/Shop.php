@@ -83,6 +83,22 @@ class Shop extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * @return HasMany<ShopMember, Shop>
+     */
+    public function members(): HasMany
+    {
+        return $this->hasMany(ShopMember::class);
+    }
+
+    /**
+     * @return HasMany<CustomerProfile, Shop>
+     */
+    public function customerProfiles(): HasMany
+    {
+        return $this->hasMany(CustomerProfile::class);
+    }
+
     public function subscription(): HasOne
     {
         return $this->hasOne(Subscription::class);

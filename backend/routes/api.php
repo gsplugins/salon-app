@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\Salon\OwnerInventoryController;
 use App\Http\Controllers\Api\Salon\OwnerQueueController;
 use App\Http\Controllers\Api\Salon\OwnerReviewController;
 use App\Http\Controllers\Api\Salon\PublicSalonController;
+use App\Http\Controllers\Api\Salon\StaffSelfProfileController;
 use App\Http\Controllers\Api\SystemSuperAdminController;
 use Illuminate\Support\Facades\Route;
 
@@ -85,8 +86,6 @@ Route::middleware(['auth.jwt', 'barber', 'subscription'])->prefix('my/shop')->gr
     Route::delete('blocked-slots/{id}', [AdminSalonBlockedSlotController::class, 'destroy']);
 
     Route::get('branches', [OwnerBranchesController::class, 'index']);
-    Route::post('branches', [OwnerBranchesController::class, 'store']);
-    Route::patch('branches/{shopId}', [OwnerBranchesController::class, 'update'])->whereNumber('shopId');
 
     Route::get('inventory', [OwnerInventoryController::class, 'index']);
     Route::post('inventory', [OwnerInventoryController::class, 'store']);
@@ -102,9 +101,17 @@ Route::middleware(['auth.jwt', 'barber', 'subscription'])->prefix('my/shop')->gr
     Route::patch('queue/{id}/status', [OwnerQueueController::class, 'updateStatus'])->whereNumber('id');
 });
 
+Route::middleware(['auth.jwt', 'shop_owner', 'subscription'])->prefix('my/shop')->group(function (): void {
+    Route::post('branches', [OwnerBranchesController::class, 'store']);
+    Route::patch('branches/{shopId}', [OwnerBranchesController::class, 'update'])->whereNumber('shopId');
+    Route::post('staff-with-account', [BarberStaffCatalogController::class, 'storeWithAccount']);
+});
+
 Route::middleware(['auth.jwt', 'staff_barber', 'subscription'])->prefix('my/barber')->group(function (): void {
     Route::get('today', [BarberStaffPortalController::class, 'today']);
     Route::get('history', [BarberStaffPortalController::class, 'history']);
+    Route::get('profile', [StaffSelfProfileController::class, 'show']);
+    Route::patch('profile', [StaffSelfProfileController::class, 'update']);
 });
 
 Route::middleware(['auth.jwt', 'super_admin'])->prefix('system')->group(function (): void {

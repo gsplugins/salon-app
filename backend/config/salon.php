@@ -16,4 +16,9 @@ return [
     | How far ahead customers can book (days from today).
     */
     'advance_booking_days' => (int) env('SALON_ADVANCE_BOOKING_DAYS', 60),
+
+    /*
+    | Max span (days) for GET /my/shop/bookings when from/to are set.
+    */
+    'admin_bookings_max_range_days' => (int) env('SALON_ADMIN_BOOKINGS_MAX_RANGE_DAYS', 1200),
 ];

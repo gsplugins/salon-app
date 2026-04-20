@@ -190,12 +190,12 @@ export function AuthHeaderProfile(props: {
           ) : null}
           {canAccessSuperAdmin(me) ? (
             <Link
-              href="/owner/dashboard"
+              href="/admin/dashboard"
               role="menuitem"
               className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-200 dark:hover:bg-zinc-800"
               onClick={() => setOpen(false)}
             >
-              Salon owner preview
+              Platform admin
             </Link>
           ) : null}
           {me.role === "customer" ? (

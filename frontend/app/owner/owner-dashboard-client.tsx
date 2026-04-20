@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { BarChart3, Calendar } from "lucide-react";
 import { SalonManagementGate } from "@/components/auth/salon-management-gate";
+import { ownerShopPath } from "@/lib/owner-shop-paths";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   fetchOwnerAnalyticsSummary,
@@ -22,7 +23,8 @@ function formatMoneyCents(cents: number): string {
   }).format(cents / 100);
 }
 
-function Body({ token }: { token: string }) {
+/** Stats + analytics block (used on `/owner/shop/[slug]` hub and legacy dashboard). */
+export function OwnerDashboardOverview({ token, shopSlug }: { token: string; shopSlug?: string }) {
   const [stats, setStats] = useState<ShopStats | null>(null);
   const [analytics, setAnalytics] = useState<OwnerAnalyticsSummary | null>(null);
   const [busy, setBusy] = useState(true);
@@ -81,12 +83,26 @@ function Body({ token }: { token: string }) {
             Live stats for your primary shop. Analytics cover the last 30 days.
           </p>
         </div>
-        <Link
-          href="/app"
-          className="text-sm font-medium text-rose-800 underline dark:text-rose-200"
-        >
-          Open staff tools
-        </Link>
+        {shopSlug ? (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+            <Link
+              href={ownerShopPath(shopSlug, "account")}
+              className="font-medium text-rose-800 underline dark:text-rose-200"
+            >
+              Account
+            </Link>
+            <Link
+              href={ownerShopPath(shopSlug, "settings")}
+              className="font-medium text-rose-800 underline dark:text-rose-200"
+            >
+              Shop preferences
+            </Link>
+          </div>
+        ) : (
+          <Link href="/app" className="text-sm font-medium text-rose-800 underline dark:text-rose-200">
+            Open account center
+          </Link>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -158,6 +174,6 @@ function Body({ token }: { token: string }) {
 
 export function OwnerDashboardClient() {
   return (
-    <SalonManagementGate>{(token) => <Body token={token} />}</SalonManagementGate>
+    <SalonManagementGate>{(token) => <OwnerDashboardOverview token={token} />}</SalonManagementGate>
   );
 }

@@ -10,11 +10,13 @@ function readToken(): string | null {
   return localStorage.getItem(LS_ACCESS);
 }
 
-export function useSalonAccessToken(): string | null {
+/** Same as {@link useSalonAccessToken} plus `ready` after localStorage has been read (avoids flashing “signed out”). */
+export function useSalonAccessTokenReady(): { token: string | null; ready: boolean } {
   const [token, setToken] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- read token after mount (no SSR localStorage)
     setToken(readToken());
+    setReady(true);
 
     const onAuthChange = (): void => setToken(readToken());
     window.addEventListener(SALON_AUTH_CHANGE_EVENT, onAuthChange);
@@ -25,5 +27,10 @@ export function useSalonAccessToken(): string | null {
       window.removeEventListener("storage", onAuthChange);
     };
   }, []);
+  return { token, ready };
+}
+
+export function useSalonAccessToken(): string | null {
+  const { token } = useSalonAccessTokenReady();
   return token;
 }

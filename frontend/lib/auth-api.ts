@@ -39,11 +39,17 @@ export type AuthMePayload = {
   name: string;
   mobile: string;
   role: string;
+  /** `super_admin` | `user` — platform vs normal account. */
+  global_role?: string;
   loyalty_points?: number;
   is_super_admin: boolean;
   is_shop_owner: boolean;
+  /** Operational manager (per-shop); subscription/billing hidden server-side. */
+  is_manager?: boolean;
   is_barber: boolean;
   is_admin: boolean;
+  /** Resolved role for the active management shop (owner | manager | barber | super_admin). */
+  shop_access?: { shop_id: number | null; role: string | null };
   shop: {
     id: number;
     name: string;

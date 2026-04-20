@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ShopRole;
 use App\Enums\SubscriptionStatus;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\BkashPayment;
 use App\Models\Shop;
+use App\Models\ShopMember;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Services\JwtTokenService;
+use Illuminate\Support\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -45,7 +48,11 @@ class SystemSuperAdminController extends Controller
         $this->applyShopSubscriptionFilter($query, $filter);
 
         $rows = $query->orderByDesc('id')->paginate(50);
-        $rows->getCollection()->transform(fn (Shop $shop) => $this->formatShopRow($shop));
+        $shopIds = $rows->getCollection()->pluck('id')->values();
+        $paymentSummaryByShop = $this->paymentSummaryByShop($shopIds);
+        $rows->getCollection()->transform(function (Shop $shop) use ($paymentSummaryByShop) {
+            return $this->formatShopRow($shop, $paymentSummaryByShop[$shop->id] ?? null);
+        });
 
         return response()->json($rows);
     }
@@ -117,7 +124,7 @@ class SystemSuperAdminController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formatShopRow(Shop $shop): array
+    private function formatShopRow(Shop $shop, ?array $paymentSummary = null): array
     {
         $shop->loadMissing([
             'owner:id,name,mobile,role,is_locked,created_at',
@@ -148,6 +155,15 @@ class SystemSuperAdminController extends Controller
                 'trial_ends_at' => $sub->trial_ends_at?->toIso8601String(),
                 'current_period_end' => $sub->current_period_end?->toIso8601String(),
             ] : null,
+            'approval_status' => (string) (($shop->settings['approval_status'] ?? null) ?: ($shop->is_active ? 'approved' : 'pending')),
+            'staff_limit' => (int) (($shop->settings['staff_limit'] ?? 30)),
+            'payment_summary' => $paymentSummary ?? [
+                'total_paid_paisa' => 0,
+                'payments_count' => 0,
+                'last_payment_at' => null,
+                'last_payment_amount_paisa' => null,
+                'last_payment_status' => null,
+            ],
         ];
     }
 
@@ -205,6 +221,13 @@ class SystemSuperAdminController extends Controller
                     : null,
             ]);
 
+            ShopMember::query()->create([
+                'user_id' => $user->id,
+                'shop_id' => $shop->id,
+                'role' => ShopRole::Owner,
+                'is_active' => true,
+            ]);
+
             return $shop->load(['owner:id,name,mobile,role', 'subscription']);
         });
 
@@ -220,12 +243,32 @@ class SystemSuperAdminController extends Controller
             'slug' => ['sometimes', 'string', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 'max:64', Rule::unique('shops', 'slug')->ignore($shop->id)],
             'description' => ['nullable', 'string', 'max:5000'],
             'is_active' => ['sometimes', 'boolean'],
+            'approval_status' => ['sometimes', 'string', Rule::in(['pending', 'approved', 'rejected'])],
+            'staff_limit' => ['sometimes', 'integer', 'min:1', 'max:500'],
         ]);
 
         $shop->fill($data);
+        if (array_key_exists('approval_status', $data) || array_key_exists('staff_limit', $data)) {
+            $settings = is_array($shop->settings) ? $shop->settings : [];
+            if (array_key_exists('approval_status', $data)) {
+                $settings['approval_status'] = $data['approval_status'];
+                if ($data['approval_status'] === 'approved') {
+                    $shop->is_active = true;
+                } elseif ($data['approval_status'] === 'rejected') {
+                    $shop->is_active = false;
+                }
+            }
+            if (array_key_exists('staff_limit', $data)) {
+                $settings['staff_limit'] = (int) $data['staff_limit'];
+            }
+            $shop->settings = $settings;
+        }
         $shop->save();
 
-        return response()->json(['data' => $shop->fresh(['owner:id,name,mobile,role', 'subscription'])]);
+        $shop = $shop->fresh(['owner:id,name,mobile,role,is_locked,created_at', 'subscription']);
+        $paymentSummaryByShop = $this->paymentSummaryByShop(collect([$shop->id]));
+
+        return response()->json(['data' => $this->formatShopRow($shop, $paymentSummaryByShop[$shop->id] ?? null)]);
     }
 
     public function destroyShop(int $id): JsonResponse
@@ -234,6 +277,48 @@ class SystemSuperAdminController extends Controller
         $shop->delete();
 
         return response()->json(['message' => 'Shop deleted.']);
+    }
+
+    /**
+     * @param Collection<int, int|string> $shopIds
+     * @return array<int, array<string, int|string|null>>
+     */
+    private function paymentSummaryByShop(Collection $shopIds): array
+    {
+        $ids = $shopIds->map(fn ($id) => (int) $id)->filter(fn ($id) => $id > 0)->values();
+        if ($ids->isEmpty()) {
+            return [];
+        }
+
+        $totals = BkashPayment::query()
+            ->selectRaw('shop_id, COALESCE(SUM(amount_paisa),0) as total_paid_paisa, COUNT(*) as payments_count, MAX(created_at) as last_payment_at')
+            ->whereIn('shop_id', $ids->all())
+            ->where('status', 'completed')
+            ->groupBy('shop_id')
+            ->get()
+            ->keyBy('shop_id');
+
+        $latestRows = BkashPayment::query()
+            ->whereIn('shop_id', $ids->all())
+            ->orderByDesc('id')
+            ->get()
+            ->groupBy('shop_id')
+            ->map(fn ($rows) => $rows->first());
+
+        $out = [];
+        foreach ($ids as $id) {
+            $t = $totals->get($id);
+            $last = $latestRows->get($id);
+            $out[$id] = [
+                'total_paid_paisa' => $t ? (int) $t->total_paid_paisa : 0,
+                'payments_count' => $t ? (int) $t->payments_count : 0,
+                'last_payment_at' => $last?->created_at?->toIso8601String(),
+                'last_payment_amount_paisa' => $last ? (int) $last->amount_paisa : null,
+                'last_payment_status' => $last?->status,
+            ];
+        }
+
+        return $out;
     }
 
     public function users(Request $request): JsonResponse
@@ -269,7 +354,7 @@ class SystemSuperAdminController extends Controller
         if (isset($data['role'])) {
             $role = $data['role'] instanceof UserRole ? $data['role'] : UserRole::from((string) $data['role']);
             $user->role = $role;
-            $user->is_admin = in_array($role, [UserRole::Barber, UserRole::ShopOwner, UserRole::SuperAdmin], true);
+            $user->is_admin = in_array($role, [UserRole::Barber, UserRole::ShopOwner, UserRole::Manager, UserRole::SuperAdmin], true);
         }
         if (isset($data['password'])) {
             $user->password = $data['password'];

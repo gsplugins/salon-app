@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { OwnerInventoryClient } from "./owner-inventory-client";
+import { RedirectToOwnerShop } from "@/components/auth/redirect-to-owner-shop";
 
 export const metadata: Metadata = {
-  title: "Inventory — Owner",
+  title: "Redirect — Inventory",
 };
 
-export default function OwnerInventoryPage() {
-  return <OwnerInventoryClient />;
+export default function OwnerInventoryRedirectPage() {
+  return <RedirectToOwnerShop segment="inventory" />;
 }

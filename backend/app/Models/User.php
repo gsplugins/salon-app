@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ShopRole;
 use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -63,13 +64,70 @@ class User extends Authenticatable
         return $this->role === UserRole::ShopOwner;
     }
 
+    public function isManager(): bool
+    {
+        return $this->role === UserRole::Manager;
+    }
+
     /**
-     * Shop dashboard access: owner or legacy role name, or staff barber.
+     * Salon dashboard/API access: owner, manager, or stylist (not customers).
      */
     public function isBarber(): bool
     {
         return $this->role === UserRole::Barber
-            || $this->role === UserRole::ShopOwner;
+            || $this->role === UserRole::ShopOwner
+            || $this->role === UserRole::Manager;
+    }
+
+    /**
+     * Super admin or any salon staff role (owner, manager, barber).
+     */
+    public function hasSalonManagementAccess(): bool
+    {
+        return $this->isSuperAdmin() || $this->isBarber();
+    }
+
+    /**
+     * Whether this user may view subscription / billing for the given shop (shop owner or platform admin).
+     */
+    public function canViewShopBilling(?Shop $shop): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+        if ($shop === null) {
+            return false;
+        }
+
+        return (int) $shop->user_id === (int) $this->id;
+    }
+
+    /**
+     * Role label for the active management shop (owner, manager, barber, or super_admin).
+     */
+    public function shopAccessRoleLabel(?Shop $shop): ?string
+    {
+        if ($shop === null) {
+            return null;
+        }
+        if ($this->isSuperAdmin()) {
+            return 'super_admin';
+        }
+        if ((int) $shop->user_id === (int) $this->id) {
+            return ShopRole::Owner->value;
+        }
+        $m = $this->shopMembers()
+            ->where('shop_id', $shop->id)
+            ->where('is_active', true)
+            ->first();
+        if ($m !== null) {
+            return $m->role->value;
+        }
+        if ($this->role === UserRole::Barber && $this->staffProfile?->shop_id === $shop->id) {
+            return 'barber';
+        }
+
+        return null;
     }
 
     /**
@@ -83,6 +141,22 @@ class User extends Authenticatable
     }
 
     /**
+     * @return HasMany<ShopMember, User>
+     */
+    public function shopMembers(): HasMany
+    {
+        return $this->hasMany(ShopMember::class);
+    }
+
+    /**
+     * @return HasMany<CustomerProfile, User>
+     */
+    public function customerProfiles(): HasMany
+    {
+        return $this->hasMany(CustomerProfile::class);
+    }
+
+    /**
      * Primary shop for API compatibility (oldest id), or staff member's workplace.
      */
     public function primaryShop(): ?Shop
@@ -90,6 +164,15 @@ class User extends Authenticatable
         $owned = $this->shops()->orderBy('id')->first();
         if ($owned !== null) {
             return $owned;
+        }
+
+        $membership = $this->shopMembers()
+            ->where('is_active', true)
+            ->whereIn('role', [ShopRole::Owner, ShopRole::Manager])
+            ->orderBy('id')
+            ->first();
+        if ($membership !== null) {
+            return $membership->shop;
         }
 
         $this->loadMissing('staffProfile.shop');

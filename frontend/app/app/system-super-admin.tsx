@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   createBkashPayment,
+  deleteSystemShop,
   fetchBkashPayments,
   fetchSystemShops,
   formatApiError,
@@ -48,6 +49,12 @@ function subLabel(row: SystemShopRow): string {
   return parts.join(" · ");
 }
 
+function approvalBadge(status: string | undefined): string {
+  if (status === "approved") return "Approved";
+  if (status === "rejected") return "Rejected";
+  return "Pending";
+}
+
 type Tab = "salons" | "bkash";
 
 export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
@@ -73,6 +80,11 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
   const [bkashAmountPaisa, setBkashAmountPaisa] = useState("");
   const [bkashTrx, setBkashTrx] = useState("");
   const [bkashNote, setBkashNote] = useState("");
+  const [editShop, setEditShop] = useState<SystemShopRow | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editSlug, setEditSlug] = useState("");
+  const [editStaffLimit, setEditStaffLimit] = useState("30");
+  const [editApproval, setEditApproval] = useState<"pending" | "approved" | "rejected">("pending");
 
   const loadShops = useCallback(async () => {
     setBusy(true);
@@ -119,6 +131,18 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
       return;
     }
     setNotice({ type: "ok", text: "Shop updated." });
+    void loadShops();
+  }
+
+  async function approveShop(s: SystemShopRow) {
+    setBusy(true);
+    const res = await patchSystemShop(accessToken, s.id, { approval_status: "approved", is_active: true });
+    setBusy(false);
+    if (!res.ok) {
+      setNotice({ type: "err", text: formatApiError(res.body) });
+      return;
+    }
+    setNotice({ type: "ok", text: "Shop approved." });
     void loadShops();
   }
 
@@ -201,6 +225,44 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
     setBkashTrx("");
     setBkashNote("");
     void loadBkash();
+  }
+
+  async function submitEditShop() {
+    if (!editShop) return;
+    const lim = Number.parseInt(editStaffLimit, 10);
+    if (Number.isNaN(lim) || lim < 1) {
+      setNotice({ type: "err", text: "Staff limit must be at least 1." });
+      return;
+    }
+    setBusy(true);
+    const res = await patchSystemShop(accessToken, editShop.id, {
+      name: editName.trim(),
+      slug: editSlug.trim(),
+      staff_limit: lim,
+      approval_status: editApproval,
+    });
+    setBusy(false);
+    if (!res.ok) {
+      setNotice({ type: "err", text: formatApiError(res.body) });
+      return;
+    }
+    setNotice({ type: "ok", text: "Shop settings updated." });
+    setEditShop(null);
+    void loadShops();
+  }
+
+  async function removeShop(s: SystemShopRow) {
+    const ok = confirm(`Delete shop "${s.name}"? This cannot be undone.`);
+    if (!ok) return;
+    setBusy(true);
+    const res = await deleteSystemShop(accessToken, s.id);
+    setBusy(false);
+    if (!res.ok) {
+      setNotice({ type: "err", text: formatApiError(res.body) });
+      return;
+    }
+    setNotice({ type: "ok", text: "Shop deleted." });
+    void loadShops();
   }
 
   const rows = shopPage?.data ?? [];
@@ -303,13 +365,15 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
           </div>
 
           <div className="overflow-x-auto rounded-2xl border border-rose-100/80 bg-white dark:border-zinc-800 dark:bg-zinc-900/40">
-            <table className="w-full min-w-[960px] text-left text-sm">
+            <table className="w-full min-w-[1180px] text-left text-sm">
               <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950/80">
                 <tr>
                   <th className="px-3 py-2">Salon</th>
                   <th className="px-3 py-2">Registered</th>
                   <th className="px-3 py-2">Owner</th>
                   <th className="px-3 py-2">Subscription</th>
+                  <th className="px-3 py-2">Payments</th>
+                  <th className="px-3 py-2">Limits</th>
                   <th className="px-3 py-2 text-right">Actions</th>
                 </tr>
               </thead>
@@ -319,7 +383,9 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                     <td className="px-3 py-2">
                       <div className="font-medium">{s.name}</div>
                       <code className="text-xs text-zinc-500">/s/{s.slug}/book</code>
-                      <div className="text-xs text-zinc-500">{s.is_active ? "Shop on" : "Shop off"}</div>
+                      <div className="text-xs text-zinc-500">
+                        {s.is_active ? "Shop on" : "Shop off"} · {approvalBadge(s.approval_status)}
+                      </div>
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-zinc-600">{formatWhen(s.created_at)}</td>
                     <td className="px-3 py-2">
@@ -336,8 +402,24 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                       )}
                     </td>
                     <td className="max-w-[280px] px-3 py-2 text-xs text-zinc-600">{subLabel(s)}</td>
+                    <td className="px-3 py-2 text-xs text-zinc-600">
+                      <div>Total: {formatBdtPaisa(s.payment_summary?.total_paid_paisa ?? 0)}</div>
+                      <div>Count: {s.payment_summary?.payments_count ?? 0}</div>
+                      <div>Last: {formatWhen(s.payment_summary?.last_payment_at ?? undefined)}</div>
+                    </td>
+                    <td className="px-3 py-2 text-xs text-zinc-600">
+                      Staff limit: {s.staff_limit ?? 30}
+                    </td>
                     <td className="px-3 py-2 text-right">
                       <div className="flex flex-col items-end gap-1">
+                        <button
+                          type="button"
+                          disabled={busy || s.approval_status === "approved"}
+                          onClick={() => void approveShop(s)}
+                          className="text-xs font-semibold text-emerald-700 hover:underline disabled:opacity-40 dark:text-emerald-300"
+                        >
+                          Approve shop
+                        </button>
                         <button
                           type="button"
                           disabled={busy || !s.subscription}
@@ -380,13 +462,35 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                         >
                           {s.is_active ? "Deactivate shop" : "Activate shop"}
                         </button>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => {
+                            setEditShop(s);
+                            setEditName(s.name);
+                            setEditSlug(s.slug);
+                            setEditStaffLimit(String(s.staff_limit ?? 30));
+                            setEditApproval((s.approval_status as "pending" | "approved" | "rejected") ?? "pending");
+                          }}
+                          className="text-xs font-semibold text-zinc-700 hover:underline dark:text-zinc-300"
+                        >
+                          Edit shop
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void removeShop(s)}
+                          className="text-xs font-semibold text-red-700 hover:underline dark:text-red-300"
+                        >
+                          Delete shop
+                        </button>
                       </div>
                     </td>
                   </tr>
                 ))}
                 {rows.length === 0 && !busy && (
                   <tr>
-                    <td colSpan={5} className="px-3 py-6 text-center text-zinc-500">
+                    <td colSpan={7} className="px-3 py-6 text-center text-zinc-500">
                       No salons match this filter.
                     </td>
                   </tr>
@@ -615,6 +719,72 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                 type="button"
                 disabled={busy}
                 onClick={() => void submitReset()}
+                className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {editShop ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Edit shop</h3>
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">#{editShop.id}</p>
+            <div className="mt-4 grid gap-3">
+              <label className="text-xs font-medium text-zinc-500">
+                Name
+                <input
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                />
+              </label>
+              <label className="text-xs font-medium text-zinc-500">
+                Slug
+                <input
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={editSlug}
+                  onChange={(e) => setEditSlug(e.target.value)}
+                />
+              </label>
+              <label className="text-xs font-medium text-zinc-500">
+                Staff limit
+                <input
+                  type="number"
+                  min={1}
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={editStaffLimit}
+                  onChange={(e) => setEditStaffLimit(e.target.value)}
+                />
+              </label>
+              <label className="text-xs font-medium text-zinc-500">
+                Approval status
+                <select
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={editApproval}
+                  onChange={(e) => setEditApproval(e.target.value as "pending" | "approved" | "rejected")}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </label>
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditShop(null)}
+                className="rounded-full border border-zinc-300 px-4 py-2 text-sm dark:border-zinc-600"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void submitEditShop()}
                 className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
               >
                 Save

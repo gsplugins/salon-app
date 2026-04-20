@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ShopRole;
 use App\Enums\SubscriptionStatus;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\PasswordResetOtp;
 use App\Models\Shop;
+use App\Models\ShopMember;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Services\JwtTokenService;
@@ -112,6 +114,13 @@ class AuthController extends Controller
                 'stripe_subscription_id' => null,
             ]);
 
+            ShopMember::query()->create([
+                'user_id' => $user->id,
+                'shop_id' => $shop->id,
+                'role' => ShopRole::Owner,
+                'is_active' => true,
+            ]);
+
             return $user;
         });
 
@@ -185,21 +194,28 @@ class AuthController extends Controller
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
-        $user->loadMissing(['shops.subscription', 'staffProfile.shop.subscription']);
+        $user->loadMissing(['shops.subscription', 'staffProfile.shop.subscription', 'shopMembers']);
 
         $shop = $user->primaryShop();
         $sub = $shop?->subscription;
+        $canViewBilling = $user->canViewShopBilling($shop);
 
         return response()->json([
             'id' => $user->id,
             'name' => $user->name,
             'mobile' => $user->mobile,
             'role' => $user->role?->value ?? 'customer',
+            'global_role' => $user->isSuperAdmin() ? 'super_admin' : 'user',
             'loyalty_points' => $user->loyalty_points ?? 0,
             'is_super_admin' => $user->isSuperAdmin(),
             'is_shop_owner' => $user->isShopOwner(),
+            'is_manager' => $user->isManager(),
             'is_barber' => $user->isBarber(),
-            'is_admin' => $user->isBarber() || $user->isSuperAdmin(),
+            'is_admin' => $user->hasSalonManagementAccess(),
+            'shop_access' => [
+                'shop_id' => $shop?->id,
+                'role' => $user->shopAccessRoleLabel($shop),
+            ],
             'shop' => $shop ? [
                 'id' => $shop->id,
                 'name' => $shop->name,
@@ -207,7 +223,7 @@ class AuthController extends Controller
                 'description' => $shop->description,
                 'is_active' => $shop->is_active,
             ] : null,
-            'subscription' => $sub ? [
+            'subscription' => ($sub && $canViewBilling) ? [
                 'status' => $sub->status->value,
                 'plan_key' => $sub->plan_key,
                 'trial_ends_at' => $sub->trial_ends_at?->toIso8601String(),

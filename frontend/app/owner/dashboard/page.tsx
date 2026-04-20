@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { OwnerDashboardClient } from "../owner-dashboard-client";
+import { RedirectToOwnerShop } from "@/components/auth/redirect-to-owner-shop";
 
 export const metadata: Metadata = {
-  title: "Owner dashboard — Salon",
-  description: "Revenue and appointment overview for your barbershop locations.",
+  title: "Redirect — Shop owner",
 };
 
-export default function OwnerDashboardPage() {
-  return <OwnerDashboardClient />;
+export default function OwnerDashboardRedirectPage() {
+  return <RedirectToOwnerShop />;
 }

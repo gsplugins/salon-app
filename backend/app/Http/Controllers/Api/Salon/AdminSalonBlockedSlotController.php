@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Salon;
 use App\Enums\BlockedSlotKind;
 use App\Http\Controllers\Controller;
 use App\Models\SalonBlockedSlot;
+use App\Models\SalonStaff;
 use App\Models\Shop;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -18,6 +19,8 @@ class AdminSalonBlockedSlotController extends Controller
     public function index(Request $request): JsonResponse
     {
         $shop = $this->shopOrAbort($request);
+        $actor = $this->userOrAbort($request);
+        $staffScopeId = $this->staffScopeId($actor, $shop);
         $data = $request->validate([
             'from' => ['required', 'date'],
             'to' => ['required', 'date', 'after_or_equal:from'],
@@ -33,6 +36,9 @@ class AdminSalonBlockedSlotController extends Controller
             ->where('ends_at', '>', $from)
             ->orderBy('starts_at')
             ->get();
+        if ($staffScopeId !== null) {
+            $rows = $rows->where('salon_staff_id', $staffScopeId)->values();
+        }
 
         return response()->json([
             'data' => $rows->map(fn (SalonBlockedSlot $b) => [
@@ -51,6 +57,8 @@ class AdminSalonBlockedSlotController extends Controller
     public function store(Request $request): JsonResponse
     {
         $shop = $this->shopOrAbort($request);
+        $actor = $this->userOrAbort($request);
+        $staffScopeId = $this->staffScopeId($actor, $shop);
         $data = $request->validate([
             'salon_staff_id' => [
                 'nullable',
@@ -62,6 +70,9 @@ class AdminSalonBlockedSlotController extends Controller
             'kind' => ['required', Rule::enum(BlockedSlotKind::class)],
             'reason' => ['nullable', 'string', 'max:255'],
         ]);
+        if ($staffScopeId !== null) {
+            $data['salon_staff_id'] = $staffScopeId;
+        }
 
         $starts = CarbonImmutable::parse($data['starts_at'])->timezone(config('app.timezone'));
         $ends = CarbonImmutable::parse($data['ends_at'])->timezone(config('app.timezone'));
@@ -100,10 +111,15 @@ class AdminSalonBlockedSlotController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $shop = $this->shopOrAbort($request);
+        $actor = $this->userOrAbort($request);
+        $staffScopeId = $this->staffScopeId($actor, $shop);
         $row = SalonBlockedSlot::query()
             ->where('shop_id', $shop->id)
             ->whereKey($id)
             ->firstOrFail();
+        if ($staffScopeId !== null && (int) $row->salon_staff_id !== $staffScopeId) {
+            abort(403, 'You can only remove your own blocked slots.');
+        }
         $row->delete();
 
         return response()->json(['message' => 'Blocked slot removed.']);
@@ -122,5 +138,29 @@ class AdminSalonBlockedSlotController extends Controller
         }
 
         return $shop;
+    }
+
+    private function userOrAbort(Request $request): User
+    {
+        $user = $request->user();
+        if (! $user instanceof User) {
+            abort(401);
+        }
+        $user->loadMissing('staffProfile');
+
+        return $user;
+    }
+
+    private function staffScopeId(User $user, Shop $shop): ?int
+    {
+        if ($user->role !== \App\Enums\UserRole::Barber) {
+            return null;
+        }
+        $sp = $user->staffProfile;
+        if (! $sp instanceof SalonStaff || (int) $sp->shop_id !== (int) $shop->id) {
+            abort(403, 'No staff profile for this shop.');
+        }
+
+        return (int) $sp->id;
     }
 }

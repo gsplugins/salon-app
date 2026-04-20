@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SalonBooking;
 use App\Models\SalonService;
 use App\Models\Shop;
+use App\Models\SalonStaff;
 use App\Models\User;
 use App\Services\Salon\AvailabilityService;
 use App\Support\MobileNormalizer;
@@ -27,21 +28,60 @@ class AdminSalonBookingController extends Controller
     public function index(Request $request): JsonResponse
     {
         $shop = $this->shopOrAbort($request);
-        $data = $request->validate([
-            'from' => ['required', 'date'],
-            'to' => ['required', 'date', 'after_or_equal:from'],
+        $actor = $this->userOrAbort($request);
+        $staffScopeId = $this->staffScopeId($actor, $shop);
+        $request->validate([
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date'],
+            'status' => ['nullable', 'string', Rule::in(BookingStatus::values())],
         ]);
 
-        $from = CarbonImmutable::parse($data['from'])->timezone(config('app.timezone'))->startOfDay();
-        $to = CarbonImmutable::parse($data['to'])->timezone(config('app.timezone'))->endOfDay();
+        $tz = config('app.timezone');
+        $from = $request->query('from') !== null && $request->query('from') !== ''
+            ? CarbonImmutable::parse((string) $request->query('from'))->timezone($tz)->startOfDay()
+            : now()->timezone($tz)->subMonths(18)->startOfDay();
+        $to = $request->query('to') !== null && $request->query('to') !== ''
+            ? CarbonImmutable::parse((string) $request->query('to'))->timezone($tz)->endOfDay()
+            : now()->timezone($tz)->addMonths(18)->endOfDay();
 
-        $rows = SalonBooking::query()
+        if ($from->gt($to)) {
+            throw ValidationException::withMessages([
+                'from' => ['The from date must be before or equal to the to date.'],
+            ]);
+        }
+
+        $maxDays = (int) config('salon.admin_bookings_max_range_days', 800);
+        if ($from->diffInDays($to) > $maxDays) {
+            throw ValidationException::withMessages([
+                'to' => ["Date range cannot exceed {$maxDays} days. Narrow from/to or use filters."],
+            ]);
+        }
+
+        $status = $request->query('status');
+        $statusEnum = is_string($status) && $status !== ''
+            ? BookingStatus::tryFrom($status)
+            : null;
+        if (is_string($status) && $status !== '' && $statusEnum === null) {
+            throw ValidationException::withMessages([
+                'status' => ['Invalid status filter.'],
+            ]);
+        }
+
+        $q = SalonBooking::query()
             ->where('shop_id', $shop->id)
             ->with(['service:id,name,duration_minutes', 'staff:id,name'])
             ->where('starts_at', '<', $to)
-            ->where('ends_at', '>', $from)
-            ->orderBy('starts_at')
-            ->get();
+            ->where('ends_at', '>', $from);
+
+        if ($staffScopeId !== null) {
+            $q->where('salon_staff_id', $staffScopeId);
+        }
+
+        if ($statusEnum !== null) {
+            $q->where('status', $statusEnum);
+        }
+
+        $rows = $q->orderBy('starts_at')->limit(2000)->get();
 
         return response()->json([
             'data' => $rows->map(fn (SalonBooking $b) => SalonBookingPresenter::toArray($b))->values(),
@@ -51,6 +91,8 @@ class AdminSalonBookingController extends Controller
     public function store(Request $request): JsonResponse
     {
         $shop = $this->shopOrAbort($request);
+        $actor = $this->userOrAbort($request);
+        $staffScopeId = $this->staffScopeId($actor, $shop);
         $data = $request->validate([
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_mobile' => ['required', 'string', 'min:8', 'max:32'],
@@ -82,7 +124,7 @@ class AdminSalonBookingController extends Controller
         $duration = max(1, (int) $service->duration_minutes);
         $ends = $starts->copy()->addMinutes($duration);
 
-        $preferred = isset($data['salon_staff_id']) ? (int) $data['salon_staff_id'] : null;
+        $preferred = $staffScopeId ?? (isset($data['salon_staff_id']) ? (int) $data['salon_staff_id'] : null);
         $staff = $this->availability->assignStaffForSlot($service, $preferred, $starts, null);
         if ($staff === null) {
             throw ValidationException::withMessages([
@@ -113,8 +155,13 @@ class AdminSalonBookingController extends Controller
     public function update(Request $request, SalonBooking $booking): JsonResponse
     {
         $shop = $this->shopOrAbort($request);
+        $actor = $this->userOrAbort($request);
+        $staffScopeId = $this->staffScopeId($actor, $shop);
         if ((int) $booking->shop_id !== (int) $shop->id) {
             abort(404);
+        }
+        if ($staffScopeId !== null && (int) $booking->salon_staff_id !== $staffScopeId) {
+            abort(403, 'You can only edit your own bookings.');
         }
 
         $data = $request->validate([
@@ -143,9 +190,11 @@ class AdminSalonBookingController extends Controller
             $duration = max(1, (int) $service->duration_minutes);
             $ends = $starts->copy()->addMinutes($duration);
 
-            $preferred = array_key_exists('salon_staff_id', $data)
-                ? ($data['salon_staff_id'] !== null ? (int) $data['salon_staff_id'] : null)
-                : (int) $booking->salon_staff_id;
+            $preferred = $staffScopeId ?? (
+                array_key_exists('salon_staff_id', $data)
+                    ? ($data['salon_staff_id'] !== null ? (int) $data['salon_staff_id'] : null)
+                    : (int) $booking->salon_staff_id
+            );
 
             $staff = $this->availability->assignStaffForSlot($service, $preferred, $starts, (int) $booking->id);
             if ($staff === null) {
@@ -190,6 +239,33 @@ class AdminSalonBookingController extends Controller
         }
 
         return $shop;
+    }
+
+    private function userOrAbort(Request $request): User
+    {
+        $user = $request->user();
+        if (! $user instanceof User) {
+            abort(401);
+        }
+        $user->loadMissing('staffProfile');
+
+        return $user;
+    }
+
+    /**
+     * Barber staff can only access their own bookings.
+     */
+    private function staffScopeId(User $user, Shop $shop): ?int
+    {
+        if ($user->role !== \App\Enums\UserRole::Barber) {
+            return null;
+        }
+        $sp = $user->staffProfile;
+        if (! $sp instanceof SalonStaff || (int) $sp->shop_id !== (int) $shop->id) {
+            abort(403, 'No staff profile for this shop.');
+        }
+
+        return (int) $sp->id;
     }
 
     private function toBookingStatus(mixed $value): ?BookingStatus
