@@ -85,7 +85,7 @@ class CustomerPortalController extends Controller
         }
 
         $data = $request->validate([
-            'status' => ['sometimes', Rule::in(['cancelled'])],
+            'status' => ['sometimes', Rule::in(['cancelled', 'completed'])],
             'starts_at' => ['sometimes', 'date'],
             'salon_staff_id' => ['sometimes', 'nullable', 'integer'],
         ]);
@@ -93,6 +93,12 @@ class CustomerPortalController extends Controller
         if (isset($data['status']) && $data['status'] === 'cancelled') {
             return response()->json([
                 'data' => $this->cancelBookingForCustomer($booking),
+            ]);
+        }
+
+        if (isset($data['status']) && $data['status'] === 'completed') {
+            return response()->json([
+                'data' => $this->completeBookingForCustomer($booking),
             ]);
         }
 
@@ -136,6 +142,34 @@ class CustomerPortalController extends Controller
         }
 
         $booking->status = BookingStatus::Cancelled;
+        $booking->save();
+
+        $booking->load(['service:id,name,category,duration_minutes,price_cents', 'staff:id,name', 'shop:id,name,slug']);
+
+        return SalonBookingPresenter::toArray($booking);
+    }
+
+    /**
+     * After the salon has confirmed the visit, the customer may mark it completed (e.g. after checkout).
+     *
+     * @return array<string, mixed>
+     */
+    private function completeBookingForCustomer(SalonBooking $booking): array
+    {
+        if ($booking->status !== BookingStatus::Confirmed) {
+            throw ValidationException::withMessages([
+                'status' => ['Only confirmed appointments can be marked completed from your account.'],
+            ]);
+        }
+
+        $tz = config('app.timezone');
+        if ($booking->starts_at->timezone($tz)->isFuture()) {
+            throw ValidationException::withMessages([
+                'status' => ['You can mark this complete once the appointment time has started.'],
+            ]);
+        }
+
+        $booking->status = BookingStatus::Completed;
         $booking->save();
 
         $booking->load(['service:id,name,category,duration_minutes,price_cents', 'staff:id,name', 'shop:id,name,slug']);

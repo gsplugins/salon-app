@@ -113,7 +113,7 @@ export function BarberStaffGate(props: { children: (accessToken: string) => Reac
           Signed-in as <strong>{me.role}</strong>. This schedule is for salon stylists (barber staff accounts).
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
-          <Link href="/dashboard" className="text-sm font-medium text-rose-800 underline dark:text-rose-200">
+          <Link href="/customer/dashboard" className="text-sm font-medium text-rose-800 underline dark:text-rose-200">
             Customer dashboard
           </Link>
           <Link href="/owner/dashboard" className="text-sm font-medium text-rose-800 underline dark:text-rose-200">

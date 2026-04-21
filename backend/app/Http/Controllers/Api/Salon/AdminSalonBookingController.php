@@ -211,6 +211,13 @@ class AdminSalonBookingController extends Controller
         if (isset($data['status'])) {
             $parsed = $this->toBookingStatus($data['status']);
             if ($parsed !== null) {
+                if ($parsed === BookingStatus::Completed) {
+                    if (! in_array($booking->status, [BookingStatus::Pending, BookingStatus::Confirmed], true)) {
+                        throw ValidationException::withMessages([
+                            'status' => ['Only pending or confirmed bookings can be marked completed.'],
+                        ]);
+                    }
+                }
                 $booking->status = $parsed;
             }
         }
@@ -233,7 +240,7 @@ class AdminSalonBookingController extends Controller
             abort(401);
         }
 
-        $shop = $user->managementShop();
+        $shop = $user->resolveManagementShop($request);
         if ($shop === null) {
             abort(403, 'No shop.');
         }

@@ -291,14 +291,6 @@ export function AuthPortal() {
 
   return (
     <div className="w-full space-y-6">
-      <section className="rounded-2xl border border-rose-100/80 bg-gradient-to-br from-white via-rose-50/40 to-amber-50/30 p-6 shadow-sm dark:border-zinc-800 dark:from-zinc-900/80 dark:via-zinc-950/70 dark:to-zinc-950">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-800 dark:text-rose-200">Lumière account</p>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">Sign in or create your account</h1>
-        <p className="mt-2 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
-          Modern role-based access for customers, owners, managers, and staff. Customers can register directly; salon staff
-          accounts are usually created by owner/manager.
-        </p>
-      </section>
 
       {accessToken && me ? (
         <section className="rounded-2xl border border-zinc-200/90 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
@@ -346,7 +338,22 @@ export function AuthPortal() {
             </button>
           </div>
           {canAccessBarberStaffRoutes(me) ? (
-            <p className="mt-3 text-xs text-zinc-500">Staff profile/settings are available in staff routes.</p>
+            <p className="mt-3 text-xs text-zinc-500">
+              Open the{" "}
+              <Link href="/staff/dashboard" className="font-semibold text-rose-800 underline dark:text-rose-200">
+                staff portal
+              </Link>{" "}
+              for schedule, earnings, and profile.
+            </p>
+          ) : null}
+          {canAccessCustomerPortal(me) ? (
+            <p className="mt-3 text-xs text-zinc-500">
+              Open the{" "}
+              <Link href="/customer/dashboard" className="font-semibold text-rose-800 underline dark:text-rose-200">
+                customer portal
+              </Link>{" "}
+              for bookings and loyalty.
+            </p>
           ) : null}
         </section>
       ) : null}

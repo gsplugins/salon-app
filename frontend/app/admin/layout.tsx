@@ -1,5 +1,5 @@
-import { AdminSidebarShell } from "@/components/platform/admin-sidebar-shell";
+import { AdminLayoutClient } from "@/components/platform/admin-layout-client";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <AdminSidebarShell>{children}</AdminSidebarShell>;
+  return <AdminLayoutClient>{children}</AdminLayoutClient>;
 }

@@ -14,11 +14,11 @@ export default function BarberLayout({ children }: { children: React.ReactNode }
             <span className="hidden text-xs text-zinc-400 sm:inline">Staff workspace</span>
           </div>
           <nav className="flex flex-wrap items-center gap-2 text-sm font-medium">
-            <Link href="/barber/schedule" className="rounded-lg px-2 py-1 hover:bg-zinc-100 hover:text-rose-800 dark:hover:bg-zinc-800 dark:hover:text-rose-200">
-              Today
+            <Link href="/staff/dashboard" className="rounded-lg px-2 py-1 hover:bg-zinc-100 hover:text-rose-800 dark:hover:bg-zinc-800 dark:hover:text-rose-200">
+              Staff home
             </Link>
-            <Link href="/barber/history" className="rounded-lg px-2 py-1 hover:bg-zinc-100 hover:text-rose-800 dark:hover:bg-zinc-800 dark:hover:text-rose-200">
-              History
+            <Link href="/staff/appointments" className="rounded-lg px-2 py-1 hover:bg-zinc-100 hover:text-rose-800 dark:hover:bg-zinc-800 dark:hover:text-rose-200">
+              Appointments
             </Link>
             <Link href="/app" className="rounded-lg px-2 py-1 text-zinc-600 hover:bg-zinc-100 hover:text-rose-800 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-rose-200">
               Account

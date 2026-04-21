@@ -44,6 +44,18 @@ class SystemSuperAdminController extends Controller
             });
         }
 
+        if ($request->query('plan_key')) {
+            $pk = (string) $request->query('plan_key');
+            $query->whereHas('subscription', fn ($q) => $q->where('plan_key', $pk));
+        }
+
+        if ($request->query('created_from')) {
+            $query->where('created_at', '>=', (string) $request->query('created_from'));
+        }
+        if ($request->query('created_to')) {
+            $query->where('created_at', '<=', (string) $request->query('created_to'));
+        }
+
         $filter = (string) $request->query('filter', 'all');
         $this->applyShopSubscriptionFilter($query, $filter);
 
@@ -330,6 +342,16 @@ class SystemSuperAdminController extends Controller
             $query->where(function ($q) use ($s) {
                 $q->where('name', 'like', $s)->orWhere('mobile', 'like', $s);
             });
+        }
+
+        if ($request->query('role')) {
+            $query->where('role', (string) $request->query('role'));
+        }
+
+        if ($request->query('status') === 'locked') {
+            $query->where('is_locked', true);
+        } elseif ($request->query('status') === 'active') {
+            $query->where('is_locked', false);
         }
 
         return response()->json($query->orderByDesc('id')->paginate(50));

@@ -29,6 +29,9 @@ class SalonStaff extends Model
         'weekly_schedule',
         'is_active',
         'sort_order',
+        'commission_percent',
+        'availability_status',
+        'portal_settings',
     ];
 
     /**
@@ -40,6 +43,7 @@ class SalonStaff extends Model
             'is_active' => 'boolean',
             'specialties' => 'array',
             'weekly_schedule' => 'array',
+            'portal_settings' => 'array',
         ];
     }
 

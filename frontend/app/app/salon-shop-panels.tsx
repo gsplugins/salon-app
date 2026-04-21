@@ -26,16 +26,14 @@ import {
   type ShopStats,
 } from "@/lib/salon-api";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  hoursFromSettings,
+  hoursToPayload,
+  SHOP_BUSINESS_DAYS,
+  type DayHoursState,
+} from "@/lib/shop-business-hours";
 
-const DAYS: { key: string; label: string }[] = [
-  { key: "mon", label: "Monday" },
-  { key: "tue", label: "Tuesday" },
-  { key: "wed", label: "Wednesday" },
-  { key: "thu", label: "Thursday" },
-  { key: "fri", label: "Friday" },
-  { key: "sat", label: "Saturday" },
-  { key: "sun", label: "Sunday" },
-];
+const DAYS = SHOP_BUSINESS_DAYS;
 
 function formatMoney(cents: number | null): string {
   if (cents === null) return "—";
@@ -48,40 +46,6 @@ function parseMoneyToCents(raw: string): number | null {
   const n = Number.parseFloat(t.replace(/[^0-9.-]/g, ""));
   if (Number.isNaN(n) || n < 0) return null;
   return Math.round(n * 100);
-}
-
-type DayHoursState = Record<string, { closed: boolean; open: string; close: string }>;
-
-function hoursFromSettings(settings: Record<string, unknown> | undefined): DayHoursState {
-  const bh = settings && typeof settings === "object" && "business_hours" in settings
-    ? (settings.business_hours as Record<string, unknown> | undefined)
-    : undefined;
-  const out: DayHoursState = {};
-  for (const { key } of DAYS) {
-    const day = bh && typeof bh[key] === "object" && bh[key] !== null ? (bh[key] as Record<string, unknown>) : null;
-    if (day && day.closed) {
-      out[key] = { closed: true, open: "09:00", close: "18:00" };
-    } else if (day && typeof day.open === "string" && typeof day.close === "string") {
-      out[key] = { closed: false, open: day.open.slice(0, 5), close: day.close.slice(0, 5) };
-    } else {
-      out[key] = { closed: false, open: "09:00", close: "18:00" };
-    }
-  }
-  return out;
-}
-
-function hoursToPayload(h: DayHoursState): Record<string, { closed?: boolean; open?: string; close?: string }> {
-  const payload: Record<string, { closed?: boolean; open?: string; close?: string }> = {};
-  for (const { key } of DAYS) {
-    const d = h[key];
-    if (!d) continue;
-    if (d.closed) {
-      payload[key] = { closed: true };
-    } else {
-      payload[key] = { open: d.open, close: d.close };
-    }
-  }
-  return payload;
 }
 
 export function ShopOverviewPanel({

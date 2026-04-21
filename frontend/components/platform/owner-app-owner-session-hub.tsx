@@ -1,7 +1,22 @@
 "use client";
 
+import type { AuthMePayload } from "@/lib/auth-api";
 import { OwnerShopAdminShopCard } from "@/components/platform/owner-shop-admin-shop-card";
-import { OwnerShopNavLinks } from "@/components/platform/owner-shop-nav-links";
+import { OwnerShopNavLinksInner } from "@/components/platform/owner-shop-nav-links";
+
+const previewNavMe = {
+  id: 0,
+  name: "Preview",
+  mobile: "",
+  role: "shop_owner",
+  is_super_admin: false,
+  is_shop_owner: true,
+  is_manager: false,
+  is_barber: false,
+  is_admin: false,
+  shop: null,
+  subscription: null,
+} as AuthMePayload;
 
 export function OwnerAppOwnerSessionHub(props: {
   shopName: string;
@@ -30,7 +45,13 @@ export function OwnerAppOwnerSessionHub(props: {
       <div className="space-y-4 p-4 sm:p-5">
         <OwnerShopAdminShopCard shopName={shopName} shopSlug={shopSlug} />
         <div className="rounded-2xl border border-zinc-200/90 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/30">
-          <OwnerShopNavLinks shopSlug={shopSlug} variant="embedded" />
+          <OwnerShopNavLinksInner
+            shopSlug={shopSlug}
+            variant="embedded"
+            me={previewNavMe}
+            profile={null}
+            profileLoading={false}
+          />
         </div>
         <div className="rounded-2xl border border-zinc-200 bg-zinc-50/90 p-5 dark:border-zinc-700 dark:bg-zinc-950/40">
           <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">Session</h3>

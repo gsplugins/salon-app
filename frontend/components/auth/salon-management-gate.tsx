@@ -64,7 +64,7 @@ export function SalonManagementGate(props: { children: (accessToken: string) => 
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link
-            href="/dashboard"
+            href="/customer/dashboard"
             className="inline-flex rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
           >
             My bookings &amp; loyalty

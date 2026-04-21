@@ -4,17 +4,20 @@ namespace App\Models;
 
 use App\Enums\ShopRole;
 use App\Enums\UserRole;
+use App\Support\SalonManagementContext;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Http\Request;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     /**
      * @var list<string>
@@ -196,6 +199,25 @@ class User extends Authenticatable
         }
 
         return null;
+    }
+
+    /**
+     * Resolved shop for salon management APIs. Platform super admins may send header
+     * {@see SalonManagementContext::ACT_AS_SHOP_SLUG_HEADER} to manage any shop by slug.
+     */
+    public function resolveManagementShop(Request $request): ?Shop
+    {
+        if ($this->isSuperAdmin()) {
+            $slug = $request->headers->get(SalonManagementContext::ACT_AS_SHOP_SLUG_HEADER);
+            if (is_string($slug)) {
+                $slug = trim($slug);
+                if ($slug !== '') {
+                    return Shop::query()->where('slug', $slug)->first();
+                }
+            }
+        }
+
+        return $this->managementShop();
     }
 
     /**

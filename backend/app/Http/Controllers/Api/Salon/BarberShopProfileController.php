@@ -50,6 +50,38 @@ class BarberShopProfileController extends Controller
             'settings.business_hours.sun' => ['nullable', 'array'],
             'settings.min_lead_time_hours' => ['nullable', 'integer', 'min:0', 'max:168'],
             'settings.currency' => ['nullable', 'string', 'max:8'],
+            'settings.website' => ['nullable', 'string', 'max:500'],
+            'settings.logo_url' => ['nullable', 'string', 'max:1024'],
+            'settings.cover_photo_url' => ['nullable', 'string', 'max:1024'],
+            'settings.holidays' => ['nullable', 'array'],
+            'settings.holidays.*.date' => ['required_with:settings.holidays', 'date_format:Y-m-d'],
+            'settings.holidays.*.note' => ['nullable', 'string', 'max:255'],
+            'settings.booking_rules' => ['nullable', 'array'],
+            'settings.booking_rules.online_booking_enabled' => ['nullable', 'boolean'],
+            'settings.booking_rules.booking_window_days' => ['nullable', 'integer', 'min:1', 'max:365'],
+            'settings.booking_rules.min_notice_hours' => ['nullable', 'integer', 'min:0', 'max:168'],
+            'settings.booking_rules.auto_confirm' => ['nullable', 'boolean'],
+            'settings.booking_rules.buffer_between_minutes' => ['nullable', 'integer', 'min:0', 'max:240'],
+            'settings.booking_rules.max_per_slot' => ['nullable', 'integer', 'min:1', 'max:50'],
+            'settings.booking_rules.cancellation_deadline_hours' => ['nullable', 'integer', 'min:0', 'max:720'],
+            'settings.booking_rules.cancellation_penalty_note' => ['nullable', 'string', 'max:2000'],
+            'settings.booking_rules.custom_fields' => ['nullable', 'array'],
+            'settings.booking_rules.custom_fields.*.key' => ['required_with:settings.booking_rules.custom_fields', 'string', 'max:64'],
+            'settings.booking_rules.custom_fields.*.label' => ['nullable', 'string', 'max:128'],
+            'settings.booking_rules.custom_fields.*.required' => ['nullable', 'boolean'],
+            'settings.notification_preferences' => ['nullable', 'array'],
+            'settings.notification_preferences.reminder_hours_before' => ['nullable', 'integer', 'min:0', 'max:168'],
+            'settings.notification_preferences.sms_enabled' => ['nullable', 'boolean'],
+            'settings.notification_preferences.email_enabled' => ['nullable', 'boolean'],
+            'settings.notification_preferences.whatsapp_enabled' => ['nullable', 'boolean'],
+            'settings.notification_templates' => ['nullable', 'array'],
+            'settings.notification_templates.booking_confirmation' => ['nullable', 'string', 'max:5000'],
+            'settings.notification_templates.cancellation' => ['nullable', 'string', 'max:5000'],
+            'settings.notification_templates.review_request' => ['nullable', 'string', 'max:5000'],
+            'settings.loyalty' => ['nullable', 'array'],
+            'settings.loyalty.points_per_spend_cents' => ['nullable', 'integer', 'min:1', 'max:100000000'],
+            'settings.loyalty.points_redeem_ratio' => ['nullable', 'numeric', 'min:0'],
+            'settings.loyalty.is_active' => ['nullable', 'boolean'],
         ]);
 
         if ($actor instanceof User && $actor->role === UserRole::Manager) {
@@ -81,7 +113,12 @@ class BarberShopProfileController extends Controller
 
         $shop->save();
 
-        return response()->json(['data' => $this->shopPayload($shop->fresh())]);
+        $fresh = $shop->fresh();
+        if ($fresh === null) {
+            abort(500);
+        }
+
+        return response()->json(['data' => $this->shopPayload($fresh)]);
     }
 
     public function stats(Request $request): JsonResponse
@@ -188,6 +225,14 @@ class BarberShopProfileController extends Controller
         $canEditShopBasics = $role !== UserRole::Barber;
         $canEditBusinessHours = $role === UserRole::ShopOwner || $role === UserRole::Manager;
         $canEditCurrency = $role === UserRole::ShopOwner;
+        $isBarber = $role === UserRole::Barber;
+        $canManagePayments = $user instanceof User && ! $isBarber;
+        $canViewSubscription = $user instanceof User && $user->canViewShopBilling($shop);
+
+        $shop->loadMissing('subscription.plan');
+        $sub = $shop->subscription;
+        $plan = $sub?->plan;
+        $features = is_array($plan?->features) ? $plan->features : [];
 
         return [
             'id' => $shop->id,
@@ -199,11 +244,21 @@ class BarberShopProfileController extends Controller
             'address' => $shop->address,
             'is_active' => $shop->is_active,
             'settings' => $shop->settings ?? (object) [],
+            'subscription' => $sub === null ? null : [
+                'status' => $sub->status instanceof \BackedEnum ? $sub->status->value : (string) $sub->status,
+                'plan_key' => $sub->plan_key,
+                'plan_name' => $plan?->name,
+                'trial_ends_at' => $sub->trial_ends_at?->toIso8601String(),
+                'current_period_end' => $sub->current_period_end?->toIso8601String(),
+                'features' => $features,
+            ],
             'permissions' => [
                 'can_edit_shop_basics' => $canEditShopBasics,
                 'can_edit_business_hours' => $canEditBusinessHours,
                 'can_edit_booking_rules' => $canEditBusinessHours,
                 'can_edit_currency' => $canEditCurrency,
+                'can_manage_payments' => $canManagePayments,
+                'can_view_subscription' => $canViewSubscription,
             ],
         ];
     }
@@ -227,7 +282,7 @@ class BarberShopProfileController extends Controller
             abort(401);
         }
 
-        $shop = $user->managementShop();
+        $shop = $user->resolveManagementShop($request);
         if ($shop === null) {
             abort(403, 'No shop.');
         }

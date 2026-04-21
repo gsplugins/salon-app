@@ -1,11 +1,5 @@
-import type { Metadata } from "next";
-import { CustomerDashboardClient } from "./customer-dashboard-client";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "My dashboard — Salon",
-  description: "Appointments and loyalty points.",
-};
-
-export default function CustomerDashboardPage() {
-  return <CustomerDashboardClient />;
+export default function LegacyDashboardPage() {
+  redirect("/customer/dashboard");
 }

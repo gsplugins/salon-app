@@ -10,6 +10,7 @@ class Subscription extends Model
 {
     protected $fillable = [
         'shop_id',
+        'subscription_plan_id',
         'plan_key',
         'status',
         'trial_ends_at',
@@ -33,6 +34,14 @@ class Subscription extends Model
     public function shop(): BelongsTo
     {
         return $this->belongsTo(Shop::class);
+    }
+
+    /**
+     * @return BelongsTo<SubscriptionPlan, self>
+     */
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
     }
 
     public function allowsAppAccess(): bool

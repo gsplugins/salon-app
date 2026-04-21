@@ -16,8 +16,30 @@ use App\Http\Controllers\Api\Salon\OwnerBranchesController;
 use App\Http\Controllers\Api\Salon\OwnerInventoryController;
 use App\Http\Controllers\Api\Salon\OwnerQueueController;
 use App\Http\Controllers\Api\Salon\OwnerReviewController;
+use App\Http\Controllers\Api\Salon\OwnerSalonPaymentController;
 use App\Http\Controllers\Api\Salon\PublicSalonController;
 use App\Http\Controllers\Api\Salon\StaffSelfProfileController;
+use App\Http\Controllers\Api\Staff\StaffAppointmentController;
+use App\Http\Controllers\Api\Staff\StaffAvailabilityController;
+use App\Http\Controllers\Api\Staff\StaffCustomerController;
+use App\Http\Controllers\Api\Staff\StaffDashboardController;
+use App\Http\Controllers\Api\Staff\StaffEarningsController;
+use App\Http\Controllers\Api\Staff\StaffLeaveRequestController;
+use App\Http\Controllers\Api\Staff\StaffNotificationController;
+use App\Http\Controllers\Api\Staff\StaffReviewController;
+use App\Http\Controllers\Api\Staff\StaffScheduleController;
+use App\Http\Controllers\Api\Staff\StaffServiceController;
+use App\Http\Controllers\Api\Admin\AdminAnalyticsController;
+use App\Http\Controllers\Api\Admin\AdminAuditLogController;
+use App\Http\Controllers\Api\Admin\AdminBillingController;
+use App\Http\Controllers\Api\Admin\AdminGeneralController;
+use App\Http\Controllers\Api\Admin\AdminIntegrationController;
+use App\Http\Controllers\Api\Admin\AdminNotificationController;
+use App\Http\Controllers\Api\Admin\AdminPermissionsController;
+use App\Http\Controllers\Api\Admin\AdminShopSubscriptionController;
+use App\Http\Controllers\Api\Admin\AdminSubscriptionPlanController;
+use App\Http\Controllers\Api\Admin\AdminUserActionsController;
+use App\Http\Controllers\Api\Admin\AdminWebhookController;
 use App\Http\Controllers\Api\SystemSuperAdminController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +60,7 @@ Route::prefix('auth')->middleware('throttle:30,1')->group(function (): void {
 
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth.jwt');
     Route::get('me', [AuthController::class, 'me'])->middleware('auth.jwt');
+    Route::post('change-password', [AuthController::class, 'changePassword'])->middleware('auth.jwt');
 });
 
 Route::prefix('public')->middleware('throttle:120,1')->group(function (): void {
@@ -97,6 +120,10 @@ Route::middleware(['auth.jwt', 'barber', 'subscription'])->prefix('my/shop')->gr
 
     Route::get('analytics/summary', [OwnerAnalyticsController::class, 'summary']);
 
+    Route::get('payments', [OwnerSalonPaymentController::class, 'index']);
+    Route::post('payments', [OwnerSalonPaymentController::class, 'store']);
+    Route::patch('payments/{payment}/refund', [OwnerSalonPaymentController::class, 'refund'])->whereNumber('payment');
+
     Route::get('queue/manage', [OwnerQueueController::class, 'index']);
     Route::patch('queue/{id}/status', [OwnerQueueController::class, 'updateStatus'])->whereNumber('id');
 });
@@ -112,6 +139,89 @@ Route::middleware(['auth.jwt', 'staff_barber', 'subscription'])->prefix('my/barb
     Route::get('history', [BarberStaffPortalController::class, 'history']);
     Route::get('profile', [StaffSelfProfileController::class, 'show']);
     Route::patch('profile', [StaffSelfProfileController::class, 'update']);
+});
+
+Route::middleware(['auth.jwt', 'staff_barber', 'subscription'])->prefix('staff')->group(function (): void {
+    Route::get('dashboard', [StaffDashboardController::class, 'show']);
+    Route::get('appointments', [StaffAppointmentController::class, 'index']);
+    Route::patch('appointments/{booking}', [StaffAppointmentController::class, 'update'])->whereNumber('booking');
+    Route::post('appointments/{booking}/reschedule-request', [StaffAppointmentController::class, 'rescheduleRequest'])->whereNumber('booking');
+
+    Route::get('schedule', [StaffScheduleController::class, 'show']);
+    Route::get('leave-requests', [StaffLeaveRequestController::class, 'index']);
+    Route::post('leave-requests', [StaffLeaveRequestController::class, 'store']);
+
+    Route::get('customers', [StaffCustomerController::class, 'index']);
+    Route::get('customers/{mobile}/history', [StaffCustomerController::class, 'history']);
+    Route::get('customers/{mobile}/notes', [StaffCustomerController::class, 'notes']);
+    Route::post('customer-notes', [StaffCustomerController::class, 'storeNote']);
+
+    Route::get('services', [StaffServiceController::class, 'index']);
+    Route::get('earnings/summary', [StaffEarningsController::class, 'summary']);
+
+    Route::get('notifications', [StaffNotificationController::class, 'index']);
+    Route::patch('notifications/{notification}/read', [StaffNotificationController::class, 'markRead'])->whereNumber('notification');
+    Route::post('notifications/read-all', [StaffNotificationController::class, 'markAllRead']);
+    Route::delete('notifications', [StaffNotificationController::class, 'destroyAll']);
+    Route::patch('notification-preferences', [StaffNotificationController::class, 'updatePreferences']);
+
+    Route::get('availability', [StaffAvailabilityController::class, 'show']);
+    Route::patch('availability', [StaffAvailabilityController::class, 'updateStatus']);
+    Route::get('availability/blocks', [StaffAvailabilityController::class, 'blocks']);
+    Route::post('availability/blocks', [StaffAvailabilityController::class, 'storeBlock']);
+    Route::delete('availability/blocks/{block}', [StaffAvailabilityController::class, 'destroyBlock'])->whereNumber('block');
+
+    Route::get('reviews', [StaffReviewController::class, 'index']);
+
+    Route::get('profile', [StaffSelfProfileController::class, 'show']);
+    Route::patch('profile', [StaffSelfProfileController::class, 'update']);
+});
+
+Route::middleware(['auth.jwt', 'super_admin'])->prefix('admin')->group(function (): void {
+    Route::get('general', [AdminGeneralController::class, 'show']);
+    Route::patch('general', [AdminGeneralController::class, 'update']);
+
+    Route::get('subscription-plans', [AdminSubscriptionPlanController::class, 'index']);
+    Route::post('subscription-plans', [AdminSubscriptionPlanController::class, 'store']);
+    Route::patch('subscription-plans/{plan}', [AdminSubscriptionPlanController::class, 'update']);
+    Route::delete('subscription-plans/{plan}', [AdminSubscriptionPlanController::class, 'destroy']);
+
+    Route::patch('shops/{shop}/subscription', [AdminShopSubscriptionController::class, 'updateForShop']);
+
+    Route::get('audit-logs', [AdminAuditLogController::class, 'index']);
+    Route::get('audit-logs/export', [AdminAuditLogController::class, 'exportCsv']);
+
+    Route::get('notification-templates', [AdminNotificationController::class, 'templates']);
+    Route::patch('notification-templates/{template}', [AdminNotificationController::class, 'updateTemplate']);
+    Route::patch('notification-toggles', [AdminNotificationController::class, 'updateGlobalToggles']);
+    Route::patch('integrations/smtp', [AdminNotificationController::class, 'updateSmtp']);
+    Route::patch('integrations/sms', [AdminNotificationController::class, 'updateSms']);
+
+    Route::get('integrations', [AdminIntegrationController::class, 'show']);
+    Route::patch('integrations/stripe', [AdminIntegrationController::class, 'updateStripe']);
+    Route::patch('integrations/google-calendar', [AdminIntegrationController::class, 'updateGoogleCalendar']);
+    Route::patch('integrations/whatsapp', [AdminIntegrationController::class, 'updateWhatsapp']);
+
+    Route::get('webhooks', [AdminWebhookController::class, 'index']);
+    Route::post('webhooks', [AdminWebhookController::class, 'store']);
+    Route::patch('webhooks/{webhook}', [AdminWebhookController::class, 'update']);
+    Route::delete('webhooks/{webhook}', [AdminWebhookController::class, 'destroy']);
+    Route::post('webhooks/{webhook}/test', [AdminWebhookController::class, 'test']);
+
+    Route::get('billing/bkash', [AdminBillingController::class, 'bkashIndex']);
+    Route::get('billing/salon-payments', [AdminBillingController::class, 'salonPaymentsIndex']);
+    Route::patch('billing/bkash/{payment}/refund', [AdminBillingController::class, 'refundBkash']);
+    Route::patch('billing/salon-payments/{salon_payment}/refund', [AdminBillingController::class, 'refundSalonPayment']);
+    Route::get('billing/salon-payments/{salon_payment}/invoice', [AdminBillingController::class, 'invoiceSalonPayment']);
+
+    Route::get('analytics/summary', [AdminAnalyticsController::class, 'summary']);
+    Route::get('analytics/signups', [AdminAnalyticsController::class, 'signupsSeries']);
+
+    Route::get('permissions', [AdminPermissionsController::class, 'show']);
+    Route::put('permissions', [AdminPermissionsController::class, 'update']);
+
+    Route::post('users/{user}/impersonate', [AdminUserActionsController::class, 'impersonate']);
+    Route::delete('users/{user}', [AdminUserActionsController::class, 'destroy']);
 });
 
 Route::middleware(['auth.jwt', 'super_admin'])->prefix('system')->group(function (): void {

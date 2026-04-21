@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useOwnerShopContext } from "@/components/auth/owner-shop-slug-gate";
+import { useShopDashboardProfileState } from "@/components/platform/shop-dashboard-profile-context";
+import type { AuthMePayload } from "@/lib/auth-api";
+import type { ShopProfile } from "@/lib/salon-api";
 import {
   buildOwnerShopNavGroups,
   isOwnerShopNavActive,
@@ -11,11 +15,17 @@ import { ownerShopPath } from "@/lib/owner-shop-paths";
 
 const { Map } = ownerNavIcons;
 
-export function OwnerShopNavLinks(props: { shopSlug: string; variant?: "aside" | "embedded" }) {
-  const { shopSlug, variant = "aside" } = props;
+export function OwnerShopNavLinksInner(props: {
+  shopSlug: string;
+  variant?: "aside" | "embedded";
+  me: AuthMePayload;
+  profile: ShopProfile | null;
+  profileLoading: boolean;
+}) {
+  const { shopSlug, variant = "aside", me, profile, profileLoading } = props;
   const pathname = usePathname();
   const base = ownerShopPath(shopSlug);
-  const groups = buildOwnerShopNavGroups(shopSlug);
+  const groups = buildOwnerShopNavGroups({ shopSlug, me, profile, profileLoading });
   const navTop = variant === "embedded" ? "mt-0" : "mt-5";
 
   return (
@@ -88,5 +98,20 @@ export function OwnerShopNavLinks(props: { shopSlug: string; variant?: "aside" |
         </ul>
       </div>
     </>
+  );
+}
+
+export function OwnerShopNavLinks(props: { shopSlug: string; variant?: "aside" | "embedded" }) {
+  const { shopSlug, variant = "aside" } = props;
+  const { me } = useOwnerShopContext();
+  const { profile, profileLoading } = useShopDashboardProfileState();
+  return (
+    <OwnerShopNavLinksInner
+      shopSlug={shopSlug}
+      variant={variant}
+      me={me}
+      profile={profile}
+      profileLoading={profileLoading}
+    />
   );
 }

@@ -23,7 +23,7 @@ class EnsureShopOwner
             return $next($request);
         }
 
-        $shop = $user->managementShop();
+        $shop = $user->resolveManagementShop($request);
         if ($shop === null) {
             return response()->json(['message' => 'No shop linked to this account.'], 403);
         }

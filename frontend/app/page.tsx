@@ -178,7 +178,7 @@ export default async function Home() {
                 href="/shops"
                 className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 dark:bg-rose-100 dark:text-zinc-900 dark:hover:bg-white"
               >
-                Browse shops
+                Shops
               </Link>
               <Link
                 href="/app"

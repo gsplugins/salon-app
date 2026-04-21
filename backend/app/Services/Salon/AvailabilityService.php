@@ -18,7 +18,7 @@ final class AvailabilityService
      * @var list<BookingStatus>
      */
     private const RESERVING_STATUSES = [
-        BookingStatus::Pending,
+        // Customer requirement: block slots for everyone after staff/shop confirms the booking.
         BookingStatus::Confirmed,
     ];
 

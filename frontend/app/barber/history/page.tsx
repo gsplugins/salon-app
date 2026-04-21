@@ -1,10 +1,5 @@
-import type { Metadata } from "next";
-import { BarberHistoryClient } from "../barber-history-client";
-
-export const metadata: Metadata = {
-  title: "Barber — History",
-};
+import { redirect } from "next/navigation";
 
 export default function BarberHistoryPage() {
-  return <BarberHistoryClient />;
+  redirect("/staff/appointments");
 }

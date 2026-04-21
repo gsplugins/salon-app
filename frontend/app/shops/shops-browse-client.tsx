@@ -45,7 +45,7 @@ export function ShopsBrowseClient() {
       <PublicHeader />
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-white">
-          Browse shops
+          Shops
         </h1>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           Search by name, slug, or address. Only active, subscribed salons are listed.

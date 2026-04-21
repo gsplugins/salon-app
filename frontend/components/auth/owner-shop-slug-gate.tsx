@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useState } from "react";
 import { fetchAuthMe, type AuthMePayload } from "@/lib/auth-api";
-import { canAccessSalonManagement } from "@/lib/role-access";
+import { canAccessSuperAdmin } from "@/lib/role-access";
 import { useSalonAccessTokenReady } from "@/hooks/use-salon-access-token";
 import { ownerShopBase } from "@/lib/owner-shop-paths";
 import { Skeleton } from "@/components/ui/skeleton";
+import { fetchShopMeta } from "@/lib/salon-api";
+import { setSalonActAsShopSlug } from "@/lib/salon-act-as-shop";
 
 type OwnerShopContextValue = {
   slug: string;
   shopName: string;
   me: AuthMePayload;
+  actingAsSuperAdmin: boolean;
 };
 
 const OwnerShopContext = createContext<OwnerShopContextValue | null>(null);
@@ -33,8 +36,14 @@ export function OwnerShopSlugGate(props: { slug: string; children: React.ReactNo
     | { kind: "no_token" }
     | { kind: "forbidden"; me: AuthMePayload | null }
     | { kind: "wrong_slug"; me: AuthMePayload; expectedSlug: string }
-    | { kind: "ok"; me: AuthMePayload }
+    | { kind: "unknown_shop"; me: AuthMePayload }
+    | { kind: "ok"; me: AuthMePayload; shopNameOverride?: string }
   >({ kind: "loading" });
+
+  useLayoutEffect(() => {
+    setSalonActAsShopSlug(slug);
+    return () => setSalonActAsShopSlug(null);
+  }, [slug]);
 
   const load = useCallback(async () => {
     if (!ready) return;
@@ -48,8 +57,18 @@ export function OwnerShopSlugGate(props: { slug: string; children: React.ReactNo
       return;
     }
     const me = res.data;
-    if (!canAccessSalonManagement(me)) {
+    const isOwnerOrManager = me.is_shop_owner || me.role === "shop_owner" || me.is_manager || me.role === "manager";
+    if (!isOwnerOrManager && !canAccessSuperAdmin(me)) {
       setState({ kind: "forbidden", me });
+      return;
+    }
+    if (canAccessSuperAdmin(me)) {
+      const meta = await fetchShopMeta(slug);
+      if (!meta.ok) {
+        setState({ kind: "unknown_shop", me });
+        return;
+      }
+      setState({ kind: "ok", me, shopNameOverride: meta.data.name });
       return;
     }
     const expected = me.shop?.slug ?? "";
@@ -84,7 +103,7 @@ export function OwnerShopSlugGate(props: { slug: string; children: React.ReactNo
       <div className="p-4 md:p-6">
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
           <p className="font-medium">Sign in required</p>
-          <p className="mt-1 opacity-90">Shop owner routes need a salon staff or owner session.</p>
+          <p className="mt-1 opacity-90">Shop manager routes need a shop owner, manager, or super admin session.</p>
           <Link
             href="/app"
             className="mt-4 inline-flex rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
@@ -117,9 +136,36 @@ export function OwnerShopSlugGate(props: { slug: string; children: React.ReactNo
     );
   }
 
-  const shopName = state.me.shop?.name?.trim() || slug;
+  if (state.kind === "unknown_shop") {
+    return (
+      <div className="p-4 md:p-6">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900/50">
+          <p className="font-medium text-zinc-900 dark:text-white">Salon not found</p>
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            No shop uses the slug <span className="font-mono">{slug}</span>. Check the spelling or pick a salon from the
+            admin directory.
+          </p>
+          <Link
+            href="/admin/shops"
+            className="mt-4 inline-flex rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+          >
+            Back to admin shops
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (state.kind !== "ok") {
+    return null;
+  }
+
+  const shopName = state.shopNameOverride?.trim() || state.me.shop?.name?.trim() || slug;
+  const actingAsSuperAdmin = canAccessSuperAdmin(state.me);
 
   return (
-    <OwnerShopContext.Provider value={{ slug, shopName, me: state.me }}>{children}</OwnerShopContext.Provider>
+    <OwnerShopContext.Provider value={{ slug, shopName, me: state.me, actingAsSuperAdmin }}>
+      {children}
+    </OwnerShopContext.Provider>
   );
 }

@@ -66,6 +66,9 @@ pass : password
 customer : 01762933844
 pass: customer@@@123
 
+cus 2 : 01762933855
+pass : 01762933844pass
+
 shop: 01762933800
 pass : shop@@@123
 

@@ -50,14 +50,65 @@ class OwnerAnalyticsController extends Controller
             ->limit(8)
             ->get();
 
+        $topServicesRevenue = DB::table('salon_bookings')
+            ->join('salon_services', 'salon_services.id', '=', 'salon_bookings.salon_service_id')
+            ->where('salon_bookings.shop_id', $shop->id)
+            ->where('salon_bookings.status', BookingStatus::Completed->value)
+            ->whereBetween('salon_bookings.starts_at', [$from, $to])
+            ->groupBy('salon_services.id', 'salon_services.name')
+            ->selectRaw('salon_services.name as name, COUNT(*) as bookings, COALESCE(SUM(salon_services.price_cents),0) as revenue_cents')
+            ->orderByDesc('revenue_cents')
+            ->limit(8)
+            ->get();
+
+        $topStaff = DB::table('salon_bookings')
+            ->join('salon_staff', 'salon_staff.id', '=', 'salon_bookings.salon_staff_id')
+            ->where('salon_bookings.shop_id', $shop->id)
+            ->whereBetween('salon_bookings.starts_at', [$from, $to])
+            ->groupBy('salon_staff.id', 'salon_staff.name')
+            ->selectRaw('salon_staff.name as name, COUNT(*) as bookings')
+            ->orderByDesc('bookings')
+            ->limit(8)
+            ->get();
+
+        $days = max(1, $from->diffInDays($to) + 1);
+        $prevTo = $from->copy()->subDay()->endOfDay();
+        $prevFrom = $prevTo->copy()->subDays($days - 1)->startOfDay();
+
+        $prevBookings = SalonBooking::query()
+            ->where('shop_id', $shop->id)
+            ->whereBetween('starts_at', [$prevFrom, $prevTo])
+            ->count();
+
+        $prevRevenue = (int) DB::table('salon_bookings')
+            ->join('salon_services', 'salon_services.id', '=', 'salon_bookings.salon_service_id')
+            ->where('salon_bookings.shop_id', $shop->id)
+            ->where('salon_bookings.status', BookingStatus::Completed->value)
+            ->whereBetween('salon_bookings.starts_at', [$prevFrom, $prevTo])
+            ->sum('salon_services.price_cents');
+
+        $total = (clone $bookings)->count();
+        $cancelled = (int) ($byStatus[BookingStatus::Cancelled->value] ?? 0)
+            + (int) ($byStatus[BookingStatus::NoShow->value] ?? 0);
+        $cancellation_rate = $total > 0 ? round(($cancelled / $total) * 1000) / 10 : 0.0;
+
         return response()->json([
             'data' => [
                 'from' => $from->toIso8601String(),
                 'to' => $to->toIso8601String(),
-                'total_bookings' => (clone $bookings)->count(),
+                'total_bookings' => $total,
                 'by_status' => $byStatus,
                 'revenue_cents_completed' => $revenue,
                 'top_services' => $topServices,
+                'top_services_revenue' => $topServicesRevenue,
+                'top_staff' => $topStaff,
+                'comparison' => [
+                    'from' => $prevFrom->toIso8601String(),
+                    'to' => $prevTo->toIso8601String(),
+                    'total_bookings' => $prevBookings,
+                    'revenue_cents_completed' => $prevRevenue,
+                ],
+                'cancellation_rate_percent' => $cancellation_rate,
             ],
         ]);
     }
@@ -68,7 +119,7 @@ class OwnerAnalyticsController extends Controller
         if (! $user instanceof User) {
             abort(401);
         }
-        $shop = $user->managementShop();
+        $shop = $user->resolveManagementShop($request);
         if ($shop === null) {
             abort(403, 'No shop.');
         }

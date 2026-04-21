@@ -123,7 +123,7 @@ class BarberServiceCatalogController extends Controller
             abort(401);
         }
 
-        $shop = $user->managementShop();
+        $shop = $user->resolveManagementShop($request);
         if ($shop === null) {
             abort(403, 'No shop.');
         }

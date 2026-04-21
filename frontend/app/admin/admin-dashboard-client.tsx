@@ -44,7 +44,7 @@ function Body({ token }: { token: string }) {
         <h1 className="text-xl font-semibold text-zinc-900 dark:text-white">Platform overview</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           High-level counts for super admins. Use{" "}
-          <Link href="/admin/settings" className="font-medium text-rose-800 underline dark:text-rose-200">
+          <Link href="/admin/general" className="font-medium text-rose-800 underline dark:text-rose-200">
             Admin Settings
           </Link>{" "}
           for full shop approvals, payments, and limits.

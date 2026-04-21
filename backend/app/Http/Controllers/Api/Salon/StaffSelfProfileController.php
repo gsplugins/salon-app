@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Salon;
 
+use App\Http\Controllers\Api\Staff\ResolvesStaffProfile;
 use App\Http\Controllers\Controller;
 use App\Models\SalonStaff;
 use App\Models\User;
@@ -13,20 +14,23 @@ use Illuminate\Http\Request;
  */
 class StaffSelfProfileController extends Controller
 {
+    use ResolvesStaffProfile;
+
     public function show(Request $request): JsonResponse
     {
-        $staff = $this->staff($request);
-        $staff->loadMissing('user:id,name,mobile');
+        $staff = $this->staffFromRequest($request);
+        $staff->loadMissing(['user:id,name,mobile,email', 'shop:id,name,slug']);
 
         return response()->json(['data' => $this->row($staff)]);
     }
 
     public function update(Request $request): JsonResponse
     {
-        $staff = $this->staff($request);
+        $staff = $this->staffFromRequest($request);
 
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
+            'email' => ['nullable', 'string', 'email', 'max:255'],
             'bio' => ['nullable', 'string', 'max:5000'],
             'specialties' => ['nullable', 'array'],
             'specialties.*' => ['string', 'max:128'],
@@ -41,6 +45,9 @@ class StaffSelfProfileController extends Controller
         ]);
 
         foreach (array_keys($data) as $key) {
+            if ($key === 'email') {
+                continue;
+            }
             if ($key === 'specialties' && array_key_exists('specialties', $data)) {
                 $staff->specialties = $data['specialties'];
             } elseif (array_key_exists($key, $data)) {
@@ -49,28 +56,22 @@ class StaffSelfProfileController extends Controller
         }
         $staff->save();
 
-        if (isset($data['name']) && $staff->user_id !== null) {
-            User::query()->whereKey($staff->user_id)->update(['name' => $data['name']]);
+        if ($staff->user_id !== null) {
+            $userUpdates = [];
+            if (isset($data['name'])) {
+                $userUpdates['name'] = $data['name'];
+            }
+            if (array_key_exists('email', $data)) {
+                $userUpdates['email'] = $data['email'];
+            }
+            if ($userUpdates !== []) {
+                User::query()->whereKey($staff->user_id)->update($userUpdates);
+            }
         }
 
-        $staff->loadMissing('user:id,name,mobile');
+        $staff->loadMissing(['user:id,name,mobile,email', 'shop:id,name,slug']);
 
         return response()->json(['data' => $this->row($staff->fresh())]);
-    }
-
-    private function staff(Request $request): SalonStaff
-    {
-        $user = $request->user();
-        if (! $user instanceof User) {
-            abort(401);
-        }
-        $user->loadMissing('staffProfile');
-        $sp = $user->staffProfile;
-        if ($sp === null) {
-            abort(403, 'No staff profile.');
-        }
-
-        return $sp;
     }
 
     /**
@@ -79,6 +80,8 @@ class StaffSelfProfileController extends Controller
     private function row(SalonStaff $s): array
     {
         $u = $s->user;
+
+        $shop = $s->relationLoaded('shop') ? $s->shop : null;
 
         return [
             'id' => $s->id,
@@ -97,7 +100,16 @@ class StaffSelfProfileController extends Controller
             'emergency_contact_name' => $s->emergency_contact_name,
             'emergency_contact_phone' => $s->emergency_contact_phone,
             'is_active' => $s->is_active,
+            'commission_percent' => $s->commission_percent,
+            'availability_status' => $s->availability_status ?? 'available',
+            'portal_settings' => $s->portal_settings ?? (object) [],
             'login_mobile' => $u?->mobile,
+            'email' => $u?->email,
+            'shop' => $shop ? [
+                'id' => $shop->id,
+                'name' => $shop->name,
+                'slug' => $shop->slug,
+            ] : null,
             'can_manage_team' => false,
         ];
     }

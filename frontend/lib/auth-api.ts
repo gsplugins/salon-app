@@ -2,6 +2,9 @@
  * Browser calls use same-origin `/api/*` so Next.js rewrites proxy to Laravel.
  */
 
+import { getSalonActAsShopSlug, SALON_ACT_AS_SHOP_SLUG_HEADER } from "@/lib/salon-act-as-shop";
+import { getStaffActAsStaffId, SALON_ACT_AS_STAFF_ID_HEADER } from "@/lib/staff-act-as";
+
 export type ApiErrorBody = {
   message?: string;
   errors?: Record<string, string[]>;
@@ -15,12 +18,16 @@ export async function authJson<T = unknown>(
   | { ok: false; status: number; body: ApiErrorBody }
 > {
   const url = path.startsWith("/api") ? path : `/api${path.startsWith("/") ? path : `/${path}`}`;
+  const actSlug = getSalonActAsShopSlug();
+  const actStaff = url.includes("/api/staff") ? getStaffActAsStaffId() : null;
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     Accept: "application/json",
     ...(init?.accessToken
       ? { Authorization: `Bearer ${init.accessToken}` }
       : {}),
+    ...(actSlug ? { [SALON_ACT_AS_SHOP_SLUG_HEADER]: actSlug } : {}),
+    ...(actStaff ? { [SALON_ACT_AS_STAFF_ID_HEADER]: actStaff } : {}),
     ...init?.headers,
   };
   const { accessToken, ...rest } = (init ?? {}) as RequestInit & { accessToken?: string };

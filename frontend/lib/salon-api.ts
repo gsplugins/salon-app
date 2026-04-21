@@ -127,6 +127,7 @@ export async function patchCustomerBooking(
   bookingId: number,
   body:
     | { status: "cancelled" }
+    | { status: "completed" }
     | { starts_at: string; salon_staff_id?: number | null }
 ): Promise<{ ok: true; data: BookingRow } | { ok: false; body: ApiErrorBody }> {
   const res = await authJson<{ data: BookingRow }>(`/me/bookings/${bookingId}`, {
@@ -243,11 +244,21 @@ export type ShopProfile = {
   address: string | null;
   is_active: boolean;
   settings: Record<string, unknown>;
+  subscription?: {
+    status: string;
+    plan_key: string;
+    plan_name?: string | null;
+    trial_ends_at?: string | null;
+    current_period_end?: string | null;
+    features?: Record<string, unknown>;
+  } | null;
   permissions?: {
     can_edit_shop_basics?: boolean;
     can_edit_business_hours?: boolean;
     can_edit_booking_rules?: boolean;
     can_edit_currency?: boolean;
+    can_manage_payments?: boolean;
+    can_view_subscription?: boolean;
   };
 };
 
@@ -331,6 +342,85 @@ export async function fetchShopStats(
   accessToken: string
 ): Promise<{ ok: true; data: ShopStats } | { ok: false; body: ApiErrorBody }> {
   const res = await authJson<{ data: ShopStats }>("/my/shop/stats", { accessToken });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
+export type SalonPaymentRow = {
+  id: number;
+  shop_id: number;
+  salon_booking_id: number | null;
+  method: string;
+  amount_cents: number;
+  currency: string;
+  transaction_id: string | null;
+  status: string;
+  created_at?: string;
+  booking?: {
+    id: number;
+    customer_name: string;
+    customer_mobile: string;
+    starts_at: string;
+  } | null;
+};
+
+export type OwnerPaymentsMeta = {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+};
+
+export async function fetchOwnerPayments(
+  accessToken: string,
+  opts?: { page?: number; per_page?: number; status?: string; method?: string; from?: string; to?: string }
+): Promise<
+  { ok: true; data: SalonPaymentRow[]; meta: OwnerPaymentsMeta } | { ok: false; body: ApiErrorBody }
+> {
+  const q = new URLSearchParams();
+  if (opts?.page != null) q.set("page", String(opts.page));
+  if (opts?.per_page != null) q.set("per_page", String(opts.per_page));
+  if (opts?.status) q.set("status", opts.status);
+  if (opts?.method) q.set("method", opts.method);
+  if (opts?.from) q.set("from", opts.from);
+  if (opts?.to) q.set("to", opts.to);
+  const qs = q.toString();
+  const res = await authJson<{ data: SalonPaymentRow[]; meta: OwnerPaymentsMeta }>(
+    `/my/shop/payments${qs ? `?${qs}` : ""}`,
+    { accessToken }
+  );
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data, meta: res.data.meta };
+}
+
+export async function createOwnerManualPayment(
+  accessToken: string,
+  body: {
+    amount_cents: number;
+    method: string;
+    currency?: string;
+    salon_booking_id?: number | null;
+    transaction_id?: string | null;
+    status?: "pending" | "completed" | "failed";
+  }
+): Promise<{ ok: true; data: SalonPaymentRow } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson<{ data: SalonPaymentRow }>("/my/shop/payments", {
+    method: "POST",
+    accessToken,
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
+export async function refundOwnerSalonPayment(
+  accessToken: string,
+  paymentId: number
+): Promise<{ ok: true; data: SalonPaymentRow } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson<{ data: SalonPaymentRow }>(`/my/shop/payments/${paymentId}/refund`, {
+    method: "PATCH",
+    accessToken,
+  });
   if (!res.ok) return { ok: false, body: res.body };
   return { ok: true, data: res.data.data };
 }
@@ -593,12 +683,22 @@ export type Paginated<T> = {
 
 export async function fetchSystemShops(
   accessToken: string,
-  opts?: { search?: string; filter?: SystemShopFilter; page?: number }
+  opts?: {
+    search?: string;
+    filter?: SystemShopFilter;
+    page?: number;
+    plan_key?: string;
+    created_from?: string;
+    created_to?: string;
+  }
 ): Promise<{ ok: true; data: Paginated<SystemShopRow> } | { ok: false; body: ApiErrorBody }> {
   const params = new URLSearchParams();
   if (opts?.search) params.set("search", opts.search);
   if (opts?.filter && opts.filter !== "all") params.set("filter", opts.filter);
   if (opts?.page && opts.page > 1) params.set("page", String(opts.page));
+  if (opts?.plan_key) params.set("plan_key", opts.plan_key);
+  if (opts?.created_from) params.set("created_from", opts.created_from);
+  if (opts?.created_to) params.set("created_to", opts.created_to);
   const q = params.toString() ? `?${params.toString()}` : "";
   const res = await authJson<Paginated<SystemShopRow>>(`/system/shops${q}`, {
     accessToken,
@@ -1019,6 +1119,15 @@ export type OwnerAnalyticsSummary = {
   by_status: Record<string, number>;
   revenue_cents_completed: number;
   top_services: { name: string; bookings: number }[];
+  top_services_revenue?: { name: string; bookings: number; revenue_cents: number }[];
+  top_staff?: { name: string; bookings: number }[];
+  comparison?: {
+    from: string;
+    to: string;
+    total_bookings: number;
+    revenue_cents_completed: number;
+  };
+  cancellation_rate_percent?: number;
 };
 
 export async function fetchOwnerAnalyticsSummary(
@@ -1078,11 +1187,13 @@ export type SystemUserRow = {
 
 export async function fetchSystemUsers(
   accessToken: string,
-  opts?: { search?: string; page?: number }
+  opts?: { search?: string; page?: number; role?: string; status?: "active" | "locked" }
 ): Promise<{ ok: true; data: Paginated<SystemUserRow> } | { ok: false; body: ApiErrorBody }> {
   const params = new URLSearchParams();
   if (opts?.search) params.set("search", opts.search);
   if (opts?.page && opts.page > 1) params.set("page", String(opts.page));
+  if (opts?.role) params.set("role", opts.role);
+  if (opts?.status) params.set("status", opts.status);
   const q = params.toString() ? `?${params.toString()}` : "";
   const res = await authJson<Paginated<SystemUserRow>>(`/system/users${q}`, { accessToken });
   if (!res.ok) return { ok: false, body: res.body };

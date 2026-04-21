@@ -64,7 +64,7 @@ export function SuperAdminGate(props: { children: (accessToken: string) => React
           <Link href="/owner/dashboard" className="text-sm font-medium text-rose-800 underline dark:text-rose-200">
             Shop owner dashboard
           </Link>
-          <Link href="/dashboard" className="text-sm font-medium text-rose-800 underline dark:text-rose-200">
+          <Link href="/customer/dashboard" className="text-sm font-medium text-rose-800 underline dark:text-rose-200">
             Customer dashboard
           </Link>
         </div>

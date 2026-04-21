@@ -16,6 +16,7 @@ import type { AuthMePayload } from "@/lib/auth-api";
 import {
   canAccessSalonManagement,
   canAccessSuperAdmin,
+  canOpenStaffPortal,
   canViewShopBilling,
 } from "@/lib/role-access";
 import { getPrimaryDashboardPath, getRoleLabel } from "@/lib/auth-session";
@@ -108,7 +109,7 @@ export function RoleProfilePanel({
           </ul>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link
-              href="/dashboard"
+              href="/customer/dashboard"
               className="inline-flex items-center gap-2 rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
             >
               <Calendar className="h-4 w-4" aria-hidden />
@@ -180,13 +181,13 @@ export function RoleProfilePanel({
             >
               Public booking page
             </Link>
-            {me.role === "barber" ? (
+            {canOpenStaffPortal(me) ? (
               <Link
-                href="/barber/schedule"
+                href="/staff/dashboard"
                 className="inline-flex min-h-11 items-center gap-2 rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-800 active:scale-[0.99] dark:border-zinc-600 dark:text-zinc-200 touch-manipulation"
               >
                 <Scissors className="h-4 w-4" aria-hidden />
-                My schedule
+                Staff portal
               </Link>
             ) : null}
           </div>

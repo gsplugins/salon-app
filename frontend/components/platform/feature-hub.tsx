@@ -43,7 +43,7 @@ const SECTIONS: HubSection[] = [
     title: "Customers",
     description: "Register at /app, then use your dashboard",
     items: [
-      { href: "/dashboard", label: "My appointments & loyalty", icon: LayoutDashboard },
+      { href: "/customer/dashboard", label: "Customer portal", icon: LayoutDashboard },
       { href: "/queue/1", label: "Live queue (replace shop id)", icon: QrCode },
     ],
   },
@@ -66,8 +66,8 @@ const SECTIONS: HubSection[] = [
     title: "Barber (staff)",
     description: "Staff accounts linked to salon_staff",
     items: [
-      { href: "/barber/schedule", label: "Today", icon: Calendar },
-      { href: "/barber/history", label: "Past appointments", icon: History },
+      { href: "/staff/dashboard", label: "Staff portal (stylists & managers)", icon: Calendar },
+      { href: "/staff/appointments", label: "Staff appointments", icon: History },
     ],
   },
   {

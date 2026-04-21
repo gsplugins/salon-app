@@ -196,7 +196,7 @@ class AuthController extends Controller
 
         $user->loadMissing(['shops.subscription', 'staffProfile.shop.subscription', 'shopMembers']);
 
-        $shop = $user->primaryShop();
+        $shop = $user->resolveManagementShop($request);
         $sub = $shop?->subscription;
         $canViewBilling = $user->canViewShopBilling($shop);
 
@@ -230,6 +230,30 @@ class AuthController extends Controller
                 'current_period_end' => $sub->current_period_end?->toIso8601String(),
             ] : null,
         ]);
+    }
+
+    public function changePassword(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user instanceof User) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        $data = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if (! Hash::check($data['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['Current password is incorrect.'],
+            ]);
+        }
+
+        $user->password = $data['password'];
+        $user->save();
+
+        return response()->json(['message' => 'Password updated.']);
     }
 
     public function forgotPassword(Request $request): JsonResponse

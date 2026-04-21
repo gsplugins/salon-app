@@ -1,0 +1,16 @@
+{
+  "name": "Salon staff",
+  "short_name": "Staff",
+  "description": "Staff appointments, schedule, and earnings.",
+  "start_url": "/staff/dashboard",
+  "display": "standalone",
+  "background_color": "#faf8f6",
+  "theme_color": "#9f1239",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}
