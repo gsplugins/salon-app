@@ -12,6 +12,8 @@ const LS_ACCESS = "salon_access_token";
 const LS_REFRESH = "salon_refresh_token";
 
 type Tab = "login" | "register" | "forgot" | "reset";
+type AuthMode = "login" | "register";
+type LoginView = "login" | "forgot" | "reset";
 type RegisterMode = "customer" | "shop";
 
 function normalizeMobileInput(raw: string): string {
@@ -30,7 +32,7 @@ function slugifyShopSlug(input: string): string {
 function SectionCard(props: { title: string; subtitle: string; children: React.ReactNode }) {
   const { title, subtitle, children } = props;
   return (
-    <section className="rounded-2xl border border-zinc-200/90 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
+    <section className="rounded-3xl border border-zinc-200/80 bg-gradient-to-b from-white to-zinc-50/40 p-6 shadow-sm ring-1 ring-zinc-100/80 dark:border-zinc-800 dark:from-zinc-900/80 dark:to-zinc-950/70 dark:ring-zinc-800/60">
       <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">{title}</h2>
       <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{subtitle}</p>
       <div className="mt-5">{children}</div>
@@ -38,8 +40,11 @@ function SectionCard(props: { title: string; subtitle: string; children: React.R
   );
 }
 
-export function AuthPortal() {
-  const [tab, setTab] = useState<Tab>("login");
+export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
+  const [mode, setMode] = useState<AuthMode>(initialTab === "register" ? "register" : "login");
+  const [loginView, setLoginView] = useState<LoginView>(
+    initialTab === "forgot" ? "forgot" : initialTab === "reset" ? "reset" : "login"
+  );
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -229,7 +234,8 @@ export function AuthPortal() {
     if (!res.ok) return showErr(res.body);
     persistTokens(null, null);
     setMe(null);
-    setTab("login");
+    setMode("login");
+    setLoginView("login");
     setNotice({ type: "ok", text: `${res.data.message} Please sign in with your new password.` });
     setResetPassword("");
     setResetPassword2("");
@@ -282,15 +288,27 @@ export function AuthPortal() {
         : ["Role-based access"]
     : [];
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "login", label: "Login" },
-    { id: "register", label: "Register" },
-    { id: "forgot", label: "Forgot password" },
-    { id: "reset", label: "Reset OTP" },
-  ];
+  useEffect(() => {
+    setMode(initialTab === "register" ? "register" : "login");
+    setLoginView(initialTab === "forgot" ? "forgot" : initialTab === "reset" ? "reset" : "login");
+  }, [initialTab]);
 
   return (
     <div className="w-full space-y-6">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-sm shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+          <p className="text-xs font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-300">Customer</p>
+          <p className="mt-1 text-zinc-600 dark:text-zinc-400">Book, track appointments, and loyalty points with mobile login.</p>
+        </div>
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-sm shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+          <p className="text-xs font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-300">Shop team</p>
+          <p className="mt-1 text-zinc-600 dark:text-zinc-400">Manager and staff access with role-aware dashboards.</p>
+        </div>
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-sm shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+          <p className="text-xs font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-300">Secure</p>
+          <p className="mt-1 text-zinc-600 dark:text-zinc-400">JWT session, refresh tokens, SMS OTP reset flow.</p>
+        </div>
+      </div>
 
       {accessToken && me ? (
         <section className="rounded-2xl border border-zinc-200/90 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
@@ -370,30 +388,40 @@ export function AuthPortal() {
         </div>
       ) : null}
 
-      <div className="rounded-2xl border border-zinc-200/90 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60 sm:p-6">
-        <div className="mb-5 flex flex-wrap gap-2 border-b border-zinc-100 pb-4 dark:border-zinc-800" role="tablist" aria-label="Auth tabs">
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              role="tab"
-              aria-selected={tab === t.id}
-              onClick={() => {
-                setTab(t.id);
-                setNotice(null);
-              }}
-              className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
-                tab === t.id
-                  ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
-                  : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+      <div className="rounded-3xl border border-zinc-200/90 bg-white p-4 shadow-sm ring-1 ring-zinc-100/70 dark:border-zinc-800 dark:bg-zinc-900/60 dark:ring-zinc-800/60 sm:p-6">
+        <div className="mb-5 flex flex-wrap gap-2 border-b border-zinc-100 pb-4 dark:border-zinc-800">
+          <button
+            type="button"
+            onClick={() => {
+              setMode("login");
+              setLoginView("login");
+              setNotice(null);
+            }}
+            className={`min-h-10 rounded-full px-4 py-2 text-sm font-semibold transition ${
+              mode === "login"
+                ? "bg-zinc-900 text-white shadow-sm dark:bg-rose-100 dark:text-zinc-900"
+                : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            }`}
+          >
+            Login
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode("register");
+              setNotice(null);
+            }}
+            className={`min-h-10 rounded-full px-4 py-2 text-sm font-semibold transition ${
+              mode === "register"
+                ? "bg-zinc-900 text-white shadow-sm dark:bg-rose-100 dark:text-zinc-900"
+                : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            }`}
+          >
+            Registration
+          </button>
         </div>
 
-        {tab === "login" ? (
+        {mode === "login" && loginView === "login" ? (
           <SectionCard
             title="Sign in"
             subtitle="Use your mobile and password. Role-based features unlock automatically after login."
@@ -435,7 +463,7 @@ export function AuthPortal() {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full rounded-full bg-zinc-900 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-900 dark:hover:bg-white"
+                className="w-full min-h-11 rounded-full bg-zinc-900 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-900 dark:hover:bg-white"
               >
                 {busy ? "Signing in..." : "Sign in"}
               </button>
@@ -445,7 +473,7 @@ export function AuthPortal() {
                   type="button"
                   className="font-medium text-rose-800 underline dark:text-rose-200"
                   onClick={() => {
-                    setTab("register");
+                    setMode("register");
                     setRegisterMode("customer");
                     setNotice(null);
                   }}
@@ -453,11 +481,33 @@ export function AuthPortal() {
                   Create an account
                 </button>
               </p>
+              <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500">
+                <button
+                  type="button"
+                  className="font-medium text-rose-800 underline dark:text-rose-200"
+                  onClick={() => {
+                    setLoginView("forgot");
+                    setNotice(null);
+                  }}
+                >
+                  Forgot password?
+                </button>
+                <button
+                  type="button"
+                  className="font-medium text-rose-800 underline dark:text-rose-200"
+                  onClick={() => {
+                    setLoginView("reset");
+                    setNotice(null);
+                  }}
+                >
+                  Have OTP? Reset now
+                </button>
+              </div>
             </form>
           </SectionCard>
         ) : null}
 
-        {tab === "register" ? (
+        {mode === "register" ? (
           <SectionCard
             title="Create account"
             subtitle="Customers can self-register. Shop owners can register business accounts with booking URL."
@@ -606,7 +656,7 @@ export function AuthPortal() {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full rounded-full bg-zinc-900 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-900"
+                className="w-full min-h-11 rounded-full bg-zinc-900 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-900"
               >
                 {busy ? "Please wait..." : registerMode === "shop" ? "Create shop account" : "Create customer account"}
               </button>
@@ -614,7 +664,7 @@ export function AuthPortal() {
           </SectionCard>
         ) : null}
 
-        {tab === "forgot" ? (
+        {mode === "login" && loginView === "forgot" ? (
           <SectionCard title="Forgot password" subtitle="Request OTP by SMS for your registered mobile number.">
             <form onSubmit={handleForgot} className="space-y-4">
               <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
@@ -629,15 +679,22 @@ export function AuthPortal() {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full rounded-full border border-zinc-300 py-2.5 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                className="w-full min-h-11 rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800"
               >
                 {busy ? "Sending..." : "Send OTP"}
+              </button>
+              <button
+                type="button"
+                className="w-full min-h-11 rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                onClick={() => setLoginView("login")}
+              >
+                Back to login
               </button>
             </form>
           </SectionCard>
         ) : null}
 
-        {tab === "reset" ? (
+        {mode === "login" && loginView === "reset" ? (
           <SectionCard title="Reset password with OTP" subtitle="Enter mobile, 6-digit OTP, and your new password.">
             <form onSubmit={handleReset} className="space-y-4">
               <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
@@ -684,9 +741,16 @@ export function AuthPortal() {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full rounded-full bg-zinc-900 py-2.5 text-sm font-semibold text-white disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-900"
+                className="w-full min-h-11 rounded-full bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-900"
               >
                 {busy ? "Updating..." : "Update password"}
+              </button>
+              <button
+                type="button"
+                className="w-full min-h-11 rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                onClick={() => setLoginView("login")}
+              >
+                Back to login
               </button>
             </form>
           </SectionCard>

@@ -159,101 +159,101 @@ function Body({ token }: { token: string }) {
       title="Salon directory"
       subtitle="Filter by plan and registration window, assign catalog plans, open the manager workspace, or suspend and delete tenants."
     >
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap gap-2">
-          {FILTERS.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              disabled={busy}
-              onClick={() => {
-                setPage(1);
-                setFilter(f.id);
-              }}
-              className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
-                filter === f.id
-                  ? "bg-zinc-900 text-white shadow dark:bg-rose-100 dark:text-zinc-900"
-                  : "border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-300"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid gap-3 lg:grid-cols-2">
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/80 bg-white/80 p-4 sm:p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
           <div className="flex flex-wrap gap-2">
-            <div className="relative min-w-[200px] flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-              <input
-                className="w-full rounded-2xl border border-zinc-200 bg-white py-2.5 pl-10 pr-3 text-sm outline-none ring-zinc-400/30 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950"
-                placeholder="Search name, slug, owner…"
-                value={searchDraft}
-                onChange={(e) => setSearchDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    setSearch(searchDraft);
-                    setPage(1);
-                  }
+            {FILTERS.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  setPage(1);
+                  setFilter(f.id);
                 }}
-              />
-            </div>
-            <Button
-              type="button"
-              disabled={busy}
-              onClick={() => {
-                setSearch(searchDraft);
-                setPage(1);
-              }}
-            >
-              Search
-            </Button>
+                className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
+                  filter === f.id
+                    ? "bg-zinc-900 text-white shadow dark:bg-rose-100 dark:text-zinc-900"
+                    : "border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-300"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
-          <div className="flex flex-wrap items-end gap-2">
-            <div className="min-w-[120px] flex-1">
-              <Label htmlFor="plan_key">Plan key</Label>
-              <Input
-                id="plan_key"
-                className="mt-1"
-                placeholder="e.g. starter"
-                value={planKey}
-                onChange={(e) => setPlanKey(e.target.value)}
-              />
+          <div className="grid gap-3 lg:grid-cols-2">
+            <div className="flex flex-wrap gap-2">
+              <div className="relative min-w-[200px] flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                <input
+                  className="w-full rounded-2xl border border-zinc-200 bg-white py-2.5 pl-10 pr-3 text-sm outline-none ring-zinc-400/30 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950"
+                  placeholder="Search name, slug, owner…"
+                  value={searchDraft}
+                  onChange={(e) => setSearchDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      setSearch(searchDraft);
+                      setPage(1);
+                    }
+                  }}
+                />
+              </div>
+              <Button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  setSearch(searchDraft);
+                  setPage(1);
+                }}
+              >
+                Search
+              </Button>
             </div>
-            <div className="min-w-[130px] flex-1">
-              <Label htmlFor="cf">Created from</Label>
-              <Input id="cf" type="date" className="mt-1" value={createdFrom} onChange={(e) => setCreatedFrom(e.target.value)} />
+            <div className="flex flex-wrap items-end gap-2">
+              <div className="min-w-[120px] flex-1">
+                <Label htmlFor="plan_key">Plan key</Label>
+                <Input
+                  id="plan_key"
+                  className="mt-1"
+                  placeholder="e.g. starter"
+                  value={planKey}
+                  onChange={(e) => setPlanKey(e.target.value)}
+                />
+              </div>
+              <div className="min-w-[130px] flex-1">
+                <Label htmlFor="cf">Created from</Label>
+                <Input id="cf" type="date" className="mt-1" value={createdFrom} onChange={(e) => setCreatedFrom(e.target.value)} />
+              </div>
+              <div className="min-w-[130px] flex-1">
+                <Label htmlFor="ct">Created to</Label>
+                <Input id="ct" type="date" className="mt-1" value={createdTo} onChange={(e) => setCreatedTo(e.target.value)} />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setPage(1);
+                  void load();
+                }}
+              >
+                Apply filters
+              </Button>
             </div>
-            <div className="min-w-[130px] flex-1">
-              <Label htmlFor="ct">Created to</Label>
-              <Input id="ct" type="date" className="mt-1" value={createdTo} onChange={(e) => setCreatedTo(e.target.value)} />
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setPage(1);
-                void load();
-              }}
-            >
-              Apply filters
-            </Button>
           </div>
         </div>
-      </div>
 
-      <p className="text-xs text-zinc-500 dark:text-zinc-400">
-        bKash ledger and bulk approvals live under{" "}
-        <Link href="/admin/tools" className="font-semibold text-rose-800 underline-offset-2 hover:underline dark:text-rose-200">
-          Tools (bKash)
-        </Link>
-        .
-      </p>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          bKash ledger and bulk approvals live under{" "}
+          <Link href="/admin/tools" className="font-semibold text-rose-800 underline-offset-2 hover:underline dark:text-rose-200">
+            Tools (bKash)
+          </Link>
+          .
+        </p>
 
-      <ul className="grid gap-4 sm:grid-cols-2">
-        {data.data.map((s) => (
-          <li key={s.id}>
-            <div className="flex h-full flex-col rounded-3xl border border-zinc-200/90 bg-white p-5 shadow-sm transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-zinc-600">
+        <ul className="grid gap-4 sm:grid-cols-2">
+          {data.data.map((s) => (
+            <li key={s.id}>
+              <div className="flex h-full flex-col rounded-3xl border border-zinc-200/90 bg-white p-5 shadow-sm transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-zinc-600">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-100 to-zinc-100 text-rose-800 dark:from-rose-950 dark:to-zinc-900 dark:text-rose-200">
@@ -335,42 +335,43 @@ function Body({ token }: { token: string }) {
                   Delete
                 </Button>
               </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {data.data.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-zinc-200 py-12 text-center text-sm text-zinc-500 dark:border-zinc-700">
+            No salons match this filter.
+          </p>
+        ) : null}
+
+        {data.last_page > 1 ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-100 pt-6 text-sm dark:border-zinc-800">
+            <span className="text-zinc-500">
+              Page {data.current_page} of {data.last_page} · {data.total} salons
+            </span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-medium disabled:opacity-40 dark:border-zinc-600"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                disabled={page >= data.last_page}
+                onClick={() => setPage((p) => p + 1)}
+                className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-medium disabled:opacity-40 dark:border-zinc-600"
+              >
+                Next
+              </button>
             </div>
-          </li>
-        ))}
-      </ul>
-
-      {data.data.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-zinc-200 py-12 text-center text-sm text-zinc-500 dark:border-zinc-700">
-          No salons match this filter.
-        </p>
-      ) : null}
-
-      {data.last_page > 1 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-100 pt-6 text-sm dark:border-zinc-800">
-          <span className="text-zinc-500">
-            Page {data.current_page} of {data.last_page} · {data.total} salons
-          </span>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-medium disabled:opacity-40 dark:border-zinc-600"
-            >
-              Previous
-            </button>
-            <button
-              type="button"
-              disabled={page >= data.last_page}
-              onClick={() => setPage((p) => p + 1)}
-              className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-medium disabled:opacity-40 dark:border-zinc-600"
-            >
-              Next
-            </button>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
 
       <Dialog open={Boolean(deleteTarget)} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <DialogContent>

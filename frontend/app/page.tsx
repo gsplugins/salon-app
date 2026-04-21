@@ -57,20 +57,20 @@ async function fetchBackendJson(): Promise<{
 
 const services = [
   {
-    title: "Cut & style",
-    blurb: "Precision cuts, blowouts, and finishes tailored to your hair and routine.",
+    title: "Skin fades & classic cuts",
+    blurb: "Sharp fades, modern styles, and clean everyday cuts tailored to your look.",
   },
   {
-    title: "Color & gloss",
-    blurb: "Balayage, highlights, and glossing for depth, shine, and healthy-looking color.",
+    title: "Beard trim & line-up",
+    blurb: "Precision beard shaping, clean neckline, and detailed line-ups for a polished finish.",
   },
   {
-    title: "Treatments",
-    blurb: "Deep conditioning and repair so your hair feels as good as it looks.",
+    title: "Hot towel shave",
+    blurb: "Traditional close shave with hot towel prep and soothing aftercare.",
   },
   {
-    title: "Special occasions",
-    blurb: "Bridal and event styling — polished looks that last through the celebration.",
+    title: "Wash & grooming care",
+    blurb: "Scalp refresh and grooming care so you leave looking sharp and feeling fresh.",
   },
 ];
 
@@ -78,38 +78,38 @@ export default async function Home() {
   const status = await fetchBackendJson();
 
   return (
-    <div className="min-h-screen bg-[#faf8f6] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+    <div className="min-h-screen bg-[#f6f2ea] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
       <PublicHeader showMarketingNav />
 
       <main>
         <section
-          className="relative overflow-hidden border-b border-rose-100/60 bg-gradient-to-br from-rose-50 via-[#faf8f6] to-amber-50/80 dark:border-zinc-800 dark:from-rose-950/40 dark:via-zinc-950 dark:to-zinc-900"
+          className="relative overflow-hidden border-b border-amber-200/60 bg-gradient-to-br from-amber-50 via-[#f6f2ea] to-zinc-100 dark:border-zinc-800 dark:from-zinc-900 dark:via-zinc-950 dark:to-zinc-900"
           aria-labelledby="hero-heading"
         >
           <div
-            className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-rose-200/40 blur-3xl dark:bg-rose-500/10"
+            className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-amber-300/40 blur-3xl dark:bg-amber-500/10"
             aria-hidden
           />
           <div className="relative mx-auto max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-rose-800/80 dark:text-rose-200/90">
-              Hair · Color · Care
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-amber-800/80 dark:text-amber-200/90">
+              Barbershop · Beard · Grooming
             </p>
             <h1
               id="hero-heading"
               className="mt-4 max-w-2xl text-4xl font-semibold leading-tight tracking-tight text-zinc-900 sm:text-5xl dark:text-white"
             >
-              Look and feel your best — every visit.
+              Sharp cuts. Clean fades. Premium barbershop experience.
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-zinc-600 dark:text-zinc-300">
-              Warm, skilled stylists, thoughtful consultation, and a calm space designed
-              around you. Book your next appointment and leave with hair you love.
+              Trusted neighborhood barbers, modern techniques, and classic service.
+              Book your chair in seconds and walk out fresh every time.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
               <Link
                 href="/shops"
-                className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 dark:bg-rose-100 dark:text-zinc-900 dark:hover:bg-white"
+                className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 dark:bg-amber-100 dark:text-zinc-900 dark:hover:bg-white"
               >
-                Find a shop
+                Find a barbershop
               </Link>
               <a
                 href="#services"
@@ -124,7 +124,7 @@ export default async function Home() {
         <FeaturedShopsSection />
 
         <section
-          className="border-y border-rose-100/80 bg-white/80 dark:border-zinc-800 dark:bg-zinc-900/20"
+          className="border-y border-amber-200/80 bg-white/80 dark:border-zinc-800 dark:bg-zinc-900/20"
           aria-labelledby="how-heading"
         >
           <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
@@ -142,7 +142,7 @@ export default async function Home() {
                 {
                   step: "1",
                   title: "Browse & compare",
-                  text: "Search salons by name or area and read services, staff, and reviews.",
+                  text: "Search barbershops by name or area and compare services, barbers, and reviews.",
                   Icon: Search,
                 },
                 {
@@ -160,12 +160,12 @@ export default async function Home() {
               ].map(({ step, title, text, Icon }) => (
                 <li
                   key={step}
-                  className="rounded-2xl border border-rose-100/80 bg-[#faf8f6] p-6 dark:border-zinc-800 dark:bg-zinc-900/40"
+                  className="rounded-2xl border border-amber-200/80 bg-[#f6f2ea] p-6 dark:border-zinc-800 dark:bg-zinc-900/40"
                 >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-100 text-rose-900 dark:bg-rose-950/60 dark:text-rose-100">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-100">
                     <Icon className="h-5 w-5" strokeWidth={1.75} />
                   </div>
-                  <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-rose-800/90 dark:text-rose-200/90">
+                  <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-amber-800/90 dark:text-amber-200/90">
                     Step {step}
                   </p>
                   <h3 className="mt-1 text-lg font-semibold text-zinc-900 dark:text-white">{title}</h3>
@@ -176,7 +176,7 @@ export default async function Home() {
             <div className="mt-10 flex flex-wrap gap-4">
               <Link
                 href="/shops"
-                className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 dark:bg-rose-100 dark:text-zinc-900 dark:hover:bg-white"
+                className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 dark:bg-amber-100 dark:text-zinc-900 dark:hover:bg-white"
               >
                 Shops
               </Link>
@@ -211,7 +211,7 @@ export default async function Home() {
             {services.map((s) => (
               <li
                 key={s.title}
-                className="rounded-2xl border border-rose-100/80 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"
+                className="rounded-2xl border border-amber-200/80 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"
               >
                 <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">
                   {s.title}
@@ -226,7 +226,7 @@ export default async function Home() {
 
         <section
           id="visit"
-          className="border-y border-rose-100/80 bg-white/70 dark:border-zinc-800 dark:bg-zinc-900/30"
+          className="border-y border-amber-200/80 bg-white/70 dark:border-zinc-800 dark:bg-zinc-900/30"
         >
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:grid-cols-2 sm:px-6 sm:py-20">
             <div>
@@ -243,15 +243,15 @@ export default async function Home() {
               </p>
             </div>
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-rose-800/90 dark:text-rose-200/90">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-amber-800/90 dark:text-amber-200/90">
                 Hours
               </h3>
               <dl className="mt-3 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-                <div className="flex justify-between gap-8 border-b border-rose-50 pb-2 dark:border-zinc-800">
+                <div className="flex justify-between gap-8 border-b border-amber-100 pb-2 dark:border-zinc-800">
                   <dt>Mon – Fri</dt>
                   <dd>9:00 – 19:00</dd>
                 </div>
-                <div className="flex justify-between gap-8 border-b border-rose-50 pb-2 dark:border-zinc-800">
+                <div className="flex justify-between gap-8 border-b border-amber-100 pb-2 dark:border-zinc-800">
                   <dt>Saturday</dt>
                   <dd>9:00 – 17:00</dd>
                 </div>
@@ -291,10 +291,10 @@ export default async function Home() {
             ].map((text) => (
               <li
                 key={text}
-                className="flex gap-3 rounded-xl border border-rose-100/80 bg-white p-4 text-sm leading-relaxed text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-300"
+                  className="flex gap-3 rounded-xl border border-amber-200/80 bg-white p-4 text-sm leading-relaxed text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-300"
               >
                 <span
-                  className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-rose-500/80"
+                  className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-amber-500/80"
                   aria-hidden
                 />
                 {text}
@@ -304,13 +304,13 @@ export default async function Home() {
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href="/platform"
-              className="inline-flex items-center justify-center rounded-full bg-rose-700 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-rose-800 dark:bg-rose-200 dark:text-zinc-900 dark:hover:bg-white"
+              className="inline-flex items-center justify-center rounded-full bg-amber-700 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-amber-800 dark:bg-amber-200 dark:text-zinc-900 dark:hover:bg-white"
             >
               View all platform pages
             </Link>
             <Link
               href="/app"
-              className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 dark:bg-rose-100 dark:text-zinc-900 dark:hover:bg-white"
+              className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 dark:bg-amber-100 dark:text-zinc-900 dark:hover:bg-white"
             >
               Open account &amp; staff demo
             </Link>
@@ -328,7 +328,7 @@ export default async function Home() {
           className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16 sm:px-6 sm:py-24"
           aria-labelledby="book-heading"
         >
-          <div className="rounded-3xl bg-gradient-to-br from-zinc-900 to-zinc-800 px-8 py-12 text-center shadow-lg dark:from-rose-950 dark:to-zinc-950 sm:px-12">
+          <div className="rounded-3xl bg-gradient-to-br from-zinc-900 to-zinc-800 px-8 py-12 text-center shadow-lg dark:from-amber-950 dark:to-zinc-950 sm:px-12">
             <h2
               id="book-heading"
               className="text-2xl font-semibold tracking-tight text-white sm:text-3xl"
@@ -342,7 +342,7 @@ export default async function Home() {
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
                 href="/book"
-                className="inline-flex w-full max-w-xs items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-zinc-900 hover:bg-rose-50 sm:w-auto"
+                className="inline-flex w-full max-w-xs items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-zinc-900 hover:bg-amber-50 sm:w-auto"
               >
                 Book online
               </Link>
@@ -363,11 +363,11 @@ export default async function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-rose-100/80 bg-white/80 dark:border-zinc-800 dark:bg-zinc-950">
+      <footer className="border-t border-amber-200/80 bg-white/80 dark:border-zinc-800 dark:bg-zinc-950">
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              © {new Date().getFullYear()} Lumière Salon. All rights reserved.
+              © {new Date().getFullYear()} Prime Barbershop. All rights reserved.
             </p>
             <div
               className={`rounded-xl border px-3 py-2 text-xs ${

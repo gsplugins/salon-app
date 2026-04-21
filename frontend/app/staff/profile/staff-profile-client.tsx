@@ -7,7 +7,7 @@ import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { formatApiError } from "@/lib/auth-api";
-import { fetchStaffProfile, patchStaffProfile, postAuthChangePassword, type StaffProfilePayload } from "@/lib/staff-api";
+import { fetchStaffProfile, patchStaffProfile, type StaffProfilePayload } from "@/lib/staff-api";
 import { useSalonAccessToken } from "@/hooks/use-salon-access-token";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -26,16 +26,6 @@ const profileSchema = z.object({
 });
 
 type ProfileForm = z.infer<typeof profileSchema>;
-
-const passwordSchema = z
-  .object({
-    current_password: z.string().min(1, "Required"),
-    password: z.string().min(8, "At least 8 characters"),
-    password_confirmation: z.string().min(1, "Confirm password"),
-  })
-  .refine((d) => d.password === d.password_confirmation, { message: "Passwords must match", path: ["password_confirmation"] });
-
-type PasswordForm = z.infer<typeof passwordSchema>;
 
 export function StaffProfileClient() {
   const token = useSalonAccessToken();
@@ -83,11 +73,6 @@ export function StaffProfileClient() {
     });
   }, [profile, pf]);
 
-  const pwf = useForm<PasswordForm>({
-    resolver: zodResolver(passwordSchema) as Resolver<PasswordForm>,
-    defaultValues: { current_password: "", password: "", password_confirmation: "" },
-  });
-
   async function onProfile(values: ProfileForm) {
     if (!token) return;
     const specialties = (values.specialtiesText ?? "")
@@ -108,21 +93,6 @@ export function StaffProfileClient() {
     }
     toast.success("Profile updated.");
     setProfile(res.data);
-  }
-
-  async function onPassword(values: PasswordForm) {
-    if (!token) return;
-    const res = await postAuthChangePassword(token, {
-      current_password: values.current_password,
-      password: values.password,
-      password_confirmation: values.password_confirmation,
-    });
-    if (!res.ok) {
-      toast.error(formatApiError(res.body));
-      return;
-    }
-    toast.success("Password changed.");
-    pwf.reset();
   }
 
   if (!token) return null;
@@ -217,27 +187,9 @@ export function StaffProfileClient() {
         </Button>
       </form>
 
-      <form className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950/40" onSubmit={pwf.handleSubmit(onPassword)}>
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Change password</h2>
-        <div>
-          <Label htmlFor="c-pw">Current password</Label>
-          <Input id="c-pw" type="password" autoComplete="current-password" className="mt-1 min-h-11" {...pwf.register("current_password")} />
-        </div>
-        <div>
-          <Label htmlFor="n-pw">New password</Label>
-          <Input id="n-pw" type="password" autoComplete="new-password" className="mt-1 min-h-11" {...pwf.register("password")} />
-        </div>
-        <div>
-          <Label htmlFor="n-pw2">Confirm new password</Label>
-          <Input id="n-pw2" type="password" autoComplete="new-password" className="mt-1 min-h-11" {...pwf.register("password_confirmation")} />
-          {pwf.formState.errors.password_confirmation ? (
-            <p className="mt-1 text-xs text-red-600">{pwf.formState.errors.password_confirmation.message}</p>
-          ) : null}
-        </div>
-        <Button type="submit" variant="outline" className="min-h-11" disabled={pwf.formState.isSubmitting}>
-          Update password
-        </Button>
-      </form>
+      <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-300">
+        Password changes are managed by your shop admin/manager.
+      </div>
     </div>
   );
 }

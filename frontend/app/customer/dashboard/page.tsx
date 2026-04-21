@@ -1,10 +1,5 @@
-import type { Metadata } from "next";
-import { CustomerHomeClient } from "./customer-home-client";
-
-export const metadata: Metadata = {
-  title: "Customer home",
-};
+import { redirect } from "next/navigation";
 
 export default function CustomerDashboardPage() {
-  return <CustomerHomeClient />;
+  redirect("/customer/home");
 }

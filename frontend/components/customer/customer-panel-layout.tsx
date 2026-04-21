@@ -3,22 +3,25 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { Calendar, ClipboardList, Gift, LayoutDashboard, Store, User } from "lucide-react";
+import { Bell, Calendar, Compass, CreditCard, Gift, Heart, Home, Star, Store, User } from "lucide-react";
 import { fetchAuthMe, type AuthMePayload } from "@/lib/auth-api";
 import { fetchCustomerLoyalty } from "@/lib/salon-api";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { PortalPanelShell, type PortalNavItem } from "@/components/portal/portal-panel-shell";
 
 const PRIMARY: PortalNavItem[] = [
-  { href: "/customer/dashboard", label: "Home", icon: LayoutDashboard },
-  { href: "/customer/appointments", label: "Bookings", icon: Calendar },
+  { href: "/customer/home", label: "Home", icon: Home },
+  { href: "/customer/explore", label: "Explore", icon: Compass },
+  { href: "/customer/appointments", label: "Appointments", icon: Calendar },
   { href: "/customer/loyalty", label: "Loyalty", icon: Gift },
   { href: "/customer/profile", label: "Profile", icon: User },
 ];
 
 const SECONDARY: PortalNavItem[] = [
-  { href: "/shops", label: "Browse shops", icon: Store },
-  { href: "/app", label: "Account & settings", icon: ClipboardList },
+  { href: "/customer/notifications", label: "Notifications", icon: Bell },
+  { href: "/customer/favorites", label: "Favorites", icon: Heart },
+  { href: "/customer/payments", label: "Payments", icon: CreditCard },
+  { href: "/customer/reviews", label: "Reviews", icon: Star },
 ];
 
 export function CustomerPanelLayout(props: { accessToken: string; children: React.ReactNode }) {
@@ -59,7 +62,7 @@ export function CustomerPanelLayout(props: { accessToken: string; children: Reac
   return (
     <PortalPanelShell
       brandLabel="Customer"
-      brandHref="/customer/dashboard"
+      brandHref="/customer/home"
       sidebarContextLine="My salon"
       primaryNav={PRIMARY}
       secondaryNav={SECONDARY}

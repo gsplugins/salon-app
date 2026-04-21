@@ -11,7 +11,7 @@ export async function FeaturedShopsSection() {
     return (
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6" aria-labelledby="featured-heading">
         <h2 id="featured-heading" className="text-2xl font-semibold text-zinc-900 dark:text-white">
-          Featured shops
+          Featured barbershops
         </h2>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           No public shops yet — check back soon or ask your salon to go live on the platform.
@@ -31,7 +31,7 @@ export async function FeaturedShopsSection() {
             Featured shops
           </h2>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            Discover salons accepting online bookings near you.
+            Discover barbershops accepting online bookings near you.
           </p>
         </div>
         <Link

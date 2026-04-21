@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Users } from "lucide-react";
 import { SalonManagementGate } from "@/components/auth/salon-management-gate";
@@ -17,6 +18,7 @@ import {
   type CatalogServiceRow,
   type CatalogStaffRow,
 } from "@/lib/salon-api";
+import { setStaffActAsStaffId } from "@/lib/staff-act-as";
 
 type StaffRoleOption = { value: string; label: string };
 const STAFF_ROLE_OPTIONS: StaffRoleOption[] = [
@@ -106,13 +108,16 @@ function parseOptionalInt(raw: string): number | null {
 }
 
 function Body({ token }: { token: string }) {
+  const router = useRouter();
   const [staff, setStaff] = useState<CatalogStaffRow[] | null>(null);
   const [services, setServices] = useState<CatalogServiceRow[] | null>(null);
   const [busy, setBusy] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [adding, setAdding] = useState<StaffFormState>(() => toForm());
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<StaffFormState>(() => toForm());
+  const staffListRef = useRef<HTMLUListElement | null>(null);
 
   const load = useCallback(async () => {
     setBusy(true);
@@ -165,7 +170,11 @@ function Body({ token }: { token: string }) {
     }
     toast.success("Staff member added.");
     setAdding(toForm());
+    setShowAddForm(false);
     void load();
+    requestAnimationFrame(() => {
+      staffListRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   }
 
   function startEdit(row: CatalogStaffRow) {
@@ -226,6 +235,12 @@ function Body({ token }: { token: string }) {
     void load();
   }
 
+  function openStaffPortalAs(row: CatalogStaffRow) {
+    setStaffActAsStaffId(row.id);
+    toast.success(`Now viewing as ${row.name} in staff portal.`);
+    router.push("/staff/dashboard");
+  }
+
   if (busy || staff === null) {
     return (
       <div className="space-y-3">
@@ -243,160 +258,171 @@ function Body({ token }: { token: string }) {
           Real-life team records and staff login credentials. Staff can edit only their own profile; managers can update
           or remove any staff member here.
         </p>
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={() => setShowAddForm((v) => !v)}
+            className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+          >
+            {showAddForm ? "Close add staff form" : "Add staff"}
+          </button>
+        </div>
       </div>
 
-      <form onSubmit={addStaff} className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Add staff</h2>
-        <div className="mt-3 grid gap-3 md:grid-cols-2">
-          <input
-            value={adding.name}
-            onChange={(e) => setAdding((p) => ({ ...p, name: e.target.value }))}
-            placeholder="Full name"
-            required
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-          />
-          <input
-            value={adding.position_title}
-            onChange={(e) => setAdding((p) => ({ ...p, position_title: e.target.value }))}
-            placeholder="Position title (e.g. Senior stylist)"
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-          />
-          <select
-            value={adding.staff_role}
-            onChange={(e) => setAdding((p) => ({ ...p, staff_role: e.target.value }))}
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-          >
-            {STAFF_ROLE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          <input
-            value={adding.work_mobile}
-            onChange={(e) => setAdding((p) => ({ ...p, work_mobile: e.target.value }))}
-            placeholder="Work mobile"
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-          />
-          <input
-            value={adding.age}
-            onChange={(e) => setAdding((p) => ({ ...p, age: e.target.value }))}
-            placeholder="Age"
-            inputMode="numeric"
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-          />
-          <input
-            value={adding.experience_years}
-            onChange={(e) => setAdding((p) => ({ ...p, experience_years: e.target.value }))}
-            placeholder="Experience years"
-            inputMode="numeric"
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-          />
-          <input
-            value={adding.emergency_contact_name}
-            onChange={(e) => setAdding((p) => ({ ...p, emergency_contact_name: e.target.value }))}
-            placeholder="Emergency contact name"
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-          />
-          <input
-            value={adding.emergency_contact_phone}
-            onChange={(e) => setAdding((p) => ({ ...p, emergency_contact_phone: e.target.value }))}
-            placeholder="Emergency contact phone"
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-          />
-        </div>
-        <textarea
-          value={adding.address}
-          onChange={(e) => setAdding((p) => ({ ...p, address: e.target.value }))}
-          placeholder="Address"
-          rows={2}
-          className="mt-3 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-        />
-        <input
-          value={adding.specialties_csv}
-          onChange={(e) => setAdding((p) => ({ ...p, specialties_csv: e.target.value }))}
-          placeholder="Specialties (comma separated)"
-          className="mt-3 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-        />
-        <textarea
-          value={adding.bio}
-          onChange={(e) => setAdding((p) => ({ ...p, bio: e.target.value }))}
-          placeholder="Short bio"
-          rows={3}
-          className="mt-3 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-        />
-        {services && services.length > 0 ? (
-          <fieldset className="mt-3">
-            <legend className="text-xs font-medium text-zinc-500">Services</legend>
-            <div className="mt-2 flex max-h-32 flex-wrap gap-2 overflow-y-auto">
-              {services.map((s) => (
-                <label key={s.id} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={adding.selectedSvc.includes(s.id)}
-                    onChange={(e) => {
-                      setAdding((prev) => ({
-                        ...prev,
-                        selectedSvc: e.target.checked
-                          ? [...prev.selectedSvc, s.id]
-                          : prev.selectedSvc.filter((x) => x !== s.id),
-                      }));
-                    }}
-                  />
-                  {s.name}
-                </label>
+      {showAddForm ? (
+        <form onSubmit={addStaff} className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Add staff</h2>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            <input
+              value={adding.name}
+              onChange={(e) => setAdding((p) => ({ ...p, name: e.target.value }))}
+              placeholder="Full name"
+              required
+              className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+            />
+            <input
+              value={adding.position_title}
+              onChange={(e) => setAdding((p) => ({ ...p, position_title: e.target.value }))}
+              placeholder="Position title (e.g. Senior stylist)"
+              className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+            />
+            <select
+              value={adding.staff_role}
+              onChange={(e) => setAdding((p) => ({ ...p, staff_role: e.target.value }))}
+              className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+            >
+              {STAFF_ROLE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
               ))}
-            </div>
-          </fieldset>
-        ) : null}
-        <label className="mt-3 flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={adding.create_login}
-            onChange={(e) => setAdding((p) => ({ ...p, create_login: e.target.checked }))}
-          />
-          Create staff login credentials now
-        </label>
-        {adding.create_login ? (
-          <div className="mt-3 grid gap-3 md:grid-cols-3">
+            </select>
             <input
-              value={adding.login_mobile}
-              onChange={(e) => setAdding((p) => ({ ...p, login_mobile: e.target.value }))}
-              placeholder="Login mobile"
-              required
+              value={adding.work_mobile}
+              onChange={(e) => setAdding((p) => ({ ...p, work_mobile: e.target.value }))}
+              placeholder="Work mobile"
               className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
             />
             <input
-              type="password"
-              value={adding.password}
-              onChange={(e) => setAdding((p) => ({ ...p, password: e.target.value }))}
-              placeholder="Password"
-              required
+              value={adding.age}
+              onChange={(e) => setAdding((p) => ({ ...p, age: e.target.value }))}
+              placeholder="Age"
+              inputMode="numeric"
               className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
             />
             <input
-              type="password"
-              value={adding.password_confirmation}
-              onChange={(e) => setAdding((p) => ({ ...p, password_confirmation: e.target.value }))}
-              placeholder="Confirm password"
-              required
+              value={adding.experience_years}
+              onChange={(e) => setAdding((p) => ({ ...p, experience_years: e.target.value }))}
+              placeholder="Experience years"
+              inputMode="numeric"
+              className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+            />
+            <input
+              value={adding.emergency_contact_name}
+              onChange={(e) => setAdding((p) => ({ ...p, emergency_contact_name: e.target.value }))}
+              placeholder="Emergency contact name"
+              className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+            />
+            <input
+              value={adding.emergency_contact_phone}
+              onChange={(e) => setAdding((p) => ({ ...p, emergency_contact_phone: e.target.value }))}
+              placeholder="Emergency contact phone"
               className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
             />
           </div>
-        ) : null}
-        <button
-          type="submit"
-          disabled={saving}
-          className="mt-4 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
-        >
-          {saving ? "Saving..." : "Save"}
-        </button>
-      </form>
+          <textarea
+            value={adding.address}
+            onChange={(e) => setAdding((p) => ({ ...p, address: e.target.value }))}
+            placeholder="Address"
+            rows={2}
+            className="mt-3 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+          />
+          <input
+            value={adding.specialties_csv}
+            onChange={(e) => setAdding((p) => ({ ...p, specialties_csv: e.target.value }))}
+            placeholder="Specialties (comma separated)"
+            className="mt-3 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+          />
+          <textarea
+            value={adding.bio}
+            onChange={(e) => setAdding((p) => ({ ...p, bio: e.target.value }))}
+            placeholder="Short bio"
+            rows={3}
+            className="mt-3 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+          />
+          {services && services.length > 0 ? (
+            <fieldset className="mt-3">
+              <legend className="text-xs font-medium text-zinc-500">Services</legend>
+              <div className="mt-2 flex max-h-32 flex-wrap gap-2 overflow-y-auto">
+                {services.map((s) => (
+                  <label key={s.id} className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={adding.selectedSvc.includes(s.id)}
+                      onChange={(e) => {
+                        setAdding((prev) => ({
+                          ...prev,
+                          selectedSvc: e.target.checked
+                            ? [...prev.selectedSvc, s.id]
+                            : prev.selectedSvc.filter((x) => x !== s.id),
+                        }));
+                      }}
+                    />
+                    {s.name}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+          <label className="mt-3 flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={adding.create_login}
+              onChange={(e) => setAdding((p) => ({ ...p, create_login: e.target.checked }))}
+            />
+            Create staff login credentials now
+          </label>
+          {adding.create_login ? (
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              <input
+                value={adding.login_mobile}
+                onChange={(e) => setAdding((p) => ({ ...p, login_mobile: e.target.value }))}
+                placeholder="Login mobile"
+                required
+                className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+              />
+              <input
+                type="text"
+                value={adding.password}
+                onChange={(e) => setAdding((p) => ({ ...p, password: e.target.value }))}
+                placeholder="Password"
+                required
+                className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+              />
+              <input
+                type="text"
+                value={adding.password_confirmation}
+                onChange={(e) => setAdding((p) => ({ ...p, password_confirmation: e.target.value }))}
+                placeholder="Confirm password"
+                required
+                className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+              />
+            </div>
+          ) : null}
+          <button
+            type="submit"
+            disabled={saving}
+            className="mt-4 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+          >
+            {saving ? "Saving..." : "Save"}
+          </button>
+        </form>
+      ) : null}
 
       {staff.length === 0 ? (
         <EmptyState icon={Users} title="No staff yet" description="Add your first stylist to take bookings." />
       ) : (
-        <ul className="space-y-3">
+        <ul ref={staffListRef} className="space-y-3">
           {staff.map((row) => (
             <li
               key={row.id}
@@ -416,6 +442,13 @@ function Body({ token }: { token: string }) {
                   </p>
                 </div>
                 <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => openStaffPortalAs(row)}
+                    className="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white dark:bg-rose-100 dark:text-zinc-900"
+                  >
+                    Staff panel view
+                  </button>
                   {editingId === row.id ? (
                     <>
                       <button
@@ -545,14 +578,14 @@ function Body({ token }: { token: string }) {
                     placeholder="Bio"
                   />
                   <input
-                    type="password"
+                    type="text"
                     value={editForm.password}
                     onChange={(e) => setEditForm((p) => ({ ...p, password: e.target.value }))}
                     className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
                     placeholder="New password (optional)"
                   />
                   <input
-                    type="password"
+                    type="text"
                     value={editForm.password_confirmation}
                     onChange={(e) => setEditForm((p) => ({ ...p, password_confirmation: e.target.value }))}
                     className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
