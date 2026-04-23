@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import { AuthHeaderProfile } from "@/components/auth-header-profile";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon };
 
@@ -71,10 +70,7 @@ export function SidebarLayout(props: {
         </aside>
         <main className="min-w-0 flex-1 rounded-2xl border border-zinc-200/80 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
           <div className="flex flex-wrap items-center justify-end gap-2 border-b border-zinc-100 px-4 py-3 dark:border-zinc-800 md:px-6">
-            <AuthHeaderProfile variant="compact" />
-            <div className="hidden md:block">
-              <ThemeToggle />
-            </div>
+            <AuthHeaderProfile />
           </div>
           <div className="p-4 md:p-6">{children}</div>
         </main>

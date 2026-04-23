@@ -1,6 +1,6 @@
 import Link from "next/link";
+import { Bell } from "lucide-react";
 import { AuthHeaderProfile } from "@/components/auth-header-profile";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function BarberLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -26,8 +26,14 @@ export default function BarberLayout({ children }: { children: React.ReactNode }
             <Link href="/platform" className="rounded-lg px-2 py-1 text-rose-800 hover:bg-rose-50 dark:text-rose-200 dark:hover:bg-rose-950/30">
               Site map
             </Link>
-            <AuthHeaderProfile variant="compact" />
-            <ThemeToggle />
+            <Link
+              href="/staff/notifications"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+              aria-label="Notifications"
+            >
+              <Bell className="h-5 w-5" />
+            </Link>
+            <AuthHeaderProfile />
           </nav>
         </div>
       </header>

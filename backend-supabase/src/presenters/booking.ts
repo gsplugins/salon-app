@@ -1,12 +1,19 @@
 import { supabaseAdmin } from "../lib/supabase.js";
 
+export type BookingLineItemJson = {
+  service_id: number;
+  name: string;
+  duration_minutes: number;
+  price_cents: number | null;
+};
+
 export type BookingRowJson = Record<string, unknown>;
 
 export async function bookingToRow(bookingId: number): Promise<BookingRowJson | null> {
   const b = await supabaseAdmin
     .from("salon_bookings")
     .select(
-      "id,customer_name,customer_mobile,starts_at,ends_at,status,source,notes,shop_id,salon_service_id,salon_staff_id"
+      "id,customer_name,customer_mobile,starts_at,ends_at,status,source,notes,shop_id,salon_service_id,salon_staff_id,line_items,total_price_cents,advance_percent_snapshot,advance_amount_cents,advance_paid_cents"
     )
     .eq("id", bookingId)
     .maybeSingle();
@@ -23,7 +30,25 @@ export async function bookingToRow(bookingId: number): Promise<BookingRowJson | 
     shop_id: number;
     salon_service_id: number;
     salon_staff_id: number;
+    line_items: unknown;
+    total_price_cents: number | null;
+    advance_percent_snapshot: number | null;
+    advance_amount_cents: number | null;
+    advance_paid_cents: number | null;
   };
+  const rawItems = row.line_items;
+  const lineItems: BookingLineItemJson[] = Array.isArray(rawItems)
+    ? (rawItems as unknown[]).map((x) => {
+        const o = (x && typeof x === "object" ? x : {}) as Record<string, unknown>;
+        return {
+          service_id: Number(o.service_id),
+          name: String(o.name ?? ""),
+          duration_minutes: Number(o.duration_minutes ?? 0),
+          price_cents: o.price_cents == null ? null : Number(o.price_cents)
+        };
+      })
+    : [];
+
   const [shop, svc, st] = await Promise.all([
     supabaseAdmin.from("shops").select("id,name,slug").eq("id", row.shop_id).maybeSingle(),
     supabaseAdmin
@@ -33,20 +58,43 @@ export async function bookingToRow(bookingId: number): Promise<BookingRowJson | 
       .maybeSingle(),
     supabaseAdmin.from("salon_staff").select("id,name").eq("id", row.salon_staff_id).maybeSingle()
   ]);
+
+  const primarySvc = svc.data
+    ? {
+        id: (svc.data as { id: number }).id,
+        name: (svc.data as { name: string }).name,
+        category: (svc.data as { category: string | null }).category ?? null,
+        duration_minutes: (svc.data as { duration_minutes: number }).duration_minutes,
+        price_cents: (svc.data as { price_cents: number | null }).price_cents ?? null
+      }
+    : { id: row.salon_service_id, name: "", category: null, duration_minutes: 0, price_cents: null };
+
   return {
     id: row.id,
     customer_name: row.customer_name,
     customer_mobile: row.customer_mobile,
-    shop: shop.data ? { id: (shop.data as { id: number }).id, name: (shop.data as { name: string }).name, slug: (shop.data as { slug: string }).slug } : null,
-    service: svc.data
+    shop: shop.data
       ? {
-          id: (svc.data as { id: number }).id,
-          name: (svc.data as { name: string }).name,
-          category: (svc.data as { category: string | null }).category ?? null,
-          duration_minutes: (svc.data as { duration_minutes: number }).duration_minutes,
-          price_cents: (svc.data as { price_cents: number | null }).price_cents ?? null
+          id: (shop.data as { id: number }).id,
+          name: (shop.data as { name: string }).name,
+          slug: (shop.data as { slug: string }).slug
         }
-      : { id: row.salon_service_id, name: "", category: null, duration_minutes: 0, price_cents: null },
+      : null,
+    service: primarySvc,
+    line_items: lineItems.length
+      ? lineItems
+      : [
+          {
+            service_id: primarySvc.id,
+            name: primarySvc.name,
+            duration_minutes: primarySvc.duration_minutes,
+            price_cents: primarySvc.price_cents
+          }
+        ],
+    total_price_cents: row.total_price_cents,
+    advance_percent_snapshot: row.advance_percent_snapshot ?? 0,
+    advance_amount_cents: row.advance_amount_cents ?? 0,
+    advance_paid_cents: row.advance_paid_cents ?? 0,
     staff: st.data
       ? { id: (st.data as { id: number }).id, name: (st.data as { name: string }).name }
       : { id: row.salon_staff_id, name: "" },

@@ -2,13 +2,13 @@
 -- Run after schema.sql
 
 -- 1) Super admin (replace hash/mobile for production)
--- Password hash below is bcrypt for: ChangeMe123!
+-- Password for this seed row: Admin@12345  (bcrypt cost 10, verified against bcryptjs)
 insert into users (id, name, mobile, password_hash, role, is_locked)
 select
   gen_random_uuid(),
   'Platform Super Admin',
-  '+8801700000000',
-  '$2a$10$WwN0M6zPq5uR9fN4C95F5uAWm5S8iSYf6m3RJeYjJ4M0Ywq8gEwA2',
+  '+8801711111111',
+  '$2a$10$6vczW0EDbtpXIywPOT32HuoX6Jt1rzoRSXHWmQoMHGBkPgR8JR7DO',
   'super_admin',
   false
 where not exists (

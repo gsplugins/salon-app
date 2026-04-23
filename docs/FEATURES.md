@@ -61,3 +61,8 @@ Implementation detail: the Next.js app uses `NEXT_PUBLIC_STAFF_LOGIN_URL` (see `
 Update this file when auth flows, URLs, or hosting split (e.g. separate `app.` subdomain) change.
 
 Test accounts for local development are defined in `backend-supabase/supabase/seed.sql` — **change or remove them before production**.
+
+
+Super Admin :
+mobile : 01700000000
+pas : ChangeMe123!

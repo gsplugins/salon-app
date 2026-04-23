@@ -23,7 +23,8 @@ export async function authJson<T = unknown>(
 > {
   const url = path.startsWith("/api") ? path : `/api${path.startsWith("/") ? path : `/${path}`}`;
   const actSlug = getSalonActAsShopSlug();
-  const actStaff = url.includes("/api/staff") ? getStaffActAsStaffId() : null;
+  const actStaff =
+    url.includes("/api/staff") || url.includes("/api/my/barber") ? getStaffActAsStaffId() : null;
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -121,9 +122,10 @@ export async function authJson<T = unknown>(
 
 /** Shape returned by `GET /api/auth/me`. */
 export type AuthMePayload = {
-  id: number;
+  id: string;
   name: string;
   mobile: string;
+  photo_url?: string | null;
   role: string;
   /** `super_admin` | `user` — platform vs normal account. */
   global_role?: string;
@@ -155,6 +157,13 @@ export async function fetchAuthMe(
   accessToken: string
 ): Promise<{ ok: true; data: AuthMePayload } | { ok: false; status: number; body: ApiErrorBody }> {
   return authJson<AuthMePayload>("/auth/me", { accessToken });
+}
+
+export async function patchAuthMe(
+  accessToken: string,
+  body: { name?: string; photo_url?: string | null }
+): Promise<{ ok: true; data: Pick<AuthMePayload, "id" | "name" | "mobile" | "photo_url" | "role"> } | { ok: false; status: number; body: ApiErrorBody }> {
+  return authJson("/auth/me", { method: "PATCH", accessToken, body: JSON.stringify(body) });
 }
 
 export function formatApiError(body: ApiErrorBody): string {

@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { Bell } from "lucide-react";
 import { AuthHeaderProfile } from "@/components/auth-header-profile";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { PortalPanelShell, type PortalNavItem } from "@/components/portal/portal-panel-shell";
 import { ADMIN_NAV } from "@/lib/admin-nav";
 import { setSalonActAsShopSlug } from "@/lib/salon-act-as-shop";
@@ -45,6 +46,7 @@ export function AdminSettingsShell({ children }: { children: React.ReactNode }) 
       ? ({ state: "loading" } as const)
       : ({
           state: "ready" as const,
+          avatarUrl: me?.photo_url ?? null,
           avatarFallback: (me?.name ?? "A").slice(0, 1).toUpperCase(),
           title: me?.name ?? "Administrator",
           subtitle: "Platform admin",
@@ -60,8 +62,14 @@ export function AdminSettingsShell({ children }: { children: React.ReactNode }) 
       header={header}
       headerTrailing={
         <div className="hidden items-center gap-2 sm:flex">
-          <ThemeToggle />
-          <AuthHeaderProfile variant="compact" />
+          <Link
+            href="/admin/notifications"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+            aria-label="Admin notifications"
+          >
+            <Bell className="h-5 w-5" />
+          </Link>
+          <AuthHeaderProfile />
         </div>
       }
       footerLink={{ href: "/platform", label: "Site map" }}
@@ -69,8 +77,14 @@ export function AdminSettingsShell({ children }: { children: React.ReactNode }) 
     >
       <div className="mb-4 flex justify-end sm:hidden">
         <div className="flex items-center gap-2 rounded-2xl border border-zinc-200/80 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
-          <ThemeToggle />
-          <AuthHeaderProfile variant="compact" />
+          <Link
+            href="/admin/notifications"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+            aria-label="Admin notifications"
+          >
+            <Bell className="h-5 w-5" />
+          </Link>
+          <AuthHeaderProfile />
         </div>
       </div>
       {children}

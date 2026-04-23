@@ -13,9 +13,11 @@ import {
 } from "@/lib/staff-ui";
 import {
   fetchStaffAppointments,
+  fetchStaffCustomerRiskProfile,
   patchStaffAppointment,
   postStaffRescheduleRequest,
   type StaffBookingRow,
+  type StaffCustomerRiskProfile,
 } from "@/lib/staff-api";
 import { useSalonAccessToken } from "@/hooks/use-salon-access-token";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -78,6 +80,8 @@ export function StaffAppointmentsClient() {
   const [detailId, setDetailId] = useState<number | null>(null);
   const [rescheduleMsg, setRescheduleMsg] = useState("");
   const [fabOpen, setFabOpen] = useState(false);
+  const [riskProfile, setRiskProfile] = useState<StaffCustomerRiskProfile | null>(null);
+  const [riskBusy, setRiskBusy] = useState(false);
   const [rangeDays] = useState(21);
 
   const from = useMemo(() => ymd(addDays(new Date(), -7)), []);
@@ -106,6 +110,24 @@ export function StaffAppointmentsClient() {
   }, [rows, filter]);
 
   const detail = detailId != null ? rows?.find((b) => b.id === detailId) ?? null : null;
+
+  useEffect(() => {
+    async function run() {
+      if (!token || !detail) {
+        setRiskProfile(null);
+        return;
+      }
+      setRiskBusy(true);
+      const res = await fetchStaffCustomerRiskProfile(token, detail.customer_mobile);
+      setRiskBusy(false);
+      if (!res.ok) {
+        setRiskProfile(null);
+        return;
+      }
+      setRiskProfile(res.data);
+    }
+    void run();
+  }, [token, detail]);
 
   async function markStatus(bookingId: number, status: "completed" | "no_show") {
     if (!token) return;
@@ -269,6 +291,31 @@ export function StaffAppointmentsClient() {
                     {detail.service?.duration_minutes ?? "—"} min
                     {detail.service?.price_cents != null ? ` · $${(detail.service.price_cents / 100).toFixed(2)}` : ""}
                   </p>
+                </div>
+                <div className="rounded-xl border border-zinc-100 p-3 dark:border-zinc-800">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Customer risk check</p>
+                  {riskBusy ? (
+                    <p className="mt-1 text-xs text-zinc-500">Loading profile…</p>
+                  ) : riskProfile ? (
+                    <div className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">
+                      <p>
+                        Completed: <strong>{riskProfile.completed}</strong> · Cancelled: <strong>{riskProfile.cancelled}</strong> · No-show:{" "}
+                        <strong>{riskProfile.no_show}</strong>
+                      </p>
+                      <p>
+                        Total bookings: <strong>{riskProfile.total_bookings}</strong> · Cancel ratio:{" "}
+                        <strong>{riskProfile.cancellation_rate_percent}%</strong>
+                      </p>
+                      <p className="mt-1">
+                        Risk level:{" "}
+                        <strong className={riskProfile.risk_level === "high" ? "text-red-600" : riskProfile.risk_level === "medium" ? "text-amber-600" : "text-emerald-600"}>
+                          {riskProfile.risk_level}
+                        </strong>
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-xs text-zinc-500">No profile data.</p>
+                  )}
                 </div>
                 <div className="flex items-start gap-2 text-zinc-700 dark:text-zinc-300">
                   <Clock className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" />

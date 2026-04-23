@@ -163,8 +163,10 @@ For production rollout steps, see `DEPLOY_CHECKLIST.md`.
 ## First admin login
 
 - Seed creates one default super admin user.
-- Default mobile in seed: `+8801700000000`
-- Update mobile/password hash in `supabase/seed.sql` before production use.
+- **Mobile:** `01711111111`, `8801711111111`, or `+8801711111111` (frontend and API normalize to `+8801711111111`). Avoid a leading `+` only with the wrong digit count (e.g. 10 digits without `0`).
+- **Password:** `Admin@12345` (matches the bcrypt in `supabase/seed.sql`). Leading/trailing spaces are trimmed on login.
+- If you already ran an older `seed.sql` and login fails, apply `supabase/migrations/20260423140000_fix_super_admin_password_hash.sql` in the SQL editor (or `npm run db:push` so migrations run).
+- Change mobile and password in `supabase/seed.sql` before production use.
 
 ## Rollout / parity
 

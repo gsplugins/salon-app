@@ -14,6 +14,8 @@ create table if not exists users (
   updated_at timestamptz not null default now()
 );
 
+alter table users add column if not exists photo_url text;
+
 create table if not exists shops (
   id bigserial primary key,
   owner_user_id uuid references users(id) on delete set null,
@@ -135,6 +137,7 @@ create table if not exists queue_entries (
 
 create index if not exists idx_services_shop on salon_services(shop_id);
 create index if not exists idx_staff_shop on salon_staff(shop_id);
+create unique index if not exists uq_staff_user_single_shop on salon_staff(user_id) where user_id is not null;
 create index if not exists idx_bookings_shop on salon_bookings(shop_id);
 create index if not exists idx_queue_shop_status on queue_entries(shop_id, status);
 
@@ -204,6 +207,7 @@ create table if not exists salon_reviews (
 );
 
 create index if not exists idx_reviews_shop on salon_reviews(shop_id);
+create unique index if not exists uq_review_booking_customer on salon_reviews(salon_booking_id, customer_user_id);
 
 alter table salon_staff add column if not exists commission_percent numeric(5,2);
 alter table salon_staff add column if not exists availability_status text not null default 'available';
@@ -245,9 +249,25 @@ create table if not exists staff_notifications (
   created_at timestamptz not null default now()
 );
 
+create table if not exists customer_notifications (
+  id bigserial primary key,
+  customer_user_id uuid references users(id) on delete set null,
+  customer_mobile text,
+  shop_id bigint references shops(id) on delete cascade,
+  salon_booking_id bigint references salon_bookings(id) on delete set null,
+  type text not null default 'system',
+  title text,
+  body text,
+  metadata jsonb,
+  is_read boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists idx_leave_staff on staff_leave_requests(salon_staff_id, date);
 create index if not exists idx_notes_staff on staff_customer_notes(salon_staff_id, customer_mobile);
 create index if not exists idx_notif_staff on staff_notifications(salon_staff_id, created_at);
+create index if not exists idx_notif_customer_user on customer_notifications(customer_user_id, created_at);
+create index if not exists idx_notif_customer_mobile on customer_notifications(customer_mobile, created_at);
 
 create table if not exists platform_general (
   id bigserial primary key,
@@ -344,3 +364,10 @@ create table if not exists password_reset_otps (
 );
 
 create index if not exists idx_password_reset_otps_mobile on password_reset_otps(mobile);
+
+-- Booking cart + advance (see migrations/20260423210000_booking_line_items_advance.sql)
+alter table salon_bookings add column if not exists line_items jsonb not null default '[]'::jsonb;
+alter table salon_bookings add column if not exists total_price_cents integer;
+alter table salon_bookings add column if not exists advance_percent_snapshot smallint not null default 0;
+alter table salon_bookings add column if not exists advance_amount_cents integer not null default 0;
+alter table salon_bookings add column if not exists advance_paid_cents integer not null default 0;

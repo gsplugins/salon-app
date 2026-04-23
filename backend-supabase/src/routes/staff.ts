@@ -3,6 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "../lib/supabase.js";
 import { fail, okData } from "../lib/http.js";
 import { bookingToRow } from "../presenters/booking.js";
+import { notifyCustomerBookingEvent } from "../lib/customer-notifications.js";
 
 async function staffFromContext(req: Request): Promise<{ id: number; shop_id: number; name: string } | null> {
   const s = req.salon;
@@ -35,6 +36,47 @@ async function staffBookingRows(staffId: number, query?: { from?: string; to?: s
     if (b) data.push(b);
   }
   return data;
+}
+
+async function customerRiskProfileByMobile(shopId: number, mobile: string) {
+  const rows = await supabaseAdmin
+    .from("salon_bookings")
+    .select("customer_name,status,starts_at")
+    .eq("shop_id", shopId)
+    .eq("customer_mobile", mobile)
+    .order("starts_at", { ascending: false })
+    .limit(2000);
+  const list = (rows.data ?? []) as { customer_name: string; status: string; starts_at: string }[];
+  let completed = 0;
+  let cancelled = 0;
+  let noShow = 0;
+  let pending = 0;
+  let confirmed = 0;
+  for (const b of list) {
+    const s = String(b.status ?? "").toLowerCase();
+    if (s === "completed") completed += 1;
+    else if (s === "cancelled") cancelled += 1;
+    else if (s === "no_show") noShow += 1;
+    else if (s === "pending") pending += 1;
+    else if (s === "confirmed") confirmed += 1;
+  }
+  const total = list.length;
+  const negatives = cancelled + noShow;
+  const cancellationRatePercent = total > 0 ? Math.round((negatives / total) * 1000) / 10 : 0;
+  const riskLevel = cancellationRatePercent >= 50 ? "high" : cancellationRatePercent >= 25 ? "medium" : "low";
+  return {
+    customer_name: list[0]?.customer_name ?? "Customer",
+    customer_mobile: mobile,
+    total_bookings: total,
+    completed,
+    confirmed,
+    pending,
+    cancelled,
+    no_show: noShow,
+    cancellation_rate_percent: cancellationRatePercent,
+    risk_level: riskLevel,
+    last_visit_at: list[0]?.starts_at ?? null
+  };
 }
 
 export function mountStaffRoutes(router: Router): void {
@@ -124,13 +166,22 @@ export function mountStaffRoutes(router: Router): void {
     return okData(res, data);
   });
 
+  router.get("/staff/customers/:mobile/profile", async (req: Request, res: Response) => {
+    const staff = await staffFromContext(req);
+    if (!staff) return fail(res, 403, "No staff profile for this shop.");
+    const mobile = decodeURIComponent(req.params.mobile);
+    if (!mobile) return fail(res, 422, "Invalid mobile.");
+    const profile = await customerRiskProfileByMobile(staff.shop_id, mobile);
+    return okData(res, profile);
+  });
+
   router.patch("/staff/appointments/:bookingId", async (req: Request, res: Response) => {
     const staff = await staffFromContext(req);
     if (!staff) return fail(res, 403, "No staff profile for this shop.");
     const bookingId = Number(req.params.bookingId);
     const row = await supabaseAdmin
       .from("salon_bookings")
-      .select("id,salon_staff_id")
+      .select("id,salon_staff_id,status")
       .eq("id", bookingId)
       .eq("salon_staff_id", staff.id)
       .maybeSingle();
@@ -142,6 +193,13 @@ export function mountStaffRoutes(router: Router): void {
       .from("salon_bookings")
       .update({ status: parsed.data.status, ...(parsed.data.notes !== undefined ? { notes: parsed.data.notes } : {}) })
       .eq("id", bookingId);
+    const prevStatus = (row.data as { status: string }).status;
+    if (parsed.data.status === "confirmed" && prevStatus !== "confirmed") {
+      await notifyCustomerBookingEvent({ bookingId, type: "booking_confirmed" });
+    }
+    if (parsed.data.status === "completed" && prevStatus !== "completed") {
+      await notifyCustomerBookingEvent({ bookingId, type: "service_completed_review" });
+    }
     const out = await bookingToRow(bookingId);
     return okData(res, out);
   });
@@ -541,6 +599,10 @@ export function mountStaffRoutes(router: Router): void {
   router.patch("/staff/profile", async (req: Request, res: Response) => {
     const staff = await staffFromContext(req);
     if (!staff) return fail(res, 403, "No staff profile for this shop.");
+    const actor = req.salon?.user;
+    if (!actor || actor.role !== "barber") {
+      return fail(res, 403, "Staff profile is view-only for manager/owner accounts.");
+    }
     const body = req.body as Record<string, unknown>;
     const allowed = ["name", "bio", "photo_url", "work_mobile", "email", "specialties", "portal_settings"];
     const upd: Record<string, unknown> = {};

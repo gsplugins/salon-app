@@ -1049,7 +1049,7 @@ function WalkInForm(props: {
       return;
     }
     void (async () => {
-      const res = await fetchSalonStaff(props.shopSlug, serviceId);
+      const res = await fetchSalonStaff(props.shopSlug, [serviceId]);
       if (res.ok) {
         setStaffOptions(res.data);
         setStaffId(null);
@@ -1194,7 +1194,7 @@ function BlockTimeForm(props: {
     void (async () => {
       const res = await fetchSalonServices(props.shopSlug);
       if (!res.ok || res.data.length === 0) return;
-      const st = await fetchSalonStaff(props.shopSlug, res.data[0].id);
+      const st = await fetchSalonStaff(props.shopSlug, [res.data[0].id]);
       if (!cancelled && st.ok) {
         setStaffRows(st.data.filter((o) => o.id !== null));
       }

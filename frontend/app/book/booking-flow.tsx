@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Calendar, Check, ChevronLeft, Loader2, Store } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { fetchAuthMe } from "@/lib/auth-api";
 import { useSalonAccessToken } from "@/hooks/use-salon-access-token";
 import {
   createPublicBooking,
   fetchAvailability,
+  fetchPublicQueue,
   fetchSalonServices,
   fetchSalonStaff,
   fetchShopMeta,
@@ -53,7 +55,7 @@ function formatMoneyFromCents(cents: number | null | undefined): string {
 }
 
 const STEPS: { n: Step; label: string }[] = [
-  { n: 1, label: "Service" },
+  { n: 1, label: "Services" },
   { n: 2, label: "Stylist" },
   { n: 3, label: "Date" },
   { n: 4, label: "Time" },
@@ -61,18 +63,23 @@ const STEPS: { n: Step; label: string }[] = [
 ];
 
 export function BookingFlow({ shopSlug }: { shopSlug: string }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const accessToken = useSalonAccessToken();
   const [step, setStep] = useState<Step>(1);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   const [shopTitle, setShopTitle] = useState<string | null>(null);
+  const [shopId, setShopId] = useState<number | null>(null);
+  const [bookingAdvancePercent, setBookingAdvancePercent] = useState(0);
+  const [queueStatus, setQueueStatus] = useState<{ activeCount: number; leadWaitMinutes: number | null } | null>(null);
 
   const [services, setServices] = useState<SalonServiceRow[]>([]);
   const [staff, setStaff] = useState<SalonStaffOption[]>([]);
   const [slots, setSlots] = useState<string[]>([]);
 
-  const [serviceId, setServiceId] = useState<number | null>(null);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
   const [staffId, setStaffId] = useState<number | null>(null);
   const [dateYmd, setDateYmd] = useState<string>(() => formatYmd(new Date()));
   const [startsAt, setStartsAt] = useState<string | null>(null);
@@ -80,11 +87,39 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
   const [customerMobile, setCustomerMobile] = useState("");
   const [notes, setNotes] = useState("");
   const [signedInCustomer, setSignedInCustomer] = useState(false);
+  const [confirmAdvancePayment, setConfirmAdvancePayment] = useState(false);
+  const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [reminderChannel, setReminderChannel] = useState<"sms" | "whatsapp">("sms");
+  const [reminderLeadHours, setReminderLeadHours] = useState<2 | 24>(24);
+  const pendingStaffParam = useRef<number | null>(null);
+  const didPrefillFromQuery = useRef(false);
 
-  const selectedService = useMemo(
-    () => services.find((s) => s.id === serviceId) ?? null,
-    [services, serviceId]
-  );
+  const orderedServiceIds = useMemo(() => {
+    const set = new Set(selectedServiceIds);
+    return services.filter((s) => set.has(s.id)).map((s) => s.id);
+  }, [services, selectedServiceIds]);
+
+  const bookingTotals = useMemo(() => {
+    const selected = services.filter((s) => orderedServiceIds.includes(s.id));
+    let duration = 0;
+    let priceSum = 0;
+    let allPriced = true;
+    for (const s of selected) {
+      duration += s.duration_minutes + (s.buffer_after_minutes ?? 0);
+      if (s.price_cents == null) allPriced = false;
+      else priceSum += s.price_cents;
+    }
+    const totalCents = selected.length > 0 && allPriced ? priceSum : null;
+    const advanceAmount =
+      totalCents != null && bookingAdvancePercent > 0
+        ? Math.round((totalCents * bookingAdvancePercent) / 100)
+        : 0;
+    return { duration, totalCents, advanceAmount, selected };
+  }, [services, orderedServiceIds, bookingAdvancePercent]);
+
+  function toggleService(id: number) {
+    setSelectedServiceIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
 
   const minDate = formatYmd(new Date());
   const maxD = new Date();
@@ -93,7 +128,11 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
 
   const loadMeta = useCallback(async () => {
     const res = await fetchShopMeta(shopSlug);
-    if (res.ok) setShopTitle(res.data.name);
+    if (res.ok) {
+      setShopTitle(res.data.name);
+      setShopId(res.data.id);
+      setBookingAdvancePercent(res.data.booking_advance_percent);
+    }
   }, [shopSlug]);
 
   const loadServices = useCallback(async () => {
@@ -109,10 +148,32 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
   }, [shopSlug]);
 
   useEffect(() => {
-     
     void loadMeta();
     void loadServices();
   }, [loadMeta, loadServices]);
+
+  useEffect(() => {
+    if (didPrefillFromQuery.current || services.length === 0) return;
+    didPrefillFromQuery.current = true;
+    const paramIds = searchParams
+      .getAll("service_id")
+      .map((v) => Number.parseInt(v, 10))
+      .filter((v) => Number.isFinite(v));
+    const allowed = new Set(services.map((s) => s.id));
+    const nextServiceIds = paramIds.filter((id) => allowed.has(id));
+    if (nextServiceIds.length > 0) {
+      setSelectedServiceIds(Array.from(new Set(nextServiceIds)));
+    }
+    const staffRaw = searchParams.get("staff_id");
+    if (staffRaw) {
+      const parsed = Number.parseInt(staffRaw, 10);
+      if (Number.isFinite(parsed)) pendingStaffParam.current = parsed;
+    }
+  }, [services, searchParams]);
+
+  useEffect(() => {
+    setConfirmAdvancePayment(false);
+  }, [orderedServiceIds, bookingTotals.advanceAmount]);
 
   useEffect(() => {
     if (!accessToken) {
@@ -138,10 +199,10 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
   }, [accessToken]);
 
   const loadStaff = useCallback(async () => {
-    if (serviceId === null) return;
+    if (orderedServiceIds.length === 0) return;
     setBusy(true);
     setNotice(null);
-    const res = await fetchSalonStaff(shopSlug, serviceId);
+    const res = await fetchSalonStaff(shopSlug, orderedServiceIds);
     setBusy(false);
     if (!res.ok) {
       setNotice({ type: "err", text: formatApiError(res.body) });
@@ -149,18 +210,42 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
     }
     setStaff(res.data);
     setStaffId(null);
-  }, [serviceId, shopSlug]);
+  }, [orderedServiceIds, shopSlug]);
 
   useEffect(() => {
-     
-    if (step === 2 && serviceId !== null) void loadStaff();
-  }, [step, serviceId, loadStaff]);
+    if (step === 2 && orderedServiceIds.length > 0) void loadStaff();
+  }, [step, orderedServiceIds, loadStaff]);
+
+  useEffect(() => {
+    if (pendingStaffParam.current == null || staff.length === 0) return;
+    if (staff.some((s) => s.id === pendingStaffParam.current)) {
+      setStaffId(pendingStaffParam.current);
+    }
+    pendingStaffParam.current = null;
+  }, [staff]);
+
+  const loadQueueStatus = useCallback(async () => {
+    if (shopId == null) return;
+    const res = await fetchPublicQueue(shopId);
+    if (!res.ok) {
+      setQueueStatus(null);
+      return;
+    }
+    const active = res.data.filter((r) => r.status === "waiting" || r.status === "in_progress");
+    const leadWait = active[0]?.estimated_wait_minutes ?? null;
+    setQueueStatus({ activeCount: active.length, leadWaitMinutes: leadWait });
+  }, [shopId]);
+
+  useEffect(() => {
+    if (shopId == null || step < 4) return;
+    void loadQueueStatus();
+  }, [shopId, step, loadQueueStatus]);
 
   const loadSlots = useCallback(async () => {
-    if (serviceId === null) return;
+    if (orderedServiceIds.length === 0) return;
     setBusy(true);
     setNotice(null);
-    const res = await fetchAvailability(shopSlug, serviceId, dateYmd, staffId);
+    const res = await fetchAvailability(shopSlug, orderedServiceIds, dateYmd, staffId);
     setBusy(false);
     if (!res.ok) {
       setNotice({ type: "err", text: formatApiError(res.body) });
@@ -169,26 +254,37 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
     }
     setSlots(res.data);
     setStartsAt(null);
-  }, [serviceId, dateYmd, staffId, shopSlug]);
+  }, [orderedServiceIds, dateYmd, staffId, shopSlug]);
 
   useEffect(() => {
     // Only load slots on step 4. Using step >= 4 re-ran this on step 5 and cleared the selected time (setStartsAt(null)).
-     
-    if (step === 4 && serviceId !== null) void loadSlots();
-  }, [step, serviceId, loadSlots]);
+    if (step === 4 && orderedServiceIds.length > 0) void loadSlots();
+  }, [step, orderedServiceIds, loadSlots]);
 
   async function submitBooking(e: React.FormEvent) {
     e.preventDefault();
-    if (serviceId === null || startsAt === null) return;
+    if (orderedServiceIds.length === 0 || startsAt === null) return;
+    if (bookingTotals.advanceAmount > 0 && !confirmAdvancePayment) {
+      setNotice({ type: "err", text: "Please confirm you have paid the advance amount to submit this booking." });
+      return;
+    }
     setBusy(true);
     setNotice(null);
     const body = {
       customer_name: customerName.trim(),
       customer_mobile: customerMobile.replace(/\D/g, ""),
-      salon_service_id: serviceId,
+      salon_service_ids: orderedServiceIds,
       starts_at: startsAt,
-      notes: notes.trim() === "" ? undefined : notes.trim(),
+      notes: [
+        notes.trim() === "" ? null : notes.trim(),
+        reminderEnabled
+          ? `Reminder preference: ${reminderChannel.toUpperCase()} ${reminderLeadHours}h before appointment.`
+          : "Reminder preference: opt out.",
+      ]
+        .filter(Boolean)
+        .join("\n"),
       ...(staffId !== null ? { salon_staff_id: staffId } : {}),
+      ...(bookingTotals.advanceAmount > 0 ? { confirm_advance_payment: true as const } : {}),
     };
     // Only send JWT for customer accounts — links booking to profile. Shop owners/staff book as guest (no customer_user_id).
     const res = await createPublicBooking(shopSlug, body, {
@@ -199,20 +295,20 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
       setNotice({ type: "err", text: formatApiError(res.body) });
       return;
     }
-    const msg = `Booking request received. Status: pending — the salon will confirm. Reference #${res.data.id}.`;
+    const msg = `Booking request received and pending review. Reference #${res.data.id}.`;
     toast.success(msg);
-    setNotice({
-      type: "ok",
-      text: msg,
-    });
+    setConfirmAdvancePayment(false);
+    if (signedInCustomer) {
+      router.push("/customer/appointments");
+      return;
+    }
+    setNotice({ type: "ok", text: msg });
     setStep(1);
-    setServiceId(null);
+    setSelectedServiceIds([]);
     setStaffId(null);
     setStartsAt(null);
-    if (!signedInCustomer) {
-      setCustomerName("");
-      setCustomerMobile("");
-    }
+    setCustomerName("");
+    setCustomerMobile("");
     setNotes("");
     setDateYmd(formatYmd(new Date()));
   }
@@ -234,12 +330,11 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
               {shopTitle ?? shopSlug}
             </h2>
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              Pick a service, time, and contact — you will get updates by SMS when the shop confirms or changes your
-              visit.
+              Pick one or more services, a time, and your contact. The shop can share updates by SMS or WhatsApp.
             </p>
             {signedInCustomer ? (
               <p className="mt-2 text-xs font-medium text-emerald-800 dark:text-emerald-200">
-                Signed in — your visit will appear under My dashboard. Use your account mobile below.
+                Signed in — after booking you will be taken to your appointments. Use your account mobile below.
               </p>
             ) : (
               <p className="mt-2 text-xs text-zinc-500">
@@ -291,7 +386,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
       <div className="rounded-2xl border border-rose-100/80 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
         {step === 1 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Choose a service</h2>
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Choose services</h2>
             <div className="space-y-2">
               {services.map((s) => (
                 <label
@@ -299,10 +394,9 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                   className="flex cursor-pointer items-start gap-3 rounded-xl border border-zinc-200 p-3 transition hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800/50"
                 >
                   <input
-                    type="radio"
-                    name="svc"
-                    checked={serviceId === s.id}
-                    onChange={() => setServiceId(s.id)}
+                    type="checkbox"
+                    checked={selectedServiceIds.includes(s.id)}
+                    onChange={() => toggleService(s.id)}
                     className="mt-1"
                   />
                   <span className="flex-1">
@@ -321,7 +415,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
             </div>
             <button
               type="button"
-              disabled={serviceId === null || busy}
+              disabled={orderedServiceIds.length === 0 || busy}
               onClick={() => setStep(2)}
               className="w-full rounded-full bg-zinc-900 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-900"
             >
@@ -334,9 +428,16 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Stylist preference</h2>
             <p className="text-xs text-zinc-500">
-              Pick someone specific or any available team member for {selectedService?.name}.
+              Pick someone who can do all selected services, or any available team member (
+              {bookingTotals.selected.map((s) => s.name).join(", ") || "—"}).
             </p>
             <div className="space-y-2">
+              {staff.length === 0 && !busy ? (
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  No team member is linked to every service you picked. Go back and change your selection, or contact
+                  the salon.
+                </p>
+              ) : null}
               {staff.map((s) => (
                 <label
                   key={s.name + String(s.id)}
@@ -413,6 +514,14 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
         {step === 4 && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Available times</h2>
+            {queueStatus ? (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+                <p>
+                  Live queue: {queueStatus.activeCount} waiting
+                  {queueStatus.leadWaitMinutes != null ? ` · about ${queueStatus.leadWaitMinutes} min to first chair` : ""}.
+                </p>
+              </div>
+            ) : null}
             {busy ? (
               <p className="flex items-center gap-2 text-sm text-zinc-500">
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
@@ -499,14 +608,74 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                 placeholder="Allergies, parking, preferred chair…"
               />
             </div>
+            <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-900/70">
+              <p className="text-xs font-medium text-zinc-700 dark:text-zinc-200">Reminder preferences</p>
+              <label className="mt-2 flex cursor-pointer items-center gap-2 text-xs text-zinc-600 dark:text-zinc-300">
+                <input
+                  type="checkbox"
+                  checked={reminderEnabled}
+                  onChange={(e) => setReminderEnabled(e.target.checked)}
+                />
+                Send me a reminder before my appointment
+              </label>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                <label className="text-xs text-zinc-500">
+                  Channel
+                  <select
+                    value={reminderChannel}
+                    onChange={(e) => setReminderChannel(e.target.value === "whatsapp" ? "whatsapp" : "sms")}
+                    disabled={!reminderEnabled}
+                    className="mt-1 w-full rounded-lg border border-zinc-200 px-2 py-2 text-sm disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950"
+                  >
+                    <option value="sms">SMS</option>
+                    <option value="whatsapp">WhatsApp</option>
+                  </select>
+                </label>
+                <label className="text-xs text-zinc-500">
+                  When
+                  <select
+                    value={String(reminderLeadHours)}
+                    onChange={(e) => setReminderLeadHours(e.target.value === "2" ? 2 : 24)}
+                    disabled={!reminderEnabled}
+                    className="mt-1 w-full rounded-lg border border-zinc-200 px-2 py-2 text-sm disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950"
+                  >
+                    <option value="24">24 hours before</option>
+                    <option value="2">2 hours before</option>
+                  </select>
+                </label>
+              </div>
+            </div>
             <div className="rounded-xl bg-zinc-50 p-3 text-xs text-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-300">
               <p>
-                <strong>{selectedService?.name}</strong>
-                {selectedService?.price_cents != null
-                  ? ` · ${formatMoneyFromCents(selectedService.price_cents)}`
-                  : ""}
+                <strong>{bookingTotals.selected.map((s) => s.name).join(", ")}</strong>
+                {bookingTotals.totalCents != null ? ` · Total ${formatMoneyFromCents(bookingTotals.totalCents)}` : ""}
+                {bookingTotals.totalCents == null && bookingTotals.selected.length > 0 ? (
+                  <span className="block text-zinc-500">Total price shown when every service has a price.</span>
+                ) : null}
               </p>
-              <p className="mt-1">
+              {bookingTotals.advanceAmount > 0 ? (
+                <p className="mt-2 font-medium text-zinc-800 dark:text-zinc-200">
+                  Advance ({bookingAdvancePercent}%): {formatMoneyFromCents(bookingTotals.advanceAmount)} — pay this
+                  amount before the visit (no online card charge in this version; salon may confirm manually).
+                </p>
+              ) : bookingAdvancePercent > 0 && bookingTotals.totalCents == null ? (
+                <p className="mt-2 text-zinc-500">Advance % applies once all selected services have prices.</p>
+              ) : null}
+              <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-lg border border-zinc-200 bg-white p-2 dark:border-zinc-600 dark:bg-zinc-950">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={confirmAdvancePayment}
+                  onChange={(e) => setConfirmAdvancePayment(e.target.checked)}
+                  disabled={bookingTotals.advanceAmount === 0}
+                />
+                <span>
+                  {bookingTotals.advanceAmount > 0
+                    ? `I confirm I have paid the advance of ${formatMoneyFromCents(bookingTotals.advanceAmount)} (or will pay per salon instructions).`
+                    : "No advance payment required for this booking."}
+                </span>
+              </label>
+              <p className="mt-2">
                 {startsAt ? formatSlotLabel(startsAt) : ""} · {selectedStaffLabel}
               </p>
             </div>
@@ -521,10 +690,14 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
               </button>
               <button
                 type="submit"
-                disabled={busy || startsAt === null}
+                disabled={
+                  busy ||
+                  startsAt === null ||
+                  (bookingTotals.advanceAmount > 0 && !confirmAdvancePayment)
+                }
                 className="flex-1 rounded-full bg-zinc-900 py-2.5 text-sm font-semibold text-white disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-900"
               >
-                {busy ? "…" : "Request booking"}
+                {busy ? "…" : "Confirm booking"}
               </button>
             </div>
           </form>

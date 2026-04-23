@@ -51,6 +51,79 @@ export function mountCustomerRoutes(router: Router): void {
     });
   });
 
+  router.get("/me/reviews", async (req: Request, res: Response) => {
+    const user = await authUser(req);
+    if (!user) return fail(res, 401, "Unauthenticated.");
+    const rows = await supabaseAdmin
+      .from("salon_reviews")
+      .select("id,salon_booking_id,rating,comment,created_at,shop_id,salon_staff(name),shops(name,slug)")
+      .eq("customer_user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(300);
+    const data = (rows.data ?? []).map(
+      (r: {
+        id: number;
+        salon_booking_id: number | null;
+        rating: number;
+        comment: string | null;
+        created_at: string | null;
+        shop_id: number | null;
+        salon_staff: { name: string }[] | null;
+        shops: { name: string; slug: string }[] | null;
+      }) => ({
+        id: r.id,
+        booking_id: r.salon_booking_id,
+        rating: Number(r.rating),
+        comment: r.comment ?? null,
+        created_at: r.created_at ?? null,
+        staff_name: r.salon_staff?.[0]?.name ?? null,
+        shop: r.shop_id
+          ? {
+              id: r.shop_id,
+              name: r.shops?.[0]?.name ?? "Shop",
+              slug: r.shops?.[0]?.slug ?? null,
+            }
+          : null,
+      })
+    );
+    return okData(res, data);
+  });
+
+  router.get("/me/notifications", async (req: Request, res: Response) => {
+    const user = await authUser(req);
+    if (!user) return fail(res, 401, "Unauthenticated.");
+    const rows = await supabaseAdmin
+      .from("customer_notifications")
+      .select("id,type,title,body,metadata,is_read,created_at,salon_booking_id")
+      .or(`customer_user_id.eq.${user.id},customer_mobile.eq.${user.mobile}`)
+      .order("created_at", { ascending: false })
+      .limit(300);
+    return okData(res, rows.data ?? []);
+  });
+
+  router.patch("/me/notifications/:id/read", async (req: Request, res: Response) => {
+    const user = await authUser(req);
+    if (!user) return fail(res, 401, "Unauthenticated.");
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) return fail(res, 422, "Invalid notification id.");
+    await supabaseAdmin
+      .from("customer_notifications")
+      .update({ is_read: true })
+      .eq("id", id)
+      .or(`customer_user_id.eq.${user.id},customer_mobile.eq.${user.mobile}`);
+    return okData(res, { id, is_read: true });
+  });
+
+  router.post("/me/notifications/read-all", async (req: Request, res: Response) => {
+    const user = await authUser(req);
+    if (!user) return fail(res, 401, "Unauthenticated.");
+    await supabaseAdmin
+      .from("customer_notifications")
+      .update({ is_read: true })
+      .or(`customer_user_id.eq.${user.id},customer_mobile.eq.${user.mobile}`);
+    return okData(res, { ok: true });
+  });
+
   router.patch("/me/bookings/:bookingId", async (req: Request, res: Response) => {
     const user = await authUser(req);
     if (!user) return fail(res, 401, "Unauthenticated.");
@@ -98,5 +171,59 @@ export function mountCustomerRoutes(router: Router): void {
     await supabaseAdmin.from("salon_bookings").update(upd).eq("id", bookingId);
     const out = await bookingToRow(bookingId);
     return okData(res, out);
+  });
+
+  router.post("/me/bookings/:bookingId/review", async (req: Request, res: Response) => {
+    const user = await authUser(req);
+    if (!user) return fail(res, 401, "Unauthenticated.");
+    const bookingId = Number(req.params.bookingId);
+    if (!Number.isFinite(bookingId)) return fail(res, 422, "Invalid booking id.");
+    const body = z.object({ rating: z.number().int().min(1).max(5), comment: z.string().max(3000).optional().nullable() });
+    const parsed = body.safeParse(req.body);
+    if (!parsed.success) return fail(res, 422, "Validation failed.");
+
+    const bookingRes = await supabaseAdmin
+      .from("salon_bookings")
+      .select("id,shop_id,salon_staff_id,status,customer_user_id,customer_mobile")
+      .eq("id", bookingId)
+      .maybeSingle();
+    const booking = bookingRes.data as
+      | {
+          id: number;
+          shop_id: number;
+          salon_staff_id: number | null;
+          status: string;
+          customer_user_id: string | null;
+          customer_mobile: string;
+        }
+      | null;
+    if (!booking) return fail(res, 404, "Booking not found.");
+    const canReview = booking.customer_user_id === user.id || booking.customer_mobile === user.mobile;
+    if (!canReview) return fail(res, 403, "Forbidden.");
+    if (booking.status !== "completed") return fail(res, 422, "You can review only completed services.");
+    if (!booking.salon_staff_id) return fail(res, 422, "Booking has no assigned barber.");
+
+    const existing = await supabaseAdmin
+      .from("salon_reviews")
+      .select("id")
+      .eq("salon_booking_id", booking.id)
+      .eq("customer_user_id", user.id)
+      .maybeSingle();
+    if (existing.data) return fail(res, 409, "You already reviewed this service.");
+
+    const inserted = await supabaseAdmin
+      .from("salon_reviews")
+      .insert({
+        shop_id: booking.shop_id,
+        salon_staff_id: booking.salon_staff_id,
+        salon_booking_id: booking.id,
+        customer_user_id: user.id,
+        rating: parsed.data.rating,
+        comment: parsed.data.comment?.trim() ? parsed.data.comment.trim() : null
+      })
+      .select("id,salon_booking_id,rating,comment,created_at")
+      .single();
+    if (inserted.error || !inserted.data) return fail(res, 500, "Could not save review.");
+    return okData(res, inserted.data, 201);
   });
 }

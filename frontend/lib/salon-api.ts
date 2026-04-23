@@ -13,6 +13,13 @@ export type SalonServiceRow = {
 
 export type SalonStaffOption = { id: number | null; name: string };
 
+export type BookingLineItem = {
+  service_id: number;
+  name: string;
+  duration_minutes: number;
+  price_cents: number | null;
+};
+
 export type BookingRow = {
   id: number;
   customer_name: string;
@@ -25,6 +32,11 @@ export type BookingRow = {
     category?: string | null;
     price_cents?: number | null;
   };
+  line_items?: BookingLineItem[];
+  total_price_cents?: number | null;
+  advance_percent_snapshot?: number;
+  advance_amount_cents?: number;
+  advance_paid_cents?: number;
   staff: { id: number; name: string };
   starts_at: string;
   ends_at: string;
@@ -32,6 +44,15 @@ export type BookingRow = {
   source: string;
   notes: string | null;
 };
+
+/** Display label for one or more services on a booking (API may send line_items or legacy service only). */
+export function bookingServicesLabel(b: Pick<BookingRow, "service" | "line_items">): string {
+  const items = b.line_items;
+  if (Array.isArray(items) && items.length > 0) {
+    return items.map((i) => i.name).join(", ");
+  }
+  return b.service?.name ?? "";
+}
 
 export type BlockedSlotRow = {
   id: number;
@@ -50,12 +71,37 @@ function shopBase(slug: string): string {
 
 export async function fetchShopMeta(
   slug: string
-): Promise<{ ok: true; data: { id: number; name: string; slug: string; description: string | null } } | { ok: false; body: ApiErrorBody }> {
-  const res = await authJson<{ data: { id: number; name: string; slug: string; description: string | null } }>(
-    `${shopBase(slug)}/meta`
-  );
+): Promise<
+  | {
+      ok: true;
+      data: {
+        id: number;
+        name: string;
+        slug: string;
+        description: string | null;
+        booking_advance_percent: number;
+      };
+    }
+  | { ok: false; body: ApiErrorBody }
+> {
+  const res = await authJson<{
+    data: {
+      id: number;
+      name: string;
+      slug: string;
+      description: string | null;
+      booking_advance_percent?: number;
+    };
+  }>(`${shopBase(slug)}/meta`);
   if (!res.ok) return { ok: false, body: res.body };
-  return { ok: true, data: res.data.data };
+  const d = res.data.data;
+  return {
+    ok: true,
+    data: {
+      ...d,
+      booking_advance_percent: typeof d.booking_advance_percent === "number" ? d.booking_advance_percent : 0
+    }
+  };
 }
 
 export async function fetchSalonServices(
@@ -68,9 +114,9 @@ export async function fetchSalonServices(
 
 export async function fetchSalonStaff(
   shopSlug: string,
-  serviceId: number
+  serviceIds: number[]
 ): Promise<{ ok: true; data: SalonStaffOption[] } | { ok: false; body: ApiErrorBody }> {
-  const q = new URLSearchParams({ service_id: String(serviceId) });
+  const q = new URLSearchParams({ service_ids: serviceIds.join(",") });
   const res = await authJson<{ data: SalonStaffOption[] }>(`${shopBase(shopSlug)}/staff?${q.toString()}`);
   if (!res.ok) return { ok: false, body: res.body };
   return { ok: true, data: res.data.data };
@@ -78,12 +124,12 @@ export async function fetchSalonStaff(
 
 export async function fetchAvailability(
   shopSlug: string,
-  serviceId: number,
+  serviceIds: number[],
   dateYmd: string,
   staffId: number | null
 ): Promise<{ ok: true; data: string[] } | { ok: false; body: ApiErrorBody }> {
   const q = new URLSearchParams({
-    service_id: String(serviceId),
+    service_ids: serviceIds.join(","),
     date: dateYmd,
   });
   if (staffId !== null) q.set("staff_id", String(staffId));
@@ -97,21 +143,23 @@ export async function createPublicBooking(
   body: {
     customer_name: string;
     customer_mobile: string;
-    salon_service_id: number;
+    salon_service_ids: number[];
     salon_staff_id?: number | null;
     starts_at: string;
     notes?: string | null;
+    confirm_advance_payment?: boolean;
   },
   opts?: { accessToken?: string }
 ): Promise<{ ok: true; data: BookingRow } | { ok: false; body: ApiErrorBody }> {
   const payload: Record<string, unknown> = {
     customer_name: body.customer_name,
     customer_mobile: body.customer_mobile,
-    salon_service_id: body.salon_service_id,
+    salon_service_ids: body.salon_service_ids,
     starts_at: body.starts_at,
   };
   if (body.salon_staff_id != null) payload.salon_staff_id = body.salon_staff_id;
   if (body.notes != null && String(body.notes).trim() !== "") payload.notes = String(body.notes).trim();
+  if (body.confirm_advance_payment === true) payload.confirm_advance_payment = true;
 
   const res = await authJson<{ data: BookingRow }>(`${shopBase(shopSlug)}/bookings`, {
     method: "POST",
@@ -242,6 +290,8 @@ export type ShopProfile = {
   phone: string | null;
   email: string | null;
   address: string | null;
+  latitude?: string | null;
+  longitude?: string | null;
   is_active: boolean;
   settings: Record<string, unknown>;
   subscription?: {
@@ -326,6 +376,8 @@ export async function patchShopProfile(
     phone?: string | null;
     email?: string | null;
     address?: string | null;
+    latitude?: string | null;
+    longitude?: string | null;
     settings?: Record<string, unknown>;
   }
 ): Promise<{ ok: true; data: ShopProfile } | { ok: false; body: ApiErrorBody }> {
@@ -821,6 +873,12 @@ export type PublicShopListRow = {
   description: string | null;
   address: string | null;
   phone: string | null;
+  latitude?: string | null;
+  longitude?: string | null;
+  logo_url?: string | null;
+  division?: string | null;
+  district?: string | null;
+  city?: string | null;
   photos?: string[] | null;
 };
 
@@ -836,8 +894,18 @@ export type PublicShopDetailPayload = {
     latitude: string | null;
     longitude: string | null;
     photos: string[];
+    logo_url?: string | null;
+    division?: string | null;
+    district?: string | null;
+    city?: string | null;
     parent_shop_id: number | null;
   };
+  offers?: {
+    title: string;
+    description: string | null;
+    discount_text: string | null;
+    valid_until: string | null;
+  }[];
   services: {
     id: number;
     name: string;
@@ -853,6 +921,13 @@ export type PublicShopDetailPayload = {
     photo_url: string | null;
     specialties: unknown;
   }[];
+  booking_stats?: {
+    pending: number;
+    confirmed: number;
+    cancelled: number;
+    completed: number;
+    total_customers: number;
+  };
   reviews_summary: { count: number; avg_rating: number | null };
   reviews: {
     id: number;
@@ -860,16 +935,23 @@ export type PublicShopDetailPayload = {
     comment: string | null;
     created_at: string | null;
     staff_name: string | null;
+    customer_name?: string | null;
   }[];
 };
 
 export async function fetchPublicShopsDirectory(opts?: {
   search?: string;
+  division?: string;
+  district?: string;
+  city?: string;
   perPage?: number;
   page?: number;
 }): Promise<{ ok: true; data: Paginated<PublicShopListRow> } | { ok: false; body: ApiErrorBody }> {
   const params = new URLSearchParams();
   if (opts?.search) params.set("search", opts.search);
+  if (opts?.division) params.set("division", opts.division);
+  if (opts?.district) params.set("district", opts.district);
+  if (opts?.city) params.set("city", opts.city);
   if (opts?.perPage) params.set("per_page", String(opts.perPage));
   if (opts?.page && opts.page > 1) params.set("page", String(opts.page));
   const q = params.toString() ? `?${params.toString()}` : "";
@@ -944,6 +1026,74 @@ export async function fetchCustomerAppointments(
   const res = await authJson<{ data: BookingRow[] }>("/me/appointments", { accessToken });
   if (!res.ok) return { ok: false, body: res.body };
   return { ok: true, data: res.data.data };
+}
+
+export type CustomerReviewRow = {
+  id: number;
+  booking_id: number | null;
+  rating: number;
+  comment: string | null;
+  created_at: string | null;
+  staff_name: string | null;
+  shop: { id: number; name: string; slug: string | null } | null;
+};
+
+export type CustomerNotificationRow = {
+  id: number;
+  type: string;
+  title: string | null;
+  body: string | null;
+  metadata: Record<string, unknown> | null;
+  is_read: boolean;
+  created_at: string | null;
+  salon_booking_id: number | null;
+};
+
+export async function fetchCustomerReviews(
+  accessToken: string
+): Promise<{ ok: true; data: CustomerReviewRow[] } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson<{ data: CustomerReviewRow[] }>("/me/reviews", { accessToken });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
+export async function createCustomerReview(
+  accessToken: string,
+  bookingId: number,
+  body: { rating: number; comment?: string | null }
+): Promise<{ ok: true; data: CustomerReviewRow } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson<{ data: CustomerReviewRow }>(`/me/bookings/${bookingId}/review`, {
+    method: "POST",
+    accessToken,
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
+export async function fetchCustomerNotifications(
+  accessToken: string
+): Promise<{ ok: true; data: CustomerNotificationRow[] } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson<{ data: CustomerNotificationRow[] }>("/me/notifications", { accessToken });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
+export async function markCustomerNotificationRead(
+  accessToken: string,
+  id: number
+): Promise<{ ok: true } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson(`/me/notifications/${id}/read`, { method: "PATCH", accessToken });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true };
+}
+
+export async function markAllCustomerNotificationsRead(
+  accessToken: string
+): Promise<{ ok: true } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson("/me/notifications/read-all", { method: "POST", accessToken });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true };
 }
 
 export type LoyaltyPayload = {
@@ -1090,10 +1240,34 @@ export type OwnerReviewRow = {
   customer: { id: number; name: string } | null;
 };
 
+export type OwnerCustomerRiskProfile = {
+  customer_name: string;
+  customer_mobile: string;
+  total_bookings: number;
+  completed: number;
+  confirmed: number;
+  pending: number;
+  cancelled: number;
+  no_show: number;
+  cancellation_rate_percent: number;
+  risk_level: "low" | "medium" | "high";
+  last_visit_at: string | null;
+};
+
 export async function fetchOwnerReviews(
   accessToken: string
 ): Promise<{ ok: true; data: OwnerReviewRow[] } | { ok: false; body: ApiErrorBody }> {
   const res = await authJson<{ data: OwnerReviewRow[] }>("/my/shop/reviews", { accessToken });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
+export async function fetchOwnerCustomerRiskProfile(
+  accessToken: string,
+  mobile: string
+): Promise<{ ok: true; data: OwnerCustomerRiskProfile } | { ok: false; body: ApiErrorBody }> {
+  const enc = encodeURIComponent(mobile);
+  const res = await authJson<{ data: OwnerCustomerRiskProfile }>(`/my/shop/customers/${enc}/profile`, { accessToken });
   if (!res.ok) return { ok: false, body: res.body };
   return { ok: true, data: res.data.data };
 }

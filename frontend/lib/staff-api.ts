@@ -111,6 +111,20 @@ export type StaffReviewPayload = {
   reviews: { id: number; rating: number; comment: string | null; created_at: string | null }[];
 };
 
+export type StaffCustomerRiskProfile = {
+  customer_name: string;
+  customer_mobile: string;
+  total_bookings: number;
+  completed: number;
+  confirmed: number;
+  pending: number;
+  cancelled: number;
+  no_show: number;
+  cancellation_rate_percent: number;
+  risk_level: "low" | "medium" | "high";
+  last_visit_at: string | null;
+};
+
 export async function fetchStaffDashboard(
   accessToken: string
 ): Promise<{ ok: true; data: StaffDashboardPayload } | { ok: false; body: ApiErrorBody }> {
@@ -361,6 +375,16 @@ export async function fetchStaffReviews(
   if (opts?.rating != null) q.set("rating", String(opts.rating));
   const qs = q.toString();
   const res = await authJson<{ data: StaffReviewPayload }>(`/staff/reviews${qs ? `?${qs}` : ""}`, { accessToken });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
+export async function fetchStaffCustomerRiskProfile(
+  accessToken: string,
+  mobile: string
+): Promise<{ ok: true; data: StaffCustomerRiskProfile } | { ok: false; body: ApiErrorBody }> {
+  const enc = encodeURIComponent(mobile);
+  const res = await authJson<{ data: StaffCustomerRiskProfile }>(`/staff/customers/${enc}/profile`, { accessToken });
   if (!res.ok) return { ok: false, body: res.body };
   return { ok: true, data: res.data.data };
 }

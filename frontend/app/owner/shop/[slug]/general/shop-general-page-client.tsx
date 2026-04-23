@@ -26,10 +26,16 @@ const schema = z.object({
   email: z.union([z.literal(""), z.string().email("Invalid email")]).optional(),
   address: z.string().max(500).optional(),
   website: z.string().max(500).optional(),
-  logo_url: z.string().max(1024).optional(),
+  logo_url: z.string().max(1500000).optional(),
   cover_photo_url: z.string().max(1024).optional(),
+  division: z.string().max(120).optional(),
+  district: z.string().max(120).optional(),
+  city: z.string().max(120).optional(),
+  latitude: z.union([z.literal(""), z.coerce.number().min(-90).max(90)]).optional(),
+  longitude: z.union([z.literal(""), z.coerce.number().min(-180).max(180)]).optional(),
   currency: z.string().max(8).optional(),
   min_lead_time_hours: z.coerce.number().int().min(0).max(168),
+  booking_advance_percent: z.coerce.number().int().min(0).max(100),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -53,8 +59,14 @@ function FormBody({ accessToken }: { accessToken: string }) {
       website: "",
       logo_url: "",
       cover_photo_url: "",
+      division: "",
+      district: "",
+      city: "",
+      latitude: "",
+      longitude: "",
       currency: "BDT",
       min_lead_time_hours: 0,
+      booking_advance_percent: 0,
     },
   });
 
@@ -78,11 +90,20 @@ function FormBody({ accessToken }: { accessToken: string }) {
       website: typeof st.website === "string" ? st.website : "",
       logo_url: typeof st.logo_url === "string" ? st.logo_url : "",
       cover_photo_url: typeof st.cover_photo_url === "string" ? st.cover_photo_url : "",
+      division: typeof st.division === "string" ? st.division : "",
+      district: typeof st.district === "string" ? st.district : "",
+      city: typeof st.city === "string" ? st.city : "",
+      latitude: p.latitude ?? "",
+      longitude: p.longitude ?? "",
       currency: typeof st.currency === "string" && st.currency ? st.currency : "BDT",
       min_lead_time_hours:
         typeof st.min_lead_time_hours === "number"
           ? st.min_lead_time_hours
           : Number.parseInt(String(st.min_lead_time_hours ?? "0"), 10) || 0,
+      booking_advance_percent:
+        typeof st.booking_advance_percent === "number"
+          ? st.booking_advance_percent
+          : Number.parseInt(String(st.booking_advance_percent ?? "0"), 10) || 0,
     });
     setHours(hoursFromSettings(st));
     const h = st.holidays;
@@ -119,9 +140,13 @@ function FormBody({ accessToken }: { accessToken: string }) {
     const settings: Record<string, unknown> = {
       business_hours: hoursToPayload(hours),
       min_lead_time_hours: values.min_lead_time_hours,
+      booking_advance_percent: values.booking_advance_percent,
       website: values.website?.trim() === "" ? null : values.website?.trim(),
       logo_url: values.logo_url?.trim() === "" ? null : values.logo_url?.trim(),
       cover_photo_url: values.cover_photo_url?.trim() === "" ? null : values.cover_photo_url?.trim(),
+      division: values.division?.trim() === "" ? null : values.division?.trim(),
+      district: values.district?.trim() === "" ? null : values.district?.trim(),
+      city: values.city?.trim() === "" ? null : values.city?.trim(),
       holidays: holidays.filter((h) => /^\d{4}-\d{2}-\d{2}$/.test(h.date)),
     };
     if (perms.can_edit_currency === true) {
@@ -133,6 +158,8 @@ function FormBody({ accessToken }: { accessToken: string }) {
       phone: values.phone?.trim() === "" ? null : values.phone?.trim() ?? null,
       email: values.email?.trim() === "" ? null : values.email?.trim() ?? null,
       address: values.address?.trim() === "" ? null : values.address?.trim() ?? null,
+      latitude: values.latitude === "" || values.latitude == null ? null : String(values.latitude),
+      longitude: values.longitude === "" || values.longitude == null ? null : String(values.longitude),
       settings,
     });
     if (!res.ok) {
@@ -141,6 +168,26 @@ function FormBody({ accessToken }: { accessToken: string }) {
     }
     setProfile(res.data);
     toast.success("Shop profile saved");
+  }
+
+  function handleLogoUpload(file: File | null) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file.");
+      return;
+    }
+    if (file.size > 1024 * 1024) {
+      toast.error("Image too large. Keep logo under 1MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      if (!result) return;
+      form.setValue("logo_url", result, { shouldDirty: true });
+      toast.success("Logo uploaded. Save changes to publish.");
+    };
+    reader.readAsDataURL(file);
   }
 
   function setDay(key: string, patch: Partial<{ closed: boolean; open: string; close: string }>) {
@@ -187,6 +234,14 @@ function FormBody({ accessToken }: { accessToken: string }) {
             <div>
               <Label htmlFor="logo_url">Logo URL</Label>
               <Input id="logo_url" className="mt-1" disabled={!canEditBasics} {...form.register("logo_url")} />
+              <Input
+                type="file"
+                accept="image/*"
+                className="mt-2"
+                disabled={!canEditBasics}
+                onChange={(e) => handleLogoUpload(e.target.files?.[0] ?? null)}
+              />
+              <p className="mt-1 text-[11px] text-zinc-500">Paste URL or upload a small image.</p>
             </div>
             <div>
               <Label htmlFor="cover_photo_url">Cover photo URL</Label>
@@ -207,6 +262,29 @@ function FormBody({ accessToken }: { accessToken: string }) {
             <div className="sm:col-span-2">
               <Label htmlFor="website">Website</Label>
               <Input id="website" placeholder="https://…" className="mt-1" disabled={!canEditBasics} {...form.register("website")} />
+            </div>
+            <div>
+              <Label htmlFor="division">Division</Label>
+              <Input id="division" className="mt-1" disabled={!canEditBasics} {...form.register("division")} />
+            </div>
+            <div>
+              <Label htmlFor="district">District</Label>
+              <Input id="district" className="mt-1" disabled={!canEditBasics} {...form.register("district")} />
+            </div>
+            <div>
+              <Label htmlFor="city">City</Label>
+              <Input id="city" className="mt-1" disabled={!canEditBasics} {...form.register("city")} />
+            </div>
+            <div>
+              <Label htmlFor="latitude">Latitude</Label>
+              <Input id="latitude" type="number" step="any" className="mt-1" disabled={!canEditBasics} {...form.register("latitude")} />
+            </div>
+            <div>
+              <Label htmlFor="longitude">Longitude</Label>
+              <Input id="longitude" type="number" step="any" className="mt-1" disabled={!canEditBasics} {...form.register("longitude")} />
+            </div>
+            <div className="sm:col-span-2 text-xs text-zinc-500">
+              Tip: open Google Maps, right-click your shop marker, then copy latitude/longitude.
             </div>
           </div>
         </section>
@@ -312,10 +390,29 @@ function FormBody({ accessToken }: { accessToken: string }) {
 
         <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
           <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Booking defaults</h2>
+          <p className="mt-1 text-xs text-zinc-500">
+            Advance % applies to the sum of priced services on the public booking page (customer must confirm before
+            submitting).
+          </p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="min_lead">Minimum lead time (hours)</Label>
               <Input id="min_lead" type="number" min={0} className="mt-1" disabled={!canEditHours} {...form.register("min_lead_time_hours")} />
+            </div>
+            <div>
+              <Label htmlFor="booking_advance_percent">Advance payment (% of total)</Label>
+              <Input
+                id="booking_advance_percent"
+                type="number"
+                min={0}
+                max={100}
+                className="mt-1"
+                disabled={!canEditHours}
+                {...form.register("booking_advance_percent")}
+              />
+              {form.formState.errors.booking_advance_percent ? (
+                <p className="mt-1 text-xs text-red-600">{form.formState.errors.booking_advance_percent.message}</p>
+              ) : null}
             </div>
             <div>
               <Label htmlFor="currency">Currency code</Label>

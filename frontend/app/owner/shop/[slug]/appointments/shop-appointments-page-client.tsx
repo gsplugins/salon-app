@@ -13,10 +13,12 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   fetchAdminBookings,
   fetchStaffCatalog,
+  fetchOwnerCustomerRiskProfile,
   formatApiError,
   patchBooking,
   type BookingRow,
   type CatalogStaffRow,
+  type OwnerCustomerRiskProfile,
 } from "@/lib/salon-api";
 
 function isoDate(d: Date): string {
@@ -38,6 +40,8 @@ function FormBody({ accessToken }: { accessToken: string }) {
   const [active, setActive] = useState<BookingRow | null>(null);
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
+  const [riskProfile, setRiskProfile] = useState<OwnerCustomerRiskProfile | null>(null);
+  const [riskBusy, setRiskBusy] = useState(false);
 
   const loadStaff = useCallback(async () => {
     const res = await fetchStaffCatalog(accessToken);
@@ -75,6 +79,24 @@ function FormBody({ accessToken }: { accessToken: string }) {
   }, [load]);
 
   const sorted = useMemo(() => [...rows].sort((a, b) => a.starts_at.localeCompare(b.starts_at)), [rows]);
+
+  useEffect(() => {
+    async function run() {
+      if (!active) {
+        setRiskProfile(null);
+        return;
+      }
+      setRiskBusy(true);
+      const res = await fetchOwnerCustomerRiskProfile(accessToken, active.customer_mobile);
+      setRiskBusy(false);
+      if (!res.ok) {
+        setRiskProfile(null);
+        return;
+      }
+      setRiskProfile(res.data);
+    }
+    void run();
+  }, [active, accessToken]);
 
   async function saveStatus(next: string) {
     if (!active) return;
@@ -223,6 +245,31 @@ function FormBody({ accessToken }: { accessToken: string }) {
               <p>
                 <span className="text-zinc-500">Staff:</span> {active.staff.name}
               </p>
+              <div className="rounded-xl border border-zinc-100 p-3 text-xs dark:border-zinc-800">
+                <p className="font-semibold uppercase tracking-wide text-zinc-500">Customer fraud/risk check</p>
+                {riskBusy ? (
+                  <p className="mt-1 text-zinc-500">Loading profile…</p>
+                ) : riskProfile ? (
+                  <>
+                    <p className="mt-1">
+                      Completed: <strong>{riskProfile.completed}</strong> · Cancelled: <strong>{riskProfile.cancelled}</strong> · No-show:{" "}
+                      <strong>{riskProfile.no_show}</strong>
+                    </p>
+                    <p>
+                      Total bookings: <strong>{riskProfile.total_bookings}</strong> · Cancel ratio:{" "}
+                      <strong>{riskProfile.cancellation_rate_percent}%</strong>
+                    </p>
+                    <p>
+                      Risk level:{" "}
+                      <strong className={riskProfile.risk_level === "high" ? "text-red-600" : riskProfile.risk_level === "medium" ? "text-amber-600" : "text-emerald-600"}>
+                        {riskProfile.risk_level}
+                      </strong>
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-1 text-zinc-500">No profile data.</p>
+                )}
+              </div>
               <div>
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea id="notes" className="mt-1" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />

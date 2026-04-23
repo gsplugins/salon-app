@@ -5,6 +5,7 @@ import { supabaseAdmin } from "../lib/supabase.js";
 import { fail, okData } from "../lib/http.js";
 import { normalizeMobile } from "../lib/mobile.js";
 import { bookingToRow } from "../presenters/booking.js";
+import { notifyCustomerBookingEvent } from "../lib/customer-notifications.js";
 import type { ShopRow } from "../salon-types.js";
 import { shopMemberRole } from "../lib/shop-resolution.js";
 
@@ -33,6 +34,8 @@ function shopPayload(shop: ShopRow, user: { id: string; role: string }, memberRo
     phone: shop.phone,
     email: shop.email,
     address: shop.address,
+    latitude: shop.latitude ?? null,
+    longitude: shop.longitude ?? null,
     is_active: shop.is_active,
     settings: shop.settings ?? {},
     subscription: null,
@@ -63,6 +66,47 @@ async function attachSubscription(shopId: number, payload: Record<string, unknow
     trial_ends_at: s.trial_ends_at,
     current_period_end: s.current_period_end,
     features: {}
+  };
+}
+
+async function customerRiskProfileByMobile(shopId: number, mobile: string) {
+  const rows = await supabaseAdmin
+    .from("salon_bookings")
+    .select("customer_name,status,starts_at")
+    .eq("shop_id", shopId)
+    .eq("customer_mobile", mobile)
+    .order("starts_at", { ascending: false })
+    .limit(5000);
+  const list = (rows.data ?? []) as { customer_name: string; status: string; starts_at: string }[];
+  let completed = 0;
+  let cancelled = 0;
+  let noShow = 0;
+  let pending = 0;
+  let confirmed = 0;
+  for (const b of list) {
+    const s = String(b.status ?? "").toLowerCase();
+    if (s === "completed") completed += 1;
+    else if (s === "cancelled") cancelled += 1;
+    else if (s === "no_show") noShow += 1;
+    else if (s === "pending") pending += 1;
+    else if (s === "confirmed") confirmed += 1;
+  }
+  const total = list.length;
+  const negatives = cancelled + noShow;
+  const cancellationRatePercent = total > 0 ? Math.round((negatives / total) * 1000) / 10 : 0;
+  const riskLevel = cancellationRatePercent >= 50 ? "high" : cancellationRatePercent >= 25 ? "medium" : "low";
+  return {
+    customer_name: list[0]?.customer_name ?? "Customer",
+    customer_mobile: mobile,
+    total_bookings: total,
+    completed,
+    confirmed,
+    pending,
+    cancelled,
+    no_show: noShow,
+    cancellation_rate_percent: cancellationRatePercent,
+    risk_level: riskLevel,
+    last_visit_at: list[0]?.starts_at ?? null
   };
 }
 
@@ -131,6 +175,8 @@ export function mountMyShopRoutes(router: Router): void {
       if (mrole !== "manager") updates.email = body.email === null ? null : String(body.email);
     }
     if ("address" in body) updates.address = body.address === null ? null : String(body.address);
+    if ("latitude" in body) updates.latitude = body.latitude === null ? null : String(body.latitude);
+    if ("longitude" in body) updates.longitude = body.longitude === null ? null : String(body.longitude);
     if (body.settings && typeof body.settings === "object" && body.settings !== null) {
       const cur = (shop.settings ?? {}) as Record<string, unknown>;
       updates.settings = deepMergeSettings(cur, body.settings as Record<string, unknown>);
@@ -239,6 +285,14 @@ export function mountMyShopRoutes(router: Router): void {
       }
     }
     return okData(res, [...byMobile.values()].sort((a, b) => (a.last_visit_at < b.last_visit_at ? 1 : -1)).slice(0, 200));
+  });
+
+  r.get("/my/shop/customers/:mobile/profile", async (req: Request, res: Response) => {
+    const { shop } = req.salon!;
+    const mobile = decodeURIComponent(req.params.mobile);
+    if (!mobile) return fail(res, 422, "Invalid mobile.");
+    const profile = await customerRiskProfileByMobile(shop.id, mobile);
+    return okData(res, profile);
   });
 
   r.get("/my/shop/services-catalog", async (req: Request, res: Response) => {
@@ -390,8 +444,9 @@ export function mountMyShopRoutes(router: Router): void {
 
   r.post("/my/shop/staff-with-account", async (req: Request, res: Response) => {
     const { user, shop } = req.salon!;
-    if (shop.owner_user_id !== user.id && user.role !== "super_admin") {
-      return fail(res, 403, "Only shop owner can create staff accounts.");
+    const role = await shopMemberRole(user.id, shop.id);
+    if (user.role !== "super_admin" && !["owner", "manager"].includes(role ?? "")) {
+      return fail(res, 403, "Only owner or manager can create staff accounts.");
     }
     const schema = z.object({
       name: z.string(),
@@ -436,7 +491,13 @@ export function mountMyShopRoutes(router: Router): void {
       })
       .select("id")
       .single();
-    if (ins.error || !ins.data) return fail(res, 500, "Could not create staff profile.");
+    if (ins.error || !ins.data) {
+      const msg = String(ins.error?.message ?? "");
+      if (msg.includes("uq_staff_user_single_shop")) {
+        return fail(res, 422, "This staff login is already linked to another shop.");
+      }
+      return fail(res, 500, "Could not create staff profile.");
+    }
     const sid = (ins.data as { id: number }).id;
     if (parsed.data.service_ids?.length) {
       const rows = parsed.data.service_ids.map((service_id) => ({ shop_id: shop.id, staff_id: sid, service_id }));
@@ -608,7 +669,7 @@ export function mountMyShopRoutes(router: Router): void {
     const bookingId = Number(req.params.bookingId);
     const b = await supabaseAdmin.from("salon_bookings").select("*").eq("id", bookingId).eq("shop_id", shop.id).maybeSingle();
     if (!b.data) return fail(res, 404, "Not found.");
-    const booking = b.data as { salon_staff_id: number };
+    const booking = b.data as { salon_staff_id: number; status: string };
     if (staffScopeId != null && booking.salon_staff_id !== staffScopeId) return fail(res, 403, "You can only edit your own bookings.");
     const patch = req.body as Record<string, unknown>;
     const upd: Record<string, unknown> = {};
@@ -631,6 +692,13 @@ export function mountMyShopRoutes(router: Router): void {
       upd.ends_at = new Date(starts.getTime() + duration * 60_000).toISOString();
     }
     await supabaseAdmin.from("salon_bookings").update(upd).eq("id", bookingId);
+    const nextStatus = typeof upd.status === "string" ? upd.status : booking.status;
+    if (nextStatus === "confirmed" && booking.status !== "confirmed") {
+      await notifyCustomerBookingEvent({ bookingId, type: "booking_confirmed" });
+    }
+    if (nextStatus === "completed" && booking.status !== "completed") {
+      await notifyCustomerBookingEvent({ bookingId, type: "service_completed_review" });
+    }
     const row = await bookingToRow(bookingId);
     return okData(res, row);
   });
@@ -902,8 +970,34 @@ export function mountMyShopRoutes(router: Router): void {
 
   r.get("/my/shop/reviews", async (req: Request, res: Response) => {
     const { shop } = req.salon!;
-    const rows = await supabaseAdmin.from("salon_reviews").select("*").eq("shop_id", shop.id).order("created_at", { ascending: false }).limit(100);
-    return okData(res, rows.data ?? []);
+    const rows = await supabaseAdmin
+      .from("salon_reviews")
+      .select("id,rating,comment,owner_reply,created_at,salon_staff_id,customer_user_id,salon_staff(name),users!salon_reviews_customer_user_id_fkey(name)")
+      .eq("shop_id", shop.id)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    const data = (rows.data ?? []).map(
+      (r: {
+        id: number;
+        rating: number;
+        comment: string | null;
+        owner_reply: string | null;
+        created_at: string | null;
+        salon_staff_id: number | null;
+        customer_user_id: string | null;
+        salon_staff: { name: string }[] | null;
+        users: { name: string }[] | null;
+      }) => ({
+        id: r.id,
+        rating: Number(r.rating),
+        comment: r.comment ?? null,
+        owner_reply: r.owner_reply ?? null,
+        created_at: r.created_at ?? null,
+        staff: r.salon_staff_id ? { id: r.salon_staff_id, name: r.salon_staff?.[0]?.name ?? "Barber" } : null,
+        customer: r.customer_user_id ? { id: 0, name: r.users?.[0]?.name ?? "Customer" } : null
+      })
+    );
+    return okData(res, data);
   });
 
   r.patch("/my/shop/reviews/:reviewId", async (req: Request, res: Response) => {

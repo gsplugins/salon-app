@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ShieldAlert } from "lucide-react";
+import { Bell, ShieldAlert } from "lucide-react";
 import { AuthHeaderProfile } from "@/components/auth-header-profile";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { PortalPanelShell, type PortalNavItem } from "@/components/portal/portal-panel-shell";
 import type { AuthMePayload } from "@/lib/auth-api";
 import type { ShopProfile } from "@/lib/salon-api";
@@ -34,6 +33,7 @@ export function OwnerShopSidebarShell(props: {
   const primaryNav = navAll.slice(0, 5);
   const secondaryNav = navAll.slice(5);
   const planLabel = shopProfile?.subscription?.plan_name?.trim() || shopProfile?.subscription?.plan_key || null;
+  const shopLogo = typeof shopProfile?.settings?.logo_url === "string" ? shopProfile.settings.logo_url : null;
 
   return (
     <PortalPanelShell
@@ -44,6 +44,7 @@ export function OwnerShopSidebarShell(props: {
       secondaryNav={secondaryNav}
       header={{
         state: "ready",
+        avatarUrl: shopLogo,
         avatarFallback: shopName.slice(0, 1).toUpperCase(),
         title: shopName,
         subtitle: "Shop manager",
@@ -55,8 +56,14 @@ export function OwnerShopSidebarShell(props: {
       }}
       headerTrailing={
         <div className="hidden items-center gap-2 sm:flex">
-          <ThemeToggle />
-          <AuthHeaderProfile variant="compact" />
+          <Link
+            href={`/owner/shop/${encodeURIComponent(shopSlug)}/notifications`}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+            aria-label="Shop notifications"
+          >
+            <Bell className="h-5 w-5" />
+          </Link>
+          <AuthHeaderProfile />
         </div>
       }
       footerLink={{ href: "/platform", label: "Site map" }}
@@ -64,8 +71,14 @@ export function OwnerShopSidebarShell(props: {
     >
       <div className="mb-4 flex justify-end sm:hidden">
         <div className="flex items-center gap-2 rounded-2xl border border-zinc-200/80 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
-          <ThemeToggle />
-          <AuthHeaderProfile variant="compact" />
+          <Link
+            href={`/owner/shop/${encodeURIComponent(shopSlug)}/notifications`}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+            aria-label="Shop notifications"
+          >
+            <Bell className="h-5 w-5" />
+          </Link>
+          <AuthHeaderProfile />
         </div>
       </div>
       {actingAsSuperAdmin ? (

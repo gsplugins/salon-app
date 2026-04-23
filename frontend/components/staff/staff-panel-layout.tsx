@@ -18,7 +18,7 @@ import {
 import { cn } from "@/lib/cn";
 import { availabilityStatusLabel } from "@/lib/staff-ui";
 import { fetchStaffNotifications, fetchStaffProfile, type StaffProfilePayload } from "@/lib/staff-api";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { AuthHeaderProfile } from "@/components/auth-header-profile";
 import { StaffActAsBar } from "@/components/staff/staff-act-as-bar";
 import { PortalPanelShell, type PortalNavItem } from "@/components/portal/portal-panel-shell";
 
@@ -109,7 +109,7 @@ export function StaffPanelLayout(props: { accessToken: string; children: React.R
       headerTrailing={
         <div className="flex items-center gap-2">
           <span className="hidden sm:inline-flex">
-            <ThemeToggle />
+            <AuthHeaderProfile />
           </span>
           <Link
             href="/staff/notifications"
@@ -129,7 +129,9 @@ export function StaffPanelLayout(props: { accessToken: string; children: React.R
     >
       <StaffActAsBar accessToken={accessToken} onStaffContextChange={() => void load()} />
       <div className="mb-4 flex justify-end sm:hidden">
-        <ThemeToggle />
+        <div className="flex items-center gap-2 rounded-2xl border border-zinc-200/80 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
+          <AuthHeaderProfile />
+        </div>
       </div>
       {props.children}
     </PortalPanelShell>

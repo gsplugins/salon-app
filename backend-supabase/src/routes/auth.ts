@@ -8,6 +8,7 @@ import { config } from "../config.js";
 import type { DbUser } from "../db-types.js";
 import { resolveManagementShop, shopMemberRole } from "../lib/shop-resolution.js";
 import { formatPostgrestError, hintMissingPublicTables } from "../lib/db-errors.js";
+import { okData } from "../lib/http.js";
 
 function bearer(req: Request): string | null {
   const auth = req.headers.authorization;
@@ -254,13 +255,31 @@ export function mountAuthRoutes(router: Router): void {
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) return res.status(422).json({ message: "Validation failed." });
 
-    const mobile = normalizeMobile(parsed.data.mobile);
+    const mobile = normalizeMobile(String(parsed.data.mobile).trim());
+    if (!mobile) {
+      return res.status(422).json({ message: "Invalid mobile number." });
+    }
+    const password = String(parsed.data.password).trim();
+    if (!password) {
+      return res.status(422).json({ message: "Password is required." });
+    }
+
     const userLookup = await supabaseAdmin.from("users").select("*").eq("mobile", mobile).maybeSingle();
+    if (userLookup.error) {
+      // eslint-disable-next-line no-console
+      console.error("[auth/login] user lookup", userLookup.error);
+      const hint = hintMissingPublicTables(userLookup.error);
+      return res.status(500).json({
+        message: "Could not look up user.",
+        detail: formatPostgrestError(userLookup.error),
+        ...(hint ? { hint } : {})
+      });
+    }
     const user = userLookup.data as DbUser | null;
     if (!user) return res.status(401).json({ message: "Invalid credentials." });
     if (user.is_locked) return res.status(403).json({ message: "Account is locked. Contact support." });
 
-    const passOk = await bcrypt.compare(parsed.data.password, user.password_hash);
+    const passOk = await bcrypt.compare(password, user.password_hash);
     if (!passOk) return res.status(401).json({ message: "Invalid credentials." });
 
     await respondWithTokens(res, 200, user);
@@ -454,6 +473,7 @@ export function mountAuthRoutes(router: Router): void {
         id: user.id,
         name: user.name,
         mobile: user.mobile,
+        photo_url: user.photo_url ?? null,
         role: user.role,
         global_role: user.role === "super_admin" ? "super_admin" : "user",
         loyalty_points: user.loyalty_points ?? 0,
@@ -474,6 +494,27 @@ export function mountAuthRoutes(router: Router): void {
           : null,
         subscription
       });
+    } catch {
+      return res.status(401).json({ message: "Unauthenticated." });
+    }
+  });
+
+  router.patch("/auth/me", async (req: Request, res: Response) => {
+    const token = bearer(req);
+    if (!token) return res.status(401).json({ message: "Unauthenticated." });
+    try {
+      const payload = verifyAccessToken(token);
+      const userRes = await supabaseAdmin.from("users").select("*").eq("id", payload.sub).maybeSingle();
+      const user = userRes.data as DbUser | null;
+      if (!user) return res.status(401).json({ message: "Unauthenticated." });
+      const body = req.body as Record<string, unknown>;
+      const updates: Record<string, unknown> = {};
+      if (typeof body.name === "string" && body.name.trim().length > 1) updates.name = body.name.trim();
+      if ("photo_url" in body) updates.photo_url = body.photo_url == null || String(body.photo_url).trim() === "" ? null : String(body.photo_url);
+      if (Object.keys(updates).length === 0) return res.status(422).json({ message: "Nothing to update." });
+      const saved = await supabaseAdmin.from("users").update(updates).eq("id", user.id).select("id,name,mobile,photo_url,role").single();
+      if (saved.error || !saved.data) return res.status(500).json({ message: "Could not update profile." });
+      return okData(res, saved.data);
     } catch {
       return res.status(401).json({ message: "Unauthenticated." });
     }

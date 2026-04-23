@@ -39,7 +39,9 @@ export function StaffActAsBar(props: { accessToken: string; onStaffContextChange
     }
     setStaff(s.data);
     const current = getStaffActAsStaffId();
-    if (!current && s.data.length > 0) {
+    const hasCurrent = typeof current === "number" && s.data.some((row) => row.id === current);
+    if ((!current || !hasCurrent) && s.data.length > 0) {
+      // Auto-fix stale manager selection (e.g. switched shops) so staff APIs always resolve a valid profile.
       setStaffActAsStaffId(s.data[0].id);
       onStaffContextChange();
     }
@@ -84,6 +86,7 @@ export function StaffActAsBar(props: { accessToken: string; onStaffContextChange
             const v = e.target.value;
             if (v === "") {
               setStaffActAsStaffId(null);
+              onStaffContextChange();
               return;
             }
             const id = Number.parseInt(v, 10);

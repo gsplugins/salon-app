@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Eye, EyeOff, Sparkles, Store } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { authJson, formatApiError, type ApiErrorBody, type AuthMePayload } from "@/lib/auth-api";
+import { authJson, fetchAuthMe, formatApiError, type ApiErrorBody, type AuthMePayload } from "@/lib/auth-api";
 import { broadcastSalonAuthChange } from "@/lib/auth-events";
 import { getPrimaryDashboardPath, getRoleLabel } from "@/lib/auth-session";
 import { canAccessBarberStaffRoutes, canAccessCustomerPortal, canAccessSalonManagement } from "@/lib/role-access";
+import { normalizeMobile } from "@/lib/normalize-mobile";
 
 const LS_ACCESS = "salon_access_token";
 const LS_REFRESH = "salon_refresh_token";
@@ -15,10 +17,6 @@ type Tab = "login" | "register" | "forgot" | "reset";
 type AuthMode = "login" | "register";
 type LoginView = "login" | "forgot" | "reset";
 type RegisterMode = "customer" | "shop";
-
-function normalizeMobileInput(raw: string): string {
-  return raw.replace(/\D/g, "");
-}
 
 function slugifyShopSlug(input: string): string {
   return input
@@ -41,6 +39,7 @@ function SectionCard(props: { title: string; subtitle: string; children: React.R
 }
 
 export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
+  const router = useRouter();
   const [mode, setMode] = useState<AuthMode>(initialTab === "register" ? "register" : "login");
   const [loginView, setLoginView] = useState<LoginView>(
     initialTab === "forgot" ? "forgot" : initialTab === "reset" ? "reset" : "login"
@@ -123,6 +122,19 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
 
   const showErr = (body: ApiErrorBody) => setNotice({ type: "err", text: formatApiError(body) });
 
+  const redirectToRoleDashboard = useCallback(
+    async (token: string) => {
+      const meRes = await fetchAuthMe(token);
+      if (!meRes.ok) {
+        setNotice({ type: "err", text: formatApiError(meRes.body) });
+        return;
+      }
+      setMe(meRes.data);
+      router.push(getPrimaryDashboardPath(meRes.data));
+    },
+    [router]
+  );
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -134,18 +146,15 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
     }>("/auth/login", {
       method: "POST",
       body: JSON.stringify({
-        mobile: normalizeMobileInput(loginMobile),
-        password: loginPassword,
+        mobile: normalizeMobile(loginMobile.trim()),
+        password: loginPassword.trim(),
       }),
     });
     setBusy(false);
     if (!res.ok) return showErr(res.body);
     persistTokens(res.data.access_token, res.data.refresh_token);
-    setNotice({
-      type: "ok",
-      text: `Signed in. Access token expires in ${Math.round(res.data.expires_in / 86400)} days.`,
-    });
     setLoginPassword("");
+    await redirectToRoleDashboard(res.data.access_token);
   }
 
   async function handleRegisterCustomer(e: React.FormEvent) {
@@ -159,7 +168,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
       method: "POST",
       body: JSON.stringify({
         ...(regName.trim() !== "" ? { name: regName.trim() } : {}),
-        mobile: normalizeMobileInput(regMobile),
+        mobile: normalizeMobile(regMobile.trim()),
         password: regPassword,
         password_confirmation: regPassword2,
       }),
@@ -167,9 +176,9 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
     setBusy(false);
     if (!res.ok) return showErr(res.body);
     persistTokens(res.data.access_token, res.data.refresh_token);
-    setNotice({ type: "ok", text: "Customer account created and signed in." });
     setRegPassword("");
     setRegPassword2("");
+    await redirectToRoleDashboard(res.data.access_token);
   }
 
   async function handleRegisterShop(e: React.FormEvent) {
@@ -184,7 +193,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
       method: "POST",
       body: JSON.stringify({
         ...(regName.trim() !== "" ? { name: regName.trim() } : {}),
-        mobile: normalizeMobileInput(regMobile),
+        mobile: normalizeMobile(regMobile.trim()),
         password: regPassword,
         password_confirmation: regPassword2,
         shop_name: shopName.trim(),
@@ -195,13 +204,13 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
     setBusy(false);
     if (!res.ok) return showErr(res.body);
     persistTokens(res.data.access_token, res.data.refresh_token);
-    setNotice({ type: "ok", text: "Shop account created with trial subscription. You're signed in as owner." });
     setRegPassword("");
     setRegPassword2("");
     setShopName("");
     setShopSlug("");
     setShopDescription("");
     setShopSlugTouched(false);
+    await redirectToRoleDashboard(res.data.access_token);
   }
 
   async function handleForgot(e: React.FormEvent) {
@@ -210,7 +219,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
     setNotice(null);
     const res = await authJson<{ message: string }>("/auth/forgot-password", {
       method: "POST",
-      body: JSON.stringify({ mobile: normalizeMobileInput(forgotMobile) }),
+      body: JSON.stringify({ mobile: normalizeMobile(forgotMobile.trim()) }),
     });
     setBusy(false);
     if (!res.ok) return showErr(res.body);
@@ -224,7 +233,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
     const res = await authJson<{ message: string }>("/auth/reset-password", {
       method: "POST",
       body: JSON.stringify({
-        mobile: normalizeMobileInput(resetMobile),
+        mobile: normalizeMobile(resetMobile.trim()),
         otp: resetOtp,
         password: resetPassword,
         password_confirmation: resetPassword2,

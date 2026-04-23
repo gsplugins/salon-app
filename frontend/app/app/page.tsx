@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, Calendar, Compass, LayoutDashboard, Shield } from "lucide-react";
 import { AuthHeaderProfile } from "@/components/auth-header-profile";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthAccessPanel } from "./auth-access-panel";
+import { AccountPhotoCard } from "./account-photo-card";
 
 export const metadata = {
   title: "Portal hub — Prime Barbershop",
@@ -25,8 +25,7 @@ export default function StaffAppPage() {
               </h1>
             </div>
             <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-              <AuthHeaderProfile variant="compact" />
-              <ThemeToggle />
+              <AuthHeaderProfile />
             </div>
           </div>
 
@@ -125,6 +124,7 @@ export default function StaffAppPage() {
                 Platform-wide admin controls
               </Link>
             </div>
+            <AccountPhotoCard />
           </section>
           <AuthAccessPanel />
         </div>

@@ -5,7 +5,14 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Calendar, Gift, Search, Store } from "lucide-react";
 import { formatCustomerWhen } from "@/lib/customer-portal-utils";
-import { fetchCustomerAppointments, fetchCustomerLoyalty, formatApiError, type BookingRow, type LoyaltyPayload } from "@/lib/salon-api";
+import {
+  bookingServicesLabel,
+  fetchCustomerAppointments,
+  fetchCustomerLoyalty,
+  formatApiError,
+  type BookingRow,
+  type LoyaltyPayload,
+} from "@/lib/salon-api";
 import { useSalonAccessToken } from "@/hooks/use-salon-access-token";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,7 +101,7 @@ export function CustomerHomeClient() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="font-medium text-zinc-900 dark:text-white">{next.service.name}</p>
+              <p className="font-medium text-zinc-900 dark:text-white">{bookingServicesLabel(next)}</p>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">{formatCustomerWhen(next.starts_at)}</p>
               <p className="text-xs text-zinc-500">
                 {next.shop?.name ?? "Salon"} · {next.staff.name}

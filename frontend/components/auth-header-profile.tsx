@@ -143,11 +143,16 @@ export function AuthHeaderProfile(props: {
         aria-haspopup="menu"
       >
         <span
-          className={`flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-rose-700 text-white shadow-inner ${
+          className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-rose-500 to-rose-700 text-white shadow-inner ${
             compact ? "h-7 w-7 text-xs" : "h-8 w-8 text-sm"
           } font-semibold`}
         >
-          {initial}
+          {me.photo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element -- user-selected avatar URL/data URL
+            <img src={me.photo_url} alt="" className="h-full w-full object-cover" />
+          ) : (
+            initial
+          )}
         </span>
         {!compact ? (
           <span className="hidden max-w-[140px] truncate text-left text-sm font-medium text-zinc-800 dark:text-zinc-100 sm:block">

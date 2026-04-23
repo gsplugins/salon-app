@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Bell, Calendar, Compass, CreditCard, Gift, Heart, Home, Star, Store, User } from "lucide-react";
 import { fetchAuthMe, type AuthMePayload } from "@/lib/auth-api";
-import { fetchCustomerLoyalty } from "@/lib/salon-api";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { fetchCustomerLoyalty, fetchCustomerNotifications } from "@/lib/salon-api";
+import { AuthHeaderProfile } from "@/components/auth-header-profile";
 import { PortalPanelShell, type PortalNavItem } from "@/components/portal/portal-panel-shell";
 
 const PRIMARY: PortalNavItem[] = [
@@ -29,14 +29,20 @@ export function CustomerPanelLayout(props: { accessToken: string; children: Reac
   const { accessToken } = props;
   const [me, setMe] = useState<AuthMePayload | null>(null);
   const [points, setPoints] = useState<number | null>(null);
+  const [unread, setUnread] = useState(0);
 
   const load = useCallback(async () => {
-    const m = await fetchAuthMe(accessToken);
+    const [m, l, n] = await Promise.all([
+      fetchAuthMe(accessToken),
+      fetchCustomerLoyalty(accessToken),
+      fetchCustomerNotifications(accessToken),
+    ]);
     if (m.ok) setMe(m.data);
     else setMe(null);
-    const l = await fetchCustomerLoyalty(accessToken);
     if (l.ok) setPoints(l.data.points);
     else setPoints(null);
+    if (n.ok) setUnread(n.data.filter((x) => !x.is_read).length);
+    else setUnread(0);
   }, [accessToken]);
 
   useEffect(() => {
@@ -47,6 +53,7 @@ export function CustomerPanelLayout(props: { accessToken: string; children: Reac
     me != null
       ? ({
           state: "ready" as const,
+          avatarUrl: me.photo_url ?? null,
           avatarFallback: me.name.slice(0, 1).toUpperCase(),
           title: me.name,
           subtitle: "Customer",
@@ -70,8 +77,20 @@ export function CustomerPanelLayout(props: { accessToken: string; children: Reac
       headerTrailing={
         <div className="flex items-center gap-2">
           <span className="hidden sm:inline-flex">
-            <ThemeToggle />
+            <AuthHeaderProfile />
           </span>
+          <Link
+            href="/customer/notifications"
+            className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+            aria-label="Customer notifications"
+          >
+            <Bell className="h-5 w-5" />
+            {unread > 0 ? (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
+                {unread > 99 ? "99+" : unread}
+              </span>
+            ) : null}
+          </Link>
           <Link
             href="/shops"
             className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
@@ -85,7 +104,21 @@ export function CustomerPanelLayout(props: { accessToken: string; children: Reac
       footerLink2={{ href: "/", label: "Marketing home" }}
     >
       <div className="mb-4 flex justify-end sm:hidden">
-        <ThemeToggle />
+        <div className="flex items-center gap-2 rounded-2xl border border-zinc-200/80 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
+          <Link
+            href="/customer/notifications"
+            className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+            aria-label="Customer notifications"
+          >
+            <Bell className="h-5 w-5" />
+            {unread > 0 ? (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
+                {unread > 99 ? "99+" : unread}
+              </span>
+            ) : null}
+          </Link>
+          <AuthHeaderProfile />
+        </div>
       </div>
       {props.children}
     </PortalPanelShell>

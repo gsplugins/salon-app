@@ -7,6 +7,7 @@ import { Users } from "lucide-react";
 import { SalonManagementGate } from "@/components/auth/salon-management-gate";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { fetchAuthMe, type AuthMePayload } from "@/lib/auth-api";
 import {
   createStaffCatalog,
   createStaffWithAccount,
@@ -109,6 +110,7 @@ function parseOptionalInt(raw: string): number | null {
 
 function Body({ token }: { token: string }) {
   const router = useRouter();
+  const [me, setMe] = useState<AuthMePayload | null>(null);
   const [staff, setStaff] = useState<CatalogStaffRow[] | null>(null);
   const [services, setServices] = useState<CatalogServiceRow[] | null>(null);
   const [busy, setBusy] = useState(true);
@@ -121,8 +123,9 @@ function Body({ token }: { token: string }) {
 
   const load = useCallback(async () => {
     setBusy(true);
-    const [s, sv] = await Promise.all([fetchStaffCatalog(token), fetchServicesCatalog(token)]);
+    const [m, s, sv] = await Promise.all([fetchAuthMe(token), fetchStaffCatalog(token), fetchServicesCatalog(token)]);
     setBusy(false);
+    setMe(m.ok ? m.data : null);
     if (!s.ok) {
       toast.error(formatApiError(s.body));
       setStaff([]);
@@ -131,6 +134,12 @@ function Body({ token }: { token: string }) {
       setServices([]);
     } else setServices(sv.data);
   }, [token]);
+
+  const canCreateLogin =
+    me?.is_super_admin === true ||
+    me?.is_shop_owner === true ||
+    me?.shop_access?.role === "owner" ||
+    me?.shop_access?.role === "manager";
 
   useEffect(() => {
      
@@ -237,8 +246,8 @@ function Body({ token }: { token: string }) {
 
   function openStaffPortalAs(row: CatalogStaffRow) {
     setStaffActAsStaffId(row.id);
-    toast.success(`Now viewing as ${row.name} in staff portal.`);
-    router.push("/staff/dashboard");
+    toast.success(`Now viewing ${row.name} profile in staff portal.`);
+    router.push("/staff/profile");
   }
 
   if (busy || staff === null) {
@@ -258,6 +267,7 @@ function Body({ token }: { token: string }) {
           Real-life team records and staff login credentials. Staff can edit only their own profile; managers can update
           or remove any staff member here.
         </p>
+        {me?.shop?.name ? <p className="mt-1 text-xs text-zinc-500">Managing staff for shop: {me.shop.name}</p> : null}
         <div className="mt-3">
           <button
             type="button"
@@ -272,6 +282,10 @@ function Body({ token }: { token: string }) {
       {showAddForm ? (
         <form onSubmit={addStaff} className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
           <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Add staff</h2>
+          <p className="mt-1 text-xs text-zinc-500">
+            Quick add for managers: fill only required team details now. Extra profile info can be updated later.
+          </p>
+          <p className="mt-1 text-xs text-zinc-500">Staff login accounts are bound to this shop and cannot be reused in another shop.</p>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             <input
               value={adding.name}
@@ -303,53 +317,15 @@ function Body({ token }: { token: string }) {
               placeholder="Work mobile"
               className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
             />
-            <input
-              value={adding.age}
-              onChange={(e) => setAdding((p) => ({ ...p, age: e.target.value }))}
-              placeholder="Age"
-              inputMode="numeric"
-              className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-            />
-            <input
-              value={adding.experience_years}
-              onChange={(e) => setAdding((p) => ({ ...p, experience_years: e.target.value }))}
-              placeholder="Experience years"
-              inputMode="numeric"
-              className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-            />
-            <input
-              value={adding.emergency_contact_name}
-              onChange={(e) => setAdding((p) => ({ ...p, emergency_contact_name: e.target.value }))}
-              placeholder="Emergency contact name"
-              className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-            />
-            <input
-              value={adding.emergency_contact_phone}
-              onChange={(e) => setAdding((p) => ({ ...p, emergency_contact_phone: e.target.value }))}
-              placeholder="Emergency contact phone"
-              className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-            />
+            <label className="flex items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700">
+              <input
+                type="checkbox"
+                checked={adding.is_active}
+                onChange={(e) => setAdding((p) => ({ ...p, is_active: e.target.checked }))}
+              />
+              Active
+            </label>
           </div>
-          <textarea
-            value={adding.address}
-            onChange={(e) => setAdding((p) => ({ ...p, address: e.target.value }))}
-            placeholder="Address"
-            rows={2}
-            className="mt-3 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-          />
-          <input
-            value={adding.specialties_csv}
-            onChange={(e) => setAdding((p) => ({ ...p, specialties_csv: e.target.value }))}
-            placeholder="Specialties (comma separated)"
-            className="mt-3 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-          />
-          <textarea
-            value={adding.bio}
-            onChange={(e) => setAdding((p) => ({ ...p, bio: e.target.value }))}
-            placeholder="Short bio"
-            rows={3}
-            className="mt-3 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-          />
           {services && services.length > 0 ? (
             <fieldset className="mt-3">
               <legend className="text-xs font-medium text-zinc-500">Services</legend>
@@ -374,41 +350,98 @@ function Body({ token }: { token: string }) {
               </div>
             </fieldset>
           ) : null}
-          <label className="mt-3 flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={adding.create_login}
-              onChange={(e) => setAdding((p) => ({ ...p, create_login: e.target.checked }))}
-            />
-            Create staff login credentials now
-          </label>
-          {adding.create_login ? (
-            <div className="mt-3 grid gap-3 md:grid-cols-3">
+          <details className="mt-3 rounded-xl border border-zinc-200 bg-white/70 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950/50">
+            <summary className="cursor-pointer font-medium text-zinc-700 dark:text-zinc-200">Optional extra profile fields</summary>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
               <input
-                value={adding.login_mobile}
-                onChange={(e) => setAdding((p) => ({ ...p, login_mobile: e.target.value }))}
-                placeholder="Login mobile"
-                required
+                value={adding.age}
+                onChange={(e) => setAdding((p) => ({ ...p, age: e.target.value }))}
+                placeholder="Age"
+                inputMode="numeric"
                 className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
               />
               <input
-                type="text"
-                value={adding.password}
-                onChange={(e) => setAdding((p) => ({ ...p, password: e.target.value }))}
-                placeholder="Password"
-                required
+                value={adding.experience_years}
+                onChange={(e) => setAdding((p) => ({ ...p, experience_years: e.target.value }))}
+                placeholder="Experience years"
+                inputMode="numeric"
                 className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
               />
               <input
-                type="text"
-                value={adding.password_confirmation}
-                onChange={(e) => setAdding((p) => ({ ...p, password_confirmation: e.target.value }))}
-                placeholder="Confirm password"
-                required
+                value={adding.emergency_contact_name}
+                onChange={(e) => setAdding((p) => ({ ...p, emergency_contact_name: e.target.value }))}
+                placeholder="Emergency contact name"
                 className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+              />
+              <input
+                value={adding.emergency_contact_phone}
+                onChange={(e) => setAdding((p) => ({ ...p, emergency_contact_phone: e.target.value }))}
+                placeholder="Emergency contact phone"
+                className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+              />
+              <textarea
+                value={adding.address}
+                onChange={(e) => setAdding((p) => ({ ...p, address: e.target.value }))}
+                placeholder="Address"
+                rows={2}
+                className="md:col-span-2 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+              />
+              <input
+                value={adding.specialties_csv}
+                onChange={(e) => setAdding((p) => ({ ...p, specialties_csv: e.target.value }))}
+                placeholder="Specialties (comma separated)"
+                className="md:col-span-2 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+              />
+              <textarea
+                value={adding.bio}
+                onChange={(e) => setAdding((p) => ({ ...p, bio: e.target.value }))}
+                placeholder="Short bio"
+                rows={3}
+                className="md:col-span-2 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
               />
             </div>
-          ) : null}
+          </details>
+          {canCreateLogin ? (
+            <>
+              <label className="mt-3 flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={adding.create_login}
+                  onChange={(e) => setAdding((p) => ({ ...p, create_login: e.target.checked }))}
+                />
+                Create staff login credentials now
+              </label>
+              {adding.create_login ? (
+                <div className="mt-3 grid gap-3 md:grid-cols-3">
+                  <input
+                    value={adding.login_mobile}
+                    onChange={(e) => setAdding((p) => ({ ...p, login_mobile: e.target.value }))}
+                    placeholder="Login mobile"
+                    required
+                    className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  />
+                  <input
+                    type="text"
+                    value={adding.password}
+                    onChange={(e) => setAdding((p) => ({ ...p, password: e.target.value }))}
+                    placeholder="Password"
+                    required
+                    className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  />
+                  <input
+                    type="text"
+                    value={adding.password_confirmation}
+                    onChange={(e) => setAdding((p) => ({ ...p, password_confirmation: e.target.value }))}
+                    placeholder="Confirm password"
+                    required
+                    className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  />
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <p className="mt-3 text-xs text-zinc-500">Managers can add staff profiles. Staff login credentials can be created by the shop owner.</p>
+          )}
           <button
             type="submit"
             disabled={saving}
@@ -440,6 +473,9 @@ function Body({ token }: { token: string }) {
                   <p className="text-xs text-zinc-500">
                     Login: {row.has_staff_login ? row.login_mobile || "Linked account" : "No login account"}
                   </p>
+                  {!row.has_staff_login ? (
+                    <p className="text-xs text-zinc-500">Manager can still open this staff profile in view mode.</p>
+                  ) : null}
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -447,7 +483,7 @@ function Body({ token }: { token: string }) {
                     onClick={() => openStaffPortalAs(row)}
                     className="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white dark:bg-rose-100 dark:text-zinc-900"
                   >
-                    Staff panel view
+                    View staff profile
                   </button>
                   {editingId === row.id ? (
                     <>
