@@ -112,13 +112,13 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
 
   useEffect(() => {
     if (tab !== "salons") return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load when tab/filter/page/search changes
+     
     void loadShops();
   }, [tab, loadShops]);
 
   useEffect(() => {
     if (tab !== "bkash") return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load bKash list
+     
     void loadBkash();
   }, [tab, loadBkash]);
 

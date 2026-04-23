@@ -105,7 +105,7 @@ function FormBody({ accessToken }: { accessToken: string }) {
   }, [accessToken, form]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- shop profile hydrate form
+     
     void load();
   }, [load]);
 

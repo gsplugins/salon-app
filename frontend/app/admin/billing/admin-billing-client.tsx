@@ -48,7 +48,7 @@ function Body({ token }: { token: string }) {
   }, [token, shopId, status, from, to]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load billing tabs
+     
     void load();
   }, [load]);
 

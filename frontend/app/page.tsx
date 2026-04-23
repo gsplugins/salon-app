@@ -6,7 +6,7 @@ import { PublicHeader } from "@/components/public-header";
 
 const directApiBase =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
-  "http://127.0.0.1:8000/api";
+  "http://127.0.0.1:4000/api";
 
 async function fetchBackendJson(): Promise<{
   ok: boolean;
@@ -23,7 +23,7 @@ async function fetchBackendJson(): Promise<{
     if (host) {
       pathsToTry.push({
         url: `${proto}://${host}/api/test`,
-        via: "same-origin proxy (Next → Laravel)",
+        via: "same-origin proxy (Next → API)",
       });
     }
   } catch {
@@ -181,7 +181,7 @@ export default async function Home() {
                 Shops
               </Link>
               <Link
-                href="/app"
+                href="/app/auth?tab=login"
                 className="inline-flex items-center justify-center rounded-full border border-zinc-300 bg-white px-6 py-3 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
               >
                 Customer sign-in
@@ -386,7 +386,7 @@ export default async function Home() {
                 </span>
               ) : (
                 <span title={status.error}>
-                  API: offline — start Laravel or check{" "}
+                  API: offline — start the API (`backend-supabase`) or check{" "}
                   <code className="rounded bg-black/5 px-1 dark:bg-white/10">
                     BACKEND_URL
                   </code>{" "}

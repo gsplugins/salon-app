@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { fetchAuthMe, type AuthMePayload } from "@/lib/auth-api";
 import { canAccessSuperAdmin } from "@/lib/role-access";
-import { useSalonAccessToken } from "@/hooks/use-salon-access-token";
+import { useSalonAccessTokenReady } from "@/hooks/use-salon-access-token";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function SuperAdminGate(props: { children: (accessToken: string) => React.ReactNode }) {
-  const token = useSalonAccessToken();
+  const { token, ready } = useSalonAccessTokenReady();
   const [me, setMe] = useState<AuthMePayload | null | undefined>(undefined);
 
   const load = useCallback(async () => {
@@ -25,11 +25,11 @@ export function SuperAdminGate(props: { children: (accessToken: string) => React
   }, [token]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load session for RBAC
+     
     void load();
   }, [load]);
 
-  if (token === null || me === undefined) {
+  if (!ready || me === undefined) {
     return (
       <div className="space-y-3">
         <Skeleton className="h-8 w-48" />

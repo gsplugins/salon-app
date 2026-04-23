@@ -87,7 +87,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
     const a = localStorage.getItem(LS_ACCESS);
     const r = localStorage.getItem(LS_REFRESH);
     if (a && r) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- restore session from localStorage
+       
       setAccessToken(a);
       setRefreshToken(r);
     }
@@ -96,7 +96,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
   useEffect(() => {
     if (registerMode !== "shop" || shopSlugTouched) return;
     const s = slugifyShopSlug(shopName);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- keep slug synced until user edits
+     
     setShopSlug(s);
   }, [shopName, registerMode, shopSlugTouched]);
 
@@ -117,7 +117,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
   );
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch profile for role-aware dashboard card
+     
     if (accessToken) void loadMe(accessToken);
   }, [accessToken, loadMe]);
 

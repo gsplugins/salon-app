@@ -57,7 +57,7 @@ export function OwnerDashboardOverview({ token, shopSlug }: { token: string; sho
   }, [token, range.from, range.to]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load owner stats
+     
     void load();
   }, [load]);
 

@@ -31,7 +31,7 @@ export function ShopsBrowseClient() {
   }, [q]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load when search changes
+     
     void load();
   }, [load]);
 

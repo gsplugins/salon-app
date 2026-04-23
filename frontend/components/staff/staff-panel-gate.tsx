@@ -7,7 +7,6 @@ import {
   canAccessCustomerPortal,
   canAccessSalonManagement,
   canOpenStaffPortal,
-  isShopOwnerLike,
 } from "@/lib/role-access";
 import { useSalonAccessTokenReady } from "@/hooks/use-salon-access-token";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,7 +29,7 @@ export function StaffPanelGate(props: { children: (accessToken: string) => React
   }, [token]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- RBAC hydrate
+     
     void load();
   }, [load]);
 

@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 
 /**
- * Server Components: build same-origin API URL (Next rewrites to Laravel).
+ * Server Components: build same-origin API URL (Next rewrites to `BACKEND_URL`).
  */
 export async function serverApiUrl(path: string): Promise<string | null> {
   const h = await headers();

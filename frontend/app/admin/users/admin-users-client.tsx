@@ -50,7 +50,7 @@ function Body({ token }: { token: string }) {
   }, [token, page, search, role, status]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load users
+     
     void load();
   }, [load]);
 

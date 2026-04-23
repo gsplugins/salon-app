@@ -63,7 +63,7 @@ function Body({ token }: { token: string }) {
   }, [token, smtp, sms]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load templates & integrations
+     
     void load();
   }, [load]);
 

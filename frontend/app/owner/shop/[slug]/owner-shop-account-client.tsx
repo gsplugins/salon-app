@@ -16,7 +16,7 @@ function AccountBody({ token, shopSlug }: { token: string; shopSlug: string }) {
   }, [token]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load /auth/me for profile + shop panels
+     
     void loadMe();
   }, [loadMe]);
 

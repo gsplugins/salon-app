@@ -1,0 +1,14 @@
+{
+  "name": "salon-app",
+  "private": true,
+  "description": "Salon monorepo: API (backend-supabase) + Next.js (frontend).",
+  "scripts": {
+    "dev": "npx --yes concurrently@9 -n api,web -c blue,green \"npm run dev --prefix backend-supabase\" \"npm run dev --prefix frontend\"",
+    "dev:api": "npm run dev --prefix backend-supabase",
+    "dev:web": "npm run dev --prefix frontend",
+    "dev:web:refresh": "npm run dev:refresh --prefix frontend",
+    "build:api": "npm run build --prefix backend-supabase",
+    "build:web": "npm run build --prefix frontend",
+    "lint:web": "npm run lint --prefix frontend"
+  }
+}

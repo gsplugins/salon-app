@@ -17,6 +17,7 @@ import {
   Store,
   Ticket,
   UserCircle,
+  UserPlus,
   Users,
 } from "lucide-react";
 
@@ -83,7 +84,10 @@ const SECTIONS: HubSection[] = [
   {
     title: "Account & API",
     description: "Authentication entry",
-    items: [{ href: "/app", label: "Sign in / register", hint: "Customers, owners, barbers, admins", icon: ClipboardList }],
+    items: [
+      { href: "/app/auth?tab=login", label: "Sign in", hint: "Also: /login", icon: ClipboardList },
+      { href: "/app/auth?tab=register", label: "Create account", hint: "Also: /register", icon: UserPlus },
+    ],
   },
 ];
 

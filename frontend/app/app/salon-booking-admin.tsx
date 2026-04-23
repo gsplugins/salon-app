@@ -263,13 +263,13 @@ export function SalonBookingAdmin({
 
   useEffect(() => {
     if (!bookingsActive) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch bookings when tab/week changes
+     
     void loadAll();
   }, [loadAll, bookingsActive]);
 
   useEffect(() => {
     if (rangeMode === "all" && view === "calendar") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- calendar only meaningful for a single week
+       
       setView("list");
     }
   }, [rangeMode, view]);
@@ -277,7 +277,7 @@ export function SalonBookingAdmin({
   useEffect(() => {
     if (!visibleSectionIds.includes(section)) {
       const next = visibleSectionIds[0] ?? "bookings";
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- ensure current section is allowed by role
+       
       setSection(next);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- setSection is intentionally stable-enough here
@@ -295,7 +295,7 @@ export function SalonBookingAdmin({
   }, [accessToken]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- header KPIs for shop console
+     
     void loadHeaderStats();
   }, [loadHeaderStats]);
 
@@ -1043,7 +1043,7 @@ function WalkInForm(props: {
 
   useEffect(() => {
     if (serviceId === "") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset staff when service cleared
+       
       setStaffOptions([]);
       setStaffId(null);
       return;

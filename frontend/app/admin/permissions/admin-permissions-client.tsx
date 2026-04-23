@@ -26,7 +26,7 @@ function Body({ token }: { token: string }) {
   }, [token]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load permissions
+     
     void load();
   }, [load]);
 
@@ -65,7 +65,7 @@ function Body({ token }: { token: string }) {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Built-in role matrix</CardTitle>
-          <CardDescription>Authoritative access still comes from Laravel guards today; this table documents intent.</CardDescription>
+          <CardDescription>Authoritative access is enforced by the API and JWT claims; this table documents intent.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>

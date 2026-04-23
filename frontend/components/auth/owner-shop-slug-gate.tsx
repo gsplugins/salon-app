@@ -84,7 +84,7 @@ export function OwnerShopSlugGate(props: { slug: string; children: React.ReactNo
   }, [token, slug, ready]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load /auth/me for slug RBAC
+     
     void load();
   }, [load]);
 

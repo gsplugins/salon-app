@@ -57,7 +57,7 @@ function Body({ accessToken }: { accessToken: string }) {
   }, [accessToken, page, canPay]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- paginated payments fetch
+     
     void load();
   }, [load]);
 

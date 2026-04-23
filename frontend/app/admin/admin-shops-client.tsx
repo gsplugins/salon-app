@@ -90,7 +90,7 @@ function Body({ token }: { token: string }) {
   }, [token, filter, page, search, planKey, createdFrom, createdTo]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load shops
+     
     void load();
   }, [load]);
 

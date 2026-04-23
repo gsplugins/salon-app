@@ -56,7 +56,7 @@ export function AuthHeaderProfile(props: {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load /auth/me when token exists
+     
     void load();
   }, [load]);
 
@@ -118,7 +118,7 @@ export function AuthHeaderProfile(props: {
     return (
       <div className="flex items-center gap-2">
         <Link
-          href="/app"
+          href="/app/auth?tab=login"
           className={`rounded-full font-medium text-rose-800 hover:underline dark:text-rose-200 ${compact ? "text-xs" : "text-sm"}`}
         >
           Sign in

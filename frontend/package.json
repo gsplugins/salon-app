@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node ./scripts/next-dev.mjs",
+    "dev:refresh": "node ./scripts/clear-next-dev-lock.mjs && node ./scripts/next-dev.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

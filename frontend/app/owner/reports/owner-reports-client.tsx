@@ -52,7 +52,7 @@ function Body({ token }: { token: string }) {
   }, [token, range.from, range.to]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load analytics
+     
     void load();
   }, [load]);
 

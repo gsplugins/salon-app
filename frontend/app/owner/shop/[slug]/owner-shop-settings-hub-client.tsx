@@ -31,12 +31,12 @@ function SettingsBody({ token, shopSlug }: { token: string; shopSlug: string }) 
   }, [token]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load /auth/me for billing tab
+     
     void loadMe();
   }, [loadMe]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset hydration flag when shop changes
+     
     setPrefsHydrated(false);
     if (typeof window === "undefined") {
       setPrefsHydrated(true);

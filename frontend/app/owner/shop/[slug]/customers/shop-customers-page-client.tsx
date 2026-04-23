@@ -38,7 +38,7 @@ function Body({ accessToken }: { accessToken: string }) {
   }, [accessToken]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- customer directory fetch
+     
     void load();
   }, [load]);
 

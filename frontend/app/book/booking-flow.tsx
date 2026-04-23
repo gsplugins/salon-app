@@ -109,14 +109,14 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
   }, [shopSlug]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load shop meta and services on mount
+     
     void loadMeta();
     void loadServices();
   }, [loadMeta, loadServices]);
 
   useEffect(() => {
     if (!accessToken) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset when token cleared
+       
       setSignedInCustomer(false);
       return;
     }
@@ -152,7 +152,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
   }, [serviceId, shopSlug]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load staff when step advances
+     
     if (step === 2 && serviceId !== null) void loadStaff();
   }, [step, serviceId, loadStaff]);
 
@@ -173,7 +173,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
 
   useEffect(() => {
     // Only load slots on step 4. Using step >= 4 re-ran this on step 5 and cleared the selected time (setStartsAt(null)).
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load slots when on time step
+     
     if (step === 4 && serviceId !== null) void loadSlots();
   }, [step, serviceId, loadSlots]);
 

@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { SuperAdminGate } from "@/components/auth/super-admin-gate";
@@ -41,7 +41,8 @@ const planSchema = z.object({
   sort_order: z.coerce.number().int().min(0),
 });
 
-type PlanForm = z.infer<typeof planSchema>;
+/** Parsed plan form (`z.coerce` output); explicit so RHF + Zod 4 resolver types align. */
+type PlanForm = z.output<typeof planSchema>;
 
 function Body({ token }: { token: string }) {
   const [rows, setRows] = useState<SubscriptionPlanRow[] | null>(null);
@@ -63,7 +64,7 @@ function Body({ token }: { token: string }) {
   }, [load]);
 
   const form = useForm<PlanForm>({
-    resolver: zodResolver(planSchema),
+    resolver: zodResolver(planSchema) as Resolver<PlanForm>,
     defaultValues: {
       slug: "",
       name: "",
@@ -98,7 +99,7 @@ function Body({ token }: { token: string }) {
         is_active: true,
         sort_order: (rows?.length ?? 0) * 10 + 10,
       });
-    } else if (editing && editing !== "new") {
+    } else if (editing) {
       const f = (editing.features ?? {}) as Record<string, unknown>;
       form.reset({
         slug: editing.slug,
@@ -144,7 +145,7 @@ function Body({ token }: { token: string }) {
         return;
       }
       toast.success("Plan created.");
-    } else if (editing && editing !== "new") {
+    } else if (editing) {
       const { slug: _s, ...patchBody } = payload;
       void _s;
       const res = await patchSubscriptionPlan(token, editing.id, patchBody);

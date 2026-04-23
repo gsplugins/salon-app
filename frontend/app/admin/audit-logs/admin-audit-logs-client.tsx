@@ -29,7 +29,7 @@ function Body({ token }: { token: string }) {
   }, [token, page, from, to, action]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load audit page
+     
     void load();
   }, [load]);
 

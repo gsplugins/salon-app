@@ -2,18 +2,8 @@
 # Root .gitignore for salon-app
 # =====================
 
-# Backend (Laravel)
-/backend/vendor/
-/backend/.env
-/backend/.env.*
-/backend/storage/*.key
-/backend/storage/framework/
-/backend/storage/logs/
-/backend/bootstrap/cache/
-/backend/.phpunit.result.cache
-/backend/composer.lock
-/backend/package-lock.json
-/backend/node_modules/
+# Old monorepo `backend/` path (ignore if an empty/locked folder remains on disk)
+/backend/
 
 # Frontend (Next.js)
 /frontend/node_modules/
@@ -25,6 +15,12 @@
 /frontend/.env.*.local
 /frontend/package-lock.json
 /frontend/yarn.lock
+
+# Backend (Supabase Node API)
+/backend-supabase/node_modules/
+/backend-supabase/dist/
+/backend-supabase/.env
+/backend-supabase/.env.*
 
 # General
 .DS_Store
@@ -43,6 +39,7 @@ $RECYCLE.BIN/
 
 # Database
 *.sql
+!/backend-supabase/supabase/*.sql
 *.sqlite
 *.sqlite3
 

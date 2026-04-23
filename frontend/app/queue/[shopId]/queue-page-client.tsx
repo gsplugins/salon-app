@@ -29,7 +29,7 @@ export function QueuePageClient(props: { shopId: number; shopName?: string }) {
   }, [shopId]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial + shop change
+     
     void load();
   }, [load]);
 

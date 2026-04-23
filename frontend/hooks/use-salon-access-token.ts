@@ -15,7 +15,7 @@ export function useSalonAccessTokenReady(): { token: string | null; ready: boole
   const [token, setToken] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate token from localStorage on mount
+     
     setToken(readToken());
     setReady(true);
 

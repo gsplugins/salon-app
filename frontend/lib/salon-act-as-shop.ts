@@ -1,4 +1,4 @@
-/** Sent with API requests; Laravel `SalonManagementContext::ACT_AS_SHOP_SLUG_HEADER` must match. */
+/** Sent with API requests; must match the API’s act-as-shop header name. */
 export const SALON_ACT_AS_SHOP_SLUG_HEADER = "X-Salon-Act-As-Shop-Slug";
 
 const STORAGE_KEY = "salon_act_as_shop_slug";

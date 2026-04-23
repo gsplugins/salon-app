@@ -47,7 +47,7 @@ function Body({ accessToken }: { accessToken: string }) {
   }, [accessToken, from, to]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load analytics when range changes
+     
     void load();
   }, [load]);
 

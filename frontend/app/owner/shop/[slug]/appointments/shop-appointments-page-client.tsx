@@ -65,12 +65,12 @@ function FormBody({ accessToken }: { accessToken: string }) {
   }, [accessToken, from, to, status, staffId]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- staff filter options
+     
     void loadStaff();
   }, [loadStaff]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- bookings when filters change
+     
     void load();
   }, [load]);
 

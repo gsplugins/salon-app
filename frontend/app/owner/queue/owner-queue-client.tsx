@@ -32,7 +32,7 @@ function Body({ token }: { token: string }) {
   }, [token]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load queue
+     
     void load();
   }, [load]);
 

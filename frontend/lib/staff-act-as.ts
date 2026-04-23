@@ -1,4 +1,4 @@
-/** Must match Laravel `SalonManagementContext::ACT_AS_STAFF_ID_HEADER`. */
+/** Must match the API’s act-as-staff header name. */
 export const SALON_ACT_AS_STAFF_ID_HEADER = "X-Act-As-Staff-Id";
 
 const STORAGE_KEY = "salon_staff_act_as_id";

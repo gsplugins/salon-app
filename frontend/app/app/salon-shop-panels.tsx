@@ -75,7 +75,7 @@ export function ShopOverviewPanel({
   }, [accessToken]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial stats fetch
+     
     void load();
   }, [load]);
 
@@ -197,7 +197,7 @@ export function ShopServicesPanel({ accessToken }: { accessToken: string }) {
   }, [accessToken]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- services catalog fetch
+     
     void load();
   }, [load]);
 
@@ -480,7 +480,7 @@ export function ShopTeamPanel({ accessToken }: { accessToken: string }) {
   }, [accessToken]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- staff catalog fetch
+     
     void load();
   }, [load]);
 
@@ -961,7 +961,7 @@ export function ShopSettingsPanel({ accessToken }: { accessToken: string }) {
   }, [accessToken]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- shop profile fetch
+     
     void load();
   }, [load]);
 

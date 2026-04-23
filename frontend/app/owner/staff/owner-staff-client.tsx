@@ -133,7 +133,7 @@ function Body({ token }: { token: string }) {
   }, [token]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load staff
+     
     void load();
   }, [load]);
 

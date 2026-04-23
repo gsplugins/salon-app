@@ -1,16 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useSalonAccessToken } from "@/hooks/use-salon-access-token";
+import { useSalonAccessTokenReady } from "@/hooks/use-salon-access-token";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function SalonTokenGate(props: {
   children: (accessToken: string) => React.ReactNode;
   roleHint?: string;
 }) {
-  const token = useSalonAccessToken();
+  const { token, ready } = useSalonAccessTokenReady();
 
-  if (token === null) {
+  if (!ready) {
     return (
       <div className="space-y-3">
         <Skeleton className="h-8 w-48" />
