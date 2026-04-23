@@ -10,10 +10,10 @@ export async function FeaturedShopsSection() {
   if (rows.length === 0) {
     return (
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6" aria-labelledby="featured-heading">
-        <h2 id="featured-heading" className="text-2xl font-semibold text-zinc-900 dark:text-white">
+        <h2 id="featured-heading" className="text-2xl font-semibold text-white">
           Featured barbershops
         </h2>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-2 text-sm text-slate-300">
           No public shops yet — check back soon or ask your salon to go live on the platform.
         </p>
       </section>
@@ -27,18 +27,18 @@ export async function FeaturedShopsSection() {
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 id="featured-heading" className="text-2xl font-semibold text-zinc-900 dark:text-white">
-            Featured shops
+          <h2 id="featured-heading" className="text-2xl font-semibold text-white">
+            Popular nearby shops
           </h2>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            Discover barbershops accepting online bookings near you.
+          <p className="mt-1 text-sm text-slate-300">
+            Real registered barbershops with open booking slots.
           </p>
         </div>
         <Link
           href="/shops"
-          className="text-sm font-semibold text-rose-800 hover:underline dark:text-rose-200"
+          className="text-sm font-semibold text-blue-300 hover:underline"
         >
-          Browse all
+          View all shops
         </Link>
       </div>
       <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -46,18 +46,18 @@ export async function FeaturedShopsSection() {
           <li key={s.id}>
             <Link
               href={`/shops/${s.id}`}
-              className="flex h-full flex-col rounded-2xl border border-rose-100/80 bg-white p-5 shadow-sm transition hover:border-rose-200 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-zinc-600"
+              className="card-clean flex h-full flex-col p-5 transition hover:border-blue-400"
             >
-              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">{s.name}</h3>
+              <h3 className="text-lg font-semibold text-white">{s.name}</h3>
               {s.address ? (
-                <p className="mt-2 flex items-start gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-rose-700/80 dark:text-rose-300/80" />
+                <p className="mt-2 flex items-start gap-2 text-sm text-slate-300">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-300" />
                   <span>{s.address}</span>
                 </p>
               ) : (
-                <p className="mt-2 text-sm text-zinc-500">Online booking available</p>
+                <p className="mt-2 text-sm text-slate-400">Online booking available</p>
               )}
-              <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-rose-800 dark:text-rose-200">
+              <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-blue-300">
                 <Star className="h-4 w-4" aria-hidden />
                 View &amp; book
               </span>

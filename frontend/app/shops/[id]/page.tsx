@@ -14,7 +14,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const name = raw?.data?.shop?.name;
   return {
     title: name ? `${name} — Salon` : `Shop ${id}`,
-    description: "Services, team, reviews, and booking.",
+    description: "Shop profile, services, barbers, customer reviews, and instant booking.",
   };
 }
 
@@ -43,15 +43,15 @@ export default async function ShopDetailPage(props: Props) {
   const stats = booking_stats ?? { pending: 0, confirmed: 0, cancelled: 0, completed: 0, total_customers: 0 };
 
   return (
-    <div className="min-h-screen bg-[#faf8f6] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+    <div className="min-h-screen text-slate-100">
       <PublicHeader />
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        <section className="overflow-hidden rounded-3xl border border-rose-100/80 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
+        <section className="section-wrap overflow-hidden">
           {featuredPhoto ? (
             // eslint-disable-next-line @next/next/no-img-element -- remote URLs from API
             <img src={featuredPhoto} alt="" className="h-52 w-full object-cover sm:h-64" />
           ) : (
-            <div className="h-40 w-full bg-gradient-to-r from-rose-100 to-orange-100 dark:from-zinc-800 dark:to-zinc-700" />
+            <div className="h-40 w-full bg-gradient-to-r from-slate-900 to-slate-800" />
           )}
           <div className="p-6 sm:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -62,40 +62,40 @@ export default async function ShopDetailPage(props: Props) {
                     <img src={shop.logo_url} alt={`${shop.name} logo`} className="h-14 w-14 rounded-full border border-zinc-200 object-cover dark:border-zinc-700" />
                   ) : null}
                   <div>
-                    <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-white">{shop.name}</h1>
-                    {locationLabel ? <p className="text-sm text-zinc-500">{locationLabel}</p> : null}
+                    <h1 className="text-3xl font-semibold tracking-tight text-white">{shop.name}</h1>
+                    {locationLabel ? <p className="text-sm text-slate-300">{locationLabel}</p> : null}
                   </div>
                 </div>
-                {shop.description ? <p className="mt-4 max-w-3xl text-sm text-zinc-600 dark:text-zinc-300">{shop.description}</p> : null}
+                {shop.description ? <p className="mt-4 max-w-3xl text-sm text-slate-300">{shop.description}</p> : null}
               </div>
               <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                <div className="rounded-xl bg-zinc-100 px-3 py-2 dark:bg-zinc-800">
-                  <p className="font-semibold text-zinc-900 dark:text-white">{serviceCount}</p>
-                  <p className="text-zinc-500">Services</p>
+                <div className="card-clean px-3 py-2">
+                  <p className="font-semibold text-white">{serviceCount}</p>
+                  <p className="text-slate-400">Services</p>
                 </div>
-                <div className="rounded-xl bg-zinc-100 px-3 py-2 dark:bg-zinc-800">
-                  <p className="font-semibold text-zinc-900 dark:text-white">{staffCount}</p>
-                  <p className="text-zinc-500">Staff</p>
+                <div className="card-clean px-3 py-2">
+                  <p className="font-semibold text-white">{staffCount}</p>
+                  <p className="text-slate-400">Staff</p>
                 </div>
-                <div className="rounded-xl bg-zinc-100 px-3 py-2 dark:bg-zinc-800">
-                  <p className="font-semibold text-zinc-900 dark:text-white">
+                <div className="card-clean px-3 py-2">
+                  <p className="font-semibold text-white">
                     {reviews_summary.avg_rating != null ? reviews_summary.avg_rating.toFixed(1) : "—"}
                   </p>
-                  <p className="text-zinc-500">Rating</p>
+                  <p className="text-slate-400">Rating</p>
                 </div>
               </div>
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
-              <Link href={`/book/${shop.id}`} className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900">
+              <Link href={`/book/${shop.id}`} className="inline-flex items-center gap-2 rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-400">
                 <Calendar className="h-4 w-4" />
                 Book now
               </Link>
-              <Link href={`/queue/${shop.id}`} className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 px-4 py-2 text-sm font-semibold dark:border-zinc-700">
+              <Link href={`/queue/${shop.id}`} className="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200">
                 <Clock3 className="h-4 w-4" />
                 Live queue
               </Link>
               {mapsHref ? (
-                <a href={mapsHref} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 px-4 py-2 text-sm font-semibold dark:border-zinc-700">
+                <a href={mapsHref} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200">
                   <MapPin className="h-4 w-4" />
                   Open map
                 </a>
@@ -158,7 +158,7 @@ export default async function ShopDetailPage(props: Props) {
         <div className="mt-8 grid gap-8 lg:grid-cols-3">
           <div className="space-y-8 lg:col-span-2">
             <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Shop service stats</h2>
+              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Today at this shop</h2>
               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/30">
                   <p className="text-xs text-amber-700 dark:text-amber-200">Pending</p>
@@ -185,8 +185,8 @@ export default async function ShopDetailPage(props: Props) {
 
             <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Top services</h2>
-                <p className="text-xs text-zinc-500">Quick browse slider</p>
+                <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Most booked services</h2>
+                <p className="text-xs text-zinc-500">Compare options before booking</p>
               </div>
               <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
                 {topServices.map((s) => (
@@ -202,7 +202,7 @@ export default async function ShopDetailPage(props: Props) {
             </section>
 
             <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Address & map</h2>
+              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Location & map</h2>
               <div className="mt-3 flex flex-wrap gap-4 text-sm text-zinc-600 dark:text-zinc-300">
                 {shop.address ? <p className="inline-flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4" />{shop.address}</p> : null}
                 {shop.phone ? <a href={`tel:${shop.phone}`} className="inline-flex items-center gap-2 hover:text-rose-700"><Phone className="h-4 w-4" />{shop.phone}</a> : null}
@@ -223,7 +223,7 @@ export default async function ShopDetailPage(props: Props) {
             </section>
 
             <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Services</h2>
+              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Service menu</h2>
               <ul className="mt-4 grid gap-3 sm:grid-cols-2">
                 {services.map((s) => (
                   <li key={s.id} className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
@@ -238,15 +238,23 @@ export default async function ShopDetailPage(props: Props) {
             </section>
 
             <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Staff</h2>
+              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Barber team</h2>
               <ul className="mt-4 grid gap-3 sm:grid-cols-2">
                 {staff.map((b) => (
                   <li key={b.id}>
                     <Link href={`/barbers/${b.id}`} className="flex gap-3 rounded-xl border border-zinc-200 p-4 transition hover:border-rose-200 dark:border-zinc-700 dark:hover:border-zinc-500">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-100">{b.name.slice(0, 1)}</div>
+                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-100">
+                        {b.photo_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element -- remote URLs from API
+                          <img src={b.photo_url} alt={b.name} className="h-full w-full object-cover" />
+                        ) : (
+                          b.name.slice(0, 1)
+                        )}
+                      </div>
                       <div>
                         <p className="font-medium text-zinc-900 dark:text-white">{b.name}</p>
-                        {b.bio ? <p className="line-clamp-2 text-sm text-zinc-600 dark:text-zinc-300">{b.bio}</p> : <p className="text-xs text-zinc-500">View profile</p>}
+                        {b.bio ? <p className="line-clamp-2 text-sm text-zinc-600 dark:text-zinc-300">{b.bio}</p> : null}
+                        <p className="mt-1 text-xs font-medium text-rose-700 dark:text-rose-200">View staff profile</p>
                       </div>
                     </Link>
                   </li>
@@ -255,7 +263,7 @@ export default async function ShopDetailPage(props: Props) {
             </section>
 
             <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Customer reviews</h2>
+              <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Recent customer reviews</h2>
               {reviews.length === 0 ? (
                 <p className="mt-3 text-sm text-zinc-500">No reviews yet.</p>
               ) : (
@@ -264,8 +272,13 @@ export default async function ShopDetailPage(props: Props) {
                     <article key={r.id} className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-100 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                            {(r.customer_name ?? "C").slice(0, 1).toUpperCase()}
+                          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-zinc-100 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+                            {r.customer_photo_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element -- remote URLs from API
+                              <img src={r.customer_photo_url} alt={r.customer_name ?? "Customer"} className="h-full w-full object-cover" />
+                            ) : (
+                              (r.customer_name ?? "C").slice(0, 1).toUpperCase()
+                            )}
                           </div>
                           <div>
                             <p className="text-sm font-medium text-zinc-900 dark:text-white">{r.customer_name ?? "Customer"}</p>
@@ -310,14 +323,14 @@ export default async function ShopDetailPage(props: Props) {
             <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
               <p className="inline-flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
                 <Users className="h-4 w-4" />
-                {staffCount} professionals ready
+                {staffCount} barbers available
               </p>
               <p className="mt-2 inline-flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
                 <Star className="h-4 w-4 text-amber-500" />
                 {reviews_summary.avg_rating != null ? `${reviews_summary.avg_rating.toFixed(1)} average rating` : "No ratings yet"}
               </p>
               <p className="mt-3 text-xs text-zinc-500">
-                Quick booking link:{" "}
+                Direct booking link:{" "}
                 <Link href={`/s/${shop.slug}/book`} className="font-medium text-rose-700 underline dark:text-rose-200">
                   /s/{shop.slug}/book
                 </Link>

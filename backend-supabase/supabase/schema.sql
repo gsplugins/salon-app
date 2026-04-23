@@ -238,6 +238,18 @@ create table if not exists staff_customer_notes (
   created_at timestamptz not null default now()
 );
 
+create table if not exists shop_customer_controls (
+  id bigserial primary key,
+  shop_id bigint not null references shops(id) on delete cascade,
+  customer_mobile text not null,
+  is_suspended boolean not null default false,
+  is_removed boolean not null default false,
+  note text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (shop_id, customer_mobile)
+);
+
 create table if not exists staff_notifications (
   id bigserial primary key,
   salon_staff_id bigint not null references salon_staff(id) on delete cascade,
@@ -265,6 +277,7 @@ create table if not exists customer_notifications (
 
 create index if not exists idx_leave_staff on staff_leave_requests(salon_staff_id, date);
 create index if not exists idx_notes_staff on staff_customer_notes(salon_staff_id, customer_mobile);
+create index if not exists idx_shop_customer_controls_shop on shop_customer_controls(shop_id, customer_mobile);
 create index if not exists idx_notif_staff on staff_notifications(salon_staff_id, created_at);
 create index if not exists idx_notif_customer_user on customer_notifications(customer_user_id, created_at);
 create index if not exists idx_notif_customer_mobile on customer_notifications(customer_mobile, created_at);

@@ -32,6 +32,7 @@ export function OwnerShopSidebarShell(props: {
   }));
   const primaryNav = navAll.slice(0, 5);
   const secondaryNav = navAll.slice(5);
+  const shopInactive = shopProfile?.is_active === false;
   const planLabel = shopProfile?.subscription?.plan_name?.trim() || shopProfile?.subscription?.plan_key || null;
   const shopLogo = typeof shopProfile?.settings?.logo_url === "string" ? shopProfile.settings.logo_url : null;
 
@@ -40,8 +41,8 @@ export function OwnerShopSidebarShell(props: {
       brandLabel="Manager"
       brandHref={`/owner/shop/${encodeURIComponent(shopSlug)}`}
       sidebarContextLine={shopName}
-      primaryNav={primaryNav}
-      secondaryNav={secondaryNav}
+      primaryNav={shopInactive ? [] : primaryNav}
+      secondaryNav={shopInactive ? [] : secondaryNav}
       header={{
         state: "ready",
         avatarUrl: shopLogo,
@@ -56,13 +57,15 @@ export function OwnerShopSidebarShell(props: {
       }}
       headerTrailing={
         <div className="hidden items-center gap-2 sm:flex">
-          <Link
-            href={`/owner/shop/${encodeURIComponent(shopSlug)}/notifications`}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
-            aria-label="Shop notifications"
-          >
-            <Bell className="h-5 w-5" />
-          </Link>
+          {!shopInactive ? (
+            <Link
+              href={`/owner/shop/${encodeURIComponent(shopSlug)}/notifications`}
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+              aria-label="Shop notifications"
+            >
+              <Bell className="h-5 w-5" />
+            </Link>
+          ) : null}
           <AuthHeaderProfile />
         </div>
       }
@@ -71,16 +74,34 @@ export function OwnerShopSidebarShell(props: {
     >
       <div className="mb-4 flex justify-end sm:hidden">
         <div className="flex items-center gap-2 rounded-2xl border border-zinc-200/80 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
-          <Link
-            href={`/owner/shop/${encodeURIComponent(shopSlug)}/notifications`}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
-            aria-label="Shop notifications"
-          >
-            <Bell className="h-5 w-5" />
-          </Link>
+          {!shopInactive ? (
+            <Link
+              href={`/owner/shop/${encodeURIComponent(shopSlug)}/notifications`}
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+              aria-label="Shop notifications"
+            >
+              <Bell className="h-5 w-5" />
+            </Link>
+          ) : null}
           <AuthHeaderProfile />
         </div>
       </div>
+      {shopInactive ? (
+        <div className="mb-4 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-4 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+          <p className="font-semibold">Shop access paused</p>
+          <p className="mt-1">
+            Your shop is currently inactive. Upgrade or renew the plan to unlock all management tools.
+          </p>
+          <div className="mt-3">
+            <Link
+              href={`/owner/shop/${encodeURIComponent(shopSlug)}/subscription`}
+              className="inline-flex rounded-full bg-zinc-900 px-4 py-2 text-xs font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+            >
+              Upgrade plan
+            </Link>
+          </div>
+        </div>
+      ) : null}
       {actingAsSuperAdmin ? (
         <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/25 dark:text-amber-50">
           <ShieldAlert className="h-4 w-4 shrink-0" aria-hidden />
@@ -95,7 +116,7 @@ export function OwnerShopSidebarShell(props: {
           </Link>
         </div>
       ) : null}
-      {children}
+      {shopInactive ? null : children}
     </PortalPanelShell>
   );
 }

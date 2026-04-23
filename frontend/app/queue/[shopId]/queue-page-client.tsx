@@ -59,14 +59,14 @@ export function QueuePageClient(props: { shopId: number; shopName?: string }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#faf8f6] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+    <div className="min-h-screen text-slate-100">
       <PublicHeader />
       <main className="mx-auto max-w-lg px-4 py-10 sm:px-6">
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">
+        <h1 className="text-2xl font-semibold text-white">
           {props.shopName ? `Queue — ${props.shopName}` : "Live queue"}
         </h1>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Positions refresh every 15 seconds. Join as a walk-in guest.
+        <p className="mt-2 text-sm text-slate-300">
+          Real-time walk-in queue. Check waiting time and join before reaching the shop.
         </p>
 
         <div className="mt-6 flex items-center gap-2">
@@ -74,12 +74,12 @@ export function QueuePageClient(props: { shopId: number; shopName?: string }) {
             type="button"
             onClick={() => void load()}
             disabled={busy}
-            className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm font-medium shadow-sm"
           >
             <RefreshCw className={`h-4 w-4 ${busy ? "animate-spin" : ""}`} />
             Refresh
           </button>
-          <Link href={`/shops/${shopId}`} className="text-sm font-medium text-rose-800 underline dark:text-rose-200">
+          <Link href={`/shops/${shopId}`} className="text-sm font-medium text-blue-300 underline">
             Shop details
           </Link>
         </div>
@@ -105,14 +105,14 @@ export function QueuePageClient(props: { shopId: number; shopName?: string }) {
             {rows.map((r) => (
               <li
                 key={r.id}
-                className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"
+                className="card-clean flex items-center justify-between p-4"
               >
                 <div>
-                  <p className="font-medium text-zinc-900 dark:text-white">#{r.position} · {r.customer_name}</p>
-                  <p className="text-xs text-zinc-500 capitalize">{r.status.replace("_", " ")}</p>
-                  {r.staff ? <p className="text-xs text-zinc-500">with {r.staff.name}</p> : null}
+                  <p className="font-medium text-white">#{r.position} · {r.customer_name}</p>
+                  <p className="text-xs text-slate-400 capitalize">{r.status.replace("_", " ")}</p>
+                  {r.staff ? <p className="text-xs text-slate-400">with {r.staff.name}</p> : null}
                 </div>
-                <div className="text-right text-sm text-zinc-600 dark:text-zinc-400">
+                <div className="text-right text-sm text-slate-300">
                   {r.estimated_wait_minutes != null ? (
                     <span className="inline-flex items-center gap-1">
                       <Clock className="h-4 w-4" />
@@ -127,30 +127,30 @@ export function QueuePageClient(props: { shopId: number; shopName?: string }) {
           </ul>
         )}
 
-        <form onSubmit={join} className="mt-10 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Join the queue</h2>
-          <label className="mt-3 block text-xs font-medium text-zinc-500">
+        <form onSubmit={join} className="section-wrap mt-10 p-5">
+          <h2 className="text-sm font-semibold text-white">Join the queue</h2>
+          <label className="mt-3 block text-xs font-medium text-slate-400">
             Name
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
               required
             />
           </label>
-          <label className="mt-3 block text-xs font-medium text-zinc-500">
+          <label className="mt-3 block text-xs font-medium text-slate-400">
             Mobile (optional)
             <input
               value={mobile}
               onChange={(e) => setMobile(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
             />
           </label>
           <button
             type="submit"
-            className="mt-4 w-full rounded-xl bg-zinc-900 py-2.5 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+            className="mt-4 w-full rounded-xl bg-blue-500 py-2.5 text-sm font-semibold text-white hover:bg-blue-400"
           >
-            Join
+            Join queue now
           </button>
         </form>
       </main>

@@ -1,13 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #070b14;
+  --foreground: #e6edf8;
+  --surface: #0d1422;
+  --surface-elevated: #121b2d;
+  --border: #223250;
+  --brand-blue: #3b82f6;
 }
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --background: #030712;
+  --foreground: #e2e8f0;
 }
 
 @theme inline {
@@ -18,9 +22,67 @@
 }
 
 body {
-  background: var(--background);
+  background: linear-gradient(180deg, #060a12 0%, #070d18 60%, #050912 100%);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.glass-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 28px rgba(2, 8, 22, 0.35);
+}
+
+.neon-border {
+  border: 1px solid #355182;
+  box-shadow: 0 0 0 1px rgba(42, 82, 150, 0.25);
+}
+
+.section-wrap {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 1rem;
+}
+
+.card-clean {
+  border: 1px solid var(--border);
+  background: var(--surface-elevated);
+  border-radius: 0.9rem;
+}
+
+.fade-up {
+  animation: fadeUp 550ms ease-out both;
+}
+
+.pulse-ring {
+  animation: pulseRing 1.8s ease-in-out infinite;
+}
+
+.spin-slow {
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseRing {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
 }
 
 /* Mobile / future native shell: respect safe areas (maps to React Native SafeAreaView). */

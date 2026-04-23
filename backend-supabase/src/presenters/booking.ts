@@ -58,6 +58,35 @@ export async function bookingToRow(bookingId: number): Promise<BookingRowJson | 
       .maybeSingle(),
     supabaseAdmin.from("salon_staff").select("id,name").eq("id", row.salon_staff_id).maybeSingle()
   ]);
+  const paymentRes = await supabaseAdmin
+    .from("salon_payments")
+    .select("id,method,amount_cents,currency,status,transaction_id,metadata,created_at")
+    .eq("salon_booking_id", row.id)
+    .order("id", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const payment = paymentRes.data as
+    | {
+        id: number;
+        method: string;
+        amount_cents: number;
+        currency: string;
+        status: string;
+        transaction_id: string | null;
+        metadata: Record<string, unknown> | null;
+        created_at: string;
+      }
+    | null;
+  const reviewRes = await supabaseAdmin
+    .from("salon_reviews")
+    .select("id,rating,comment,owner_reply,created_at")
+    .eq("salon_booking_id", row.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const review = reviewRes.data as
+    | { id: number; rating: number; comment: string | null; owner_reply: string | null; created_at: string | null }
+    | null;
 
   const primarySvc = svc.data
     ? {
@@ -103,5 +132,27 @@ export async function bookingToRow(bookingId: number): Promise<BookingRowJson | 
     status: row.status,
     source: row.source,
     notes: row.notes
+    ,
+    payment: payment
+      ? {
+          id: payment.id,
+          method: payment.method,
+          amount_cents: payment.amount_cents,
+          currency: payment.currency,
+          status: payment.status,
+          transaction_id: payment.transaction_id ?? null,
+          tip_cents: Number((payment.metadata as { tip_cents?: unknown } | null)?.tip_cents ?? 0),
+          created_at: payment.created_at
+        }
+      : null,
+    review: review
+      ? {
+          id: review.id,
+          rating: Number(review.rating),
+          comment: review.comment ?? null,
+          owner_reply: review.owner_reply ?? null,
+          created_at: review.created_at ?? null
+        }
+      : null
   };
 }

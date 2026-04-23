@@ -26,15 +26,15 @@ export function AccountPhotoCard() {
   if (!token || !me) return null;
 
   return (
-    <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-      <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">Profile picture</h3>
-      <p className="mt-1 text-xs text-zinc-500">Used in your profile icon across panels.</p>
+    <section className="card-clean mt-6 p-4">
+      <h3 className="text-sm font-semibold text-white">Profile picture</h3>
+      <p className="mt-1 text-xs text-slate-400">Used in your profile icon across panels.</p>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         {photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- user uploaded URL/data URL
           <img src={photoUrl} alt="Profile" className="h-12 w-12 rounded-full object-cover" />
         ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-sm font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-800 text-sm font-semibold text-slate-100">
             {me.name.slice(0, 1).toUpperCase()}
           </div>
         )}
@@ -42,7 +42,7 @@ export function AccountPhotoCard() {
           value={photoUrl}
           onChange={(e) => setPhotoUrl(e.target.value)}
           placeholder="https://..."
-          className="min-w-[220px] flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+          className="min-w-[220px] flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
         />
         <input
           type="file"
@@ -73,7 +73,7 @@ export function AccountPhotoCard() {
             toast.success("Profile picture updated.");
             void load();
           }}
-          className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+          className="rounded-lg bg-blue-500 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-400"
         >
           {busy ? "Saving..." : "Save"}
         </button>

@@ -253,7 +253,10 @@ export function StaffAppointmentsClient() {
                         <span className="text-sm text-zinc-600 dark:text-zinc-400">
                           {b.service?.name ?? "Service"} · {formatStaffDateTime(b.starts_at)}
                         </span>
-                        <span className="text-xs text-zinc-500">{bookingStatusLabel(b.status)}</span>
+                        <span className="text-xs text-zinc-500">
+                          {bookingStatusLabel(b.status)}
+                          {b.review ? ` · Rating ${b.review.rating}/5` : ""}
+                        </span>
                       </button>
                     </SwipeRow>
                   </li>
@@ -290,6 +293,9 @@ export function StaffAppointmentsClient() {
                   <p className="mt-1 text-zinc-600 dark:text-zinc-400">
                     {detail.service?.duration_minutes ?? "—"} min
                     {detail.service?.price_cents != null ? ` · $${(detail.service.price_cents / 100).toFixed(2)}` : ""}
+                  </p>
+                  <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+                    Rating: {detail.review ? `${detail.review.rating}/5` : "No rating yet"}
                   </p>
                 </div>
                 <div className="rounded-xl border border-zinc-100 p-3 dark:border-zinc-800">

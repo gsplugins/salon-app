@@ -333,13 +333,17 @@ export function mountPublicRoutes(router: Router): void {
     const userIds = [...new Set(reviewsRaw.map((r) => r.customer_user_id).filter((x): x is string => Boolean(x)))];
     const bookingIds = [...new Set(reviewsRaw.map((r) => r.salon_booking_id).filter((x): x is number => Number.isFinite(x)))];
     const [usersRes, bookingsRes] = await Promise.all([
-      userIds.length ? supabaseAdmin.from("users").select("id,name").in("id", userIds) : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+      userIds.length
+        ? supabaseAdmin.from("users").select("id,name,photo_url").in("id", userIds)
+        : Promise.resolve({ data: [] as { id: string; name: string; photo_url: string | null }[] }),
       bookingIds.length
         ? supabaseAdmin.from("salon_bookings").select("id,customer_name").in("id", bookingIds)
         : Promise.resolve({ data: [] as { id: number; customer_name: string }[] }),
     ]);
-    const userNameById = new Map<string, string>();
-    for (const u of (usersRes.data ?? []) as { id: string; name: string }[]) userNameById.set(u.id, u.name);
+    const userById = new Map<string, { name: string; photo_url: string | null }>();
+    for (const u of (usersRes.data ?? []) as { id: string; name: string; photo_url: string | null }[]) {
+      userById.set(u.id, { name: u.name, photo_url: u.photo_url ?? null });
+    }
     const bookingNameById = new Map<number, string>();
     for (const b of (bookingsRes.data ?? []) as { id: number; customer_name: string }[]) bookingNameById.set(b.id, b.customer_name);
     const reviewCount = reviewsRaw.length;
@@ -405,10 +409,10 @@ export function mountPublicRoutes(router: Router): void {
         comment: r.comment ?? null,
         created_at: r.created_at ?? null,
         staff_name: r.salon_staff?.[0]?.name ?? null,
-        customer_name:
-          (r.customer_user_id ? userNameById.get(r.customer_user_id) : null) ??
-          (r.salon_booking_id ? bookingNameById.get(r.salon_booking_id) : null) ??
-          "Customer"
+        customer_name: r.customer_user_id
+          ? (userById.get(r.customer_user_id)?.name ?? null) ?? (r.salon_booking_id ? bookingNameById.get(r.salon_booking_id) : null) ?? "Customer"
+          : (r.salon_booking_id ? bookingNameById.get(r.salon_booking_id) : null) ?? "Customer",
+        customer_photo_url: r.customer_user_id ? (userById.get(r.customer_user_id)?.photo_url ?? null) : null
       }))
     });
   });
@@ -424,23 +428,86 @@ export function mountPublicRoutes(router: Router): void {
     const shopRes = await supabaseAdmin.from("shops").select("id,name,slug").eq("id", staff.shop_id).maybeSingle();
     const reviewsRes = await supabaseAdmin
       .from("salon_reviews")
-      .select("id,rating,comment,created_at")
+      .select("id,rating,comment,created_at,customer_user_id,salon_booking_id")
       .eq("salon_staff_id", staff.id)
       .order("created_at", { ascending: false })
       .limit(100);
-    const reviews = (reviewsRes.data ?? []) as { id: number; rating: number; comment: string | null; created_at: string | null }[];
+    const staffServicesRes = await supabaseAdmin
+      .from("salon_staff_services")
+      .select("service_id,salon_services(id,name,duration_minutes,price_cents)")
+      .eq("staff_id", staff.id)
+      .eq("shop_id", staff.shop_id);
+    const completedBookingsRes = await supabaseAdmin
+      .from("salon_bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("salon_staff_id", staff.id)
+      .eq("shop_id", staff.shop_id)
+      .eq("status", "completed");
+    const reviews = (reviewsRes.data ?? []) as {
+      id: number;
+      rating: number;
+      comment: string | null;
+      created_at: string | null;
+      customer_user_id: string | null;
+      salon_booking_id: number | null;
+    }[];
+    const reviewUserIds = [...new Set(reviews.map((r) => r.customer_user_id).filter((x): x is string => Boolean(x)))];
+    const reviewBookingIds = [...new Set(reviews.map((r) => r.salon_booking_id).filter((x): x is number => Number.isFinite(x)))];
+    const [reviewUsersRes, reviewBookingsRes] = await Promise.all([
+      reviewUserIds.length
+        ? supabaseAdmin.from("users").select("id,name,photo_url").in("id", reviewUserIds)
+        : Promise.resolve({ data: [] as { id: string; name: string; photo_url: string | null }[] }),
+      reviewBookingIds.length
+        ? supabaseAdmin.from("salon_bookings").select("id,customer_name").in("id", reviewBookingIds)
+        : Promise.resolve({ data: [] as { id: number; customer_name: string }[] })
+    ]);
+    const reviewUserById = new Map<string, { name: string; photo_url: string | null }>();
+    for (const user of (reviewUsersRes.data ?? []) as { id: string; name: string; photo_url: string | null }[]) {
+      reviewUserById.set(user.id, { name: user.name, photo_url: user.photo_url ?? null });
+    }
+    const reviewBookingNameById = new Map<number, string>();
+    for (const booking of (reviewBookingsRes.data ?? []) as { id: number; customer_name: string }[]) {
+      reviewBookingNameById.set(booking.id, booking.customer_name);
+    }
+    const services = (staffServicesRes.data ?? [])
+      .map((row: { salon_services?: { id: number; name: string; duration_minutes: number; price_cents: number | null } | { id: number; name: string; duration_minutes: number; price_cents: number | null }[] | null }) => {
+        if (Array.isArray(row.salon_services)) return row.salon_services[0] ?? null;
+        return row.salon_services ?? null;
+      })
+      .filter(Boolean);
     const count = reviews.length;
     const avg = count ? Math.round((reviews.reduce((a, b) => a + Number(b.rating), 0) / count) * 10) / 10 : null;
+    const completedCount = completedBookingsRes.count ?? 0;
     return okData(res, {
       id: staff.id,
       name: staff.name,
       bio: staff.bio,
       photo_url: staff.photo_url,
       specialties: staff.specialties,
+      position_title: staff.position_title ?? null,
+      staff_role: staff.staff_role ?? null,
+      experience_years: staff.experience_years ?? null,
+      address: staff.address ?? null,
+      work_mobile: staff.work_mobile ?? null,
       weekly_schedule: {},
       shop: shopRes.data ?? null,
+      services,
+      stats: {
+        completed_bookings: completedCount
+      },
       reviews_summary: { count, avg_rating: avg },
-      recent_reviews: reviews
+      recent_reviews: reviews.map((review) => ({
+        id: review.id,
+        rating: review.rating,
+        comment: review.comment,
+        created_at: review.created_at,
+        customer_name: review.customer_user_id
+          ? (reviewUserById.get(review.customer_user_id)?.name ?? null) ??
+            (review.salon_booking_id ? reviewBookingNameById.get(review.salon_booking_id) : null) ??
+            "Customer"
+          : (review.salon_booking_id ? reviewBookingNameById.get(review.salon_booking_id) : null) ?? "Customer",
+        customer_photo_url: review.customer_user_id ? (reviewUserById.get(review.customer_user_id)?.photo_url ?? null) : null
+      }))
     });
   });
 
@@ -717,6 +784,21 @@ export function mountPublicRoutes(router: Router): void {
     });
     const parsed = body.safeParse(req.body);
     if (!parsed.success) return fail(res, 422, "Validation failed.");
+    const normalizedMobile = normalizeMobile(parsed.data.customer_mobile);
+    if (!normalizedMobile) return fail(res, 422, "Invalid mobile number.");
+
+    const ctrl = await supabaseAdmin
+      .from("shop_customer_controls")
+      .select("is_suspended,is_removed")
+      .eq("shop_id", shopId)
+      .eq("customer_mobile", normalizedMobile)
+      .maybeSingle();
+    if ((ctrl.data as { is_removed?: boolean } | null)?.is_removed) {
+      return fail(res, 403, "Customer is removed from this shop.");
+    }
+    if ((ctrl.data as { is_suspended?: boolean } | null)?.is_suspended) {
+      return fail(res, 403, "Customer is suspended in this shop.");
+    }
 
     const serviceIds =
       parsed.data.salon_service_ids && parsed.data.salon_service_ids.length > 0
@@ -824,7 +906,7 @@ export function mountPublicRoutes(router: Router): void {
         salon_service_id: primaryServiceId,
         salon_staff_id: staff.id,
         customer_name: parsed.data.customer_name,
-        customer_mobile: normalizeMobile(parsed.data.customer_mobile),
+        customer_mobile: normalizedMobile,
         customer_user_id: customerUserId,
         starts_at: startsAt.toISOString(),
         ends_at: endsAt.toISOString(),

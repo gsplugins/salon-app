@@ -7,6 +7,7 @@ import { Calendar, Star } from "lucide-react";
 import { formatCustomerWhen } from "@/lib/customer-portal-utils";
 import {
   bookingServicesLabel,
+  createCustomerBookingPayment,
   createCustomerReview,
   fetchCustomerAppointments,
   fetchCustomerReviews,
@@ -19,6 +20,9 @@ import { useSalonAccessToken } from "@/hooks/use-salon-access-token";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 function buildRebookHref(b: BookingRow): string | null {
   const slug = b.shop?.slug;
@@ -39,6 +43,11 @@ export function CustomerAppointmentsClient() {
   const [reviewRows, setReviewRows] = useState<CustomerReviewRow[]>([]);
   const [reviewDrafts, setReviewDrafts] = useState<Record<number, { rating: number; comment: string }>>({});
   const [reviewBusyId, setReviewBusyId] = useState<number | null>(null);
+  const [payFor, setPayFor] = useState<BookingRow | null>(null);
+  const [payMethod, setPayMethod] = useState<"manual" | "bkash">("manual");
+  const [tipTaka, setTipTaka] = useState("0");
+  const [trxId, setTrxId] = useState("");
+  const [payBusy, setPayBusy] = useState(false);
   const [asOf] = useState(() => new Date());
 
   const load = useCallback(async () => {
@@ -112,6 +121,27 @@ export function CustomerAppointmentsClient() {
     }
     toast.success("Thanks for reviewing your barber.");
     setReviewRows((prev) => [res.data, ...prev]);
+  }
+
+  async function submitPayment() {
+    if (!token || !payFor) return;
+    const tip = Math.max(0, Math.round((Number.parseFloat(tipTaka || "0") || 0) * 100));
+    setPayBusy(true);
+    const res = await createCustomerBookingPayment(token, payFor.id, {
+      method: payMethod,
+      tip_cents: tip,
+      trx_id: payMethod === "bkash" ? trxId.trim() || null : null
+    });
+    setPayBusy(false);
+    if (!res.ok) {
+      toast.error(formatApiError(res.body));
+      return;
+    }
+    toast.success("Payment submitted successfully.");
+    setPayFor(null);
+    setTipTaka("0");
+    setTrxId("");
+    void load();
   }
 
   if (!token) return null;
@@ -220,8 +250,30 @@ export function CustomerAppointmentsClient() {
                   {b.shop?.name ?? "Shop"} · {b.staff.name}
                 </p>
                 <p className="text-xs capitalize text-zinc-500">{b.status}</p>
+                {b.payment ? (
+                  <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-300">
+                    Paid: {(b.payment.amount_cents / 100).toFixed(2)} {b.payment.currency}
+                    {b.payment.tip_cents > 0 ? ` (tip ${(b.payment.tip_cents / 100).toFixed(2)})` : ""}
+                  </p>
+                ) : null}
                 {b.status === "completed" ? (
                   <div className="mt-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-900">
+                    {!b.payment ? (
+                      <div className="mb-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPayFor(b);
+                            setPayMethod("manual");
+                            setTipTaka("0");
+                            setTrxId("");
+                          }}
+                          className="rounded-lg bg-zinc-900 px-3 py-2 text-xs font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                        >
+                          Pay now (manual / bKash + tip)
+                        </button>
+                      </div>
+                    ) : null}
                     {reviewedForBooking(b.id) ? (
                       <div>
                         <p className="inline-flex items-center gap-1 text-sm font-medium text-amber-600 dark:text-amber-300">
@@ -288,6 +340,54 @@ export function CustomerAppointmentsClient() {
           </ul>
         )}
       </section>
+
+      <Dialog open={payFor !== null} onOpenChange={(o) => !o && setPayFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Complete payment</DialogTitle>
+          </DialogHeader>
+          {payFor ? (
+            <div className="space-y-3 text-sm">
+              <p>
+                <span className="text-zinc-500">Booking:</span> {bookingServicesLabel(payFor)}
+              </p>
+              <p>
+                <span className="text-zinc-500">Shop:</span> {payFor.shop?.name ?? "Shop"}
+              </p>
+              <div>
+                <Label htmlFor="pay-method">Method</Label>
+                <select
+                  id="pay-method"
+                  className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={payMethod}
+                  onChange={(e) => setPayMethod(e.target.value as "manual" | "bkash")}
+                >
+                  <option value="manual">Manual (cash/card at salon)</option>
+                  <option value="bkash">bKash</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="tip">Tip amount (BDT)</Label>
+                <Input id="tip" className="mt-1" value={tipTaka} onChange={(e) => setTipTaka(e.target.value)} />
+              </div>
+              {payMethod === "bkash" ? (
+                <div>
+                  <Label htmlFor="trx">bKash transaction ID</Label>
+                  <Input id="trx" className="mt-1" value={trxId} onChange={(e) => setTrxId(e.target.value)} placeholder="Optional but recommended" />
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setPayFor(null)}>
+              Cancel
+            </Button>
+            <Button type="button" disabled={payBusy} onClick={() => void submitPayment()}>
+              {payBusy ? "Saving..." : "Pay now"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

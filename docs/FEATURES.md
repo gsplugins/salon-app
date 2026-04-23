@@ -64,5 +64,5 @@ Test accounts for local development are defined in `backend-supabase/supabase/se
 
 
 Super Admin :
-mobile : 01700000000
-pas : ChangeMe123!
+mobile : 01711111111
+pas : Admin@12345

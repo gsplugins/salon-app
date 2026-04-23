@@ -78,44 +78,43 @@ export default async function Home() {
   const status = await fetchBackendJson();
 
   return (
-    <div className="min-h-screen bg-[#f6f2ea] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+    <div className="min-h-screen text-slate-100">
       <PublicHeader showMarketingNav />
 
       <main>
         <section
-          className="relative overflow-hidden border-b border-amber-200/60 bg-gradient-to-br from-amber-50 via-[#f6f2ea] to-zinc-100 dark:border-zinc-800 dark:from-zinc-900 dark:via-zinc-950 dark:to-zinc-900"
+          className="relative overflow-hidden border-b border-slate-800 bg-[#0a1220]"
           aria-labelledby="hero-heading"
         >
           <div
-            className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-amber-300/40 blur-3xl dark:bg-amber-500/10"
+            className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-blue-500/15 blur-3xl"
             aria-hidden
           />
           <div className="relative mx-auto max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-amber-800/80 dark:text-amber-200/90">
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-blue-300">
               Barbershop · Beard · Grooming
             </p>
             <h1
               id="hero-heading"
-              className="mt-4 max-w-2xl text-4xl font-semibold leading-tight tracking-tight text-zinc-900 sm:text-5xl dark:text-white"
+              className="mt-4 max-w-2xl text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl"
             >
-              Sharp cuts. Clean fades. Premium barbershop experience.
+              Discover nearby barbershops and book instantly.
             </h1>
-            <p className="mt-5 max-w-xl text-lg leading-relaxed text-zinc-600 dark:text-zinc-300">
-              Trusted neighborhood barbers, modern techniques, and classic service.
-              Book your chair in seconds and walk out fresh every time.
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-slate-300">
+              Compare registered local shops, see services and team profiles, then reserve your best time slot in minutes.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
               <Link
                 href="/shops"
-                className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 dark:bg-amber-100 dark:text-zinc-900 dark:hover:bg-white"
+                className="inline-flex items-center justify-center rounded-full bg-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-400"
               >
                 Find a barbershop
               </Link>
               <a
                 href="#services"
-                className="inline-flex items-center justify-center rounded-full border border-zinc-300 bg-white/60 px-6 py-3 text-sm font-semibold text-zinc-800 backdrop-blur hover:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-900/60 dark:text-zinc-100 dark:hover:border-zinc-500"
+                className="inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-900 px-6 py-3 text-sm font-semibold text-slate-200 backdrop-blur hover:border-blue-400"
               >
-                Explore services
+                How booking works
               </a>
             </div>
           </div>
@@ -124,65 +123,65 @@ export default async function Home() {
         <FeaturedShopsSection />
 
         <section
-          className="border-y border-amber-200/80 bg-white/80 dark:border-zinc-800 dark:bg-zinc-900/20"
+          className="border-y border-slate-800 bg-[#09111d]"
           aria-labelledby="how-heading"
         >
           <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
             <h2
               id="how-heading"
-              className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white"
+              className="text-2xl font-semibold tracking-tight text-white"
             >
               How it works
             </h2>
-            <p className="mt-2 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
-              Book in minutes — pick a verified shop, choose your service and stylist, then show up on time.
+            <p className="mt-2 max-w-2xl text-sm text-slate-300">
+              Search by area, pick a trusted barber shop, and confirm your booking with your phone number.
             </p>
             <ol className="mt-10 grid gap-6 md:grid-cols-3">
               {[
                 {
                   step: "1",
                   title: "Browse & compare",
-                  text: "Search barbershops by name or area and compare services, barbers, and reviews.",
+                  text: "Find shops near your location and compare ratings, team and services.",
                   Icon: Search,
                 },
                 {
                   step: "2",
                   title: "Book a slot",
-                  text: "Select a service, optional stylist, and a time that fits your calendar.",
+                  text: "Choose services, your preferred barber, and a suitable date/time.",
                   Icon: Calendar,
                 },
                 {
                   step: "3",
                   title: "Enjoy your visit",
-                  text: "Get reminders, join the live queue if you walk in, and earn loyalty points.",
+                  text: "Receive booking updates and optionally join live queue for walk-in visits.",
                   Icon: Sparkles,
                 },
               ].map(({ step, title, text, Icon }) => (
                 <li
                   key={step}
-                  className="rounded-2xl border border-amber-200/80 bg-[#f6f2ea] p-6 dark:border-zinc-800 dark:bg-zinc-900/40"
+                  className="card-clean p-6"
                 >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-100">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/20 text-blue-200">
                     <Icon className="h-5 w-5" strokeWidth={1.75} />
                   </div>
-                  <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-amber-800/90 dark:text-amber-200/90">
+                  <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-blue-200/90">
                     Step {step}
                   </p>
-                  <h3 className="mt-1 text-lg font-semibold text-zinc-900 dark:text-white">{title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{text}</p>
+                  <h3 className="mt-1 text-lg font-semibold text-white">{title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-300">{text}</p>
                 </li>
               ))}
             </ol>
             <div className="mt-10 flex flex-wrap gap-4">
               <Link
                 href="/shops"
-                className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 dark:bg-amber-100 dark:text-zinc-900 dark:hover:bg-white"
+                className="inline-flex items-center justify-center rounded-full bg-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-400"
               >
                 Shops
               </Link>
               <Link
                 href="/app/auth?tab=login"
-                className="inline-flex items-center justify-center rounded-full border border-zinc-300 bg-white px-6 py-3 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+                className="inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-900 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-blue-400"
               >
                 Customer sign-in
               </Link>
@@ -198,25 +197,24 @@ export default async function Home() {
           <div className="max-w-2xl">
             <h2
               id="services-heading"
-              className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white"
+              className="text-2xl font-semibold tracking-tight text-white"
             >
-              What we do
+              Popular barbershop services
             </h2>
-            <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-              From everyday cuts to full transformations, we focus on healthy hair and
-              results that fit your life.
+            <p className="mt-2 text-slate-300">
+              Services and pricing are shown per shop, so you can compare before booking.
             </p>
           </div>
           <ul className="mt-10 grid gap-6 sm:grid-cols-2">
             {services.map((s) => (
               <li
                 key={s.title}
-                className="rounded-2xl border border-amber-200/80 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"
+                className="card-clean p-6"
               >
-                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">
+                <h3 className="text-lg font-semibold text-white">
                   {s.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">
                   {s.blurb}
                 </p>
               </li>
@@ -226,38 +224,38 @@ export default async function Home() {
 
         <section
           id="visit"
-          className="border-y border-amber-200/80 bg-white/70 dark:border-zinc-800 dark:bg-zinc-900/30"
+          className="border-y border-slate-800 bg-[#09111d]"
         >
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:grid-cols-2 sm:px-6 sm:py-20">
             <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">
-                Visit us
+              <h2 className="text-2xl font-semibold tracking-tight text-white">
+                Find shops near you
               </h2>
-              <p className="mt-3 text-zinc-600 dark:text-zinc-400">
-                128 Oak Street, Suite 4
+              <p className="mt-3 text-slate-300">
+                Use the shop directory with division, district, and city filters.
                 <br />
-                Portland, OR 97209
+                Pick your nearest location and book directly.
               </p>
-              <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-500">
-                Street parking and a small lot behind the building.
+              <p className="mt-4 text-sm text-slate-400">
+                Each shop page includes address, map, services, team, and customer reviews.
               </p>
             </div>
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-amber-800/90 dark:text-amber-200/90">
-                Hours
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-blue-300/90">
+                Quick start
               </h3>
-              <dl className="mt-3 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-                <div className="flex justify-between gap-8 border-b border-amber-100 pb-2 dark:border-zinc-800">
-                  <dt>Mon – Fri</dt>
-                  <dd>9:00 – 19:00</dd>
+              <dl className="mt-3 space-y-2 text-sm text-slate-300">
+                <div className="flex justify-between gap-8 border-b border-slate-800 pb-2">
+                  <dt>Step 1</dt>
+                  <dd>Search nearest shop</dd>
                 </div>
-                <div className="flex justify-between gap-8 border-b border-amber-100 pb-2 dark:border-zinc-800">
-                  <dt>Saturday</dt>
-                  <dd>9:00 – 17:00</dd>
+                <div className="flex justify-between gap-8 border-b border-slate-800 pb-2">
+                  <dt>Step 2</dt>
+                  <dd>Select service + barber</dd>
                 </div>
                 <div className="flex justify-between gap-8">
-                  <dt>Sunday</dt>
-                  <dd>Closed</dd>
+                  <dt>Step 3</dt>
+                  <dd>Confirm booking</dd>
                 </div>
               </dl>
             </div>
@@ -272,29 +270,28 @@ export default async function Home() {
           <div className="max-w-2xl">
             <h2
               id="account-heading"
-              className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white"
+              className="text-2xl font-semibold tracking-tight text-white"
             >
-              Account &amp; platform
+              Why people book here
             </h2>
-            <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-              Sign in and manage sessions on the web app (same flows power a future mobile
-              app via the API).
+            <p className="mt-2 text-slate-300">
+              Built for real customer behavior: discover local shops quickly and book with confidence.
             </p>
           </div>
           <ul className="mt-8 grid gap-3 sm:grid-cols-2">
             {[
-              "Login with mobile number and password — no email required",
-              "Password reset: OTP sent by SMS to registered mobile (SMS gateway in production)",
-              "JWT access tokens (7-day default) and rotating refresh tokens",
-              "Staff portal on this site: header “Staff login” or path /app",
-              "Optional: dedicated login host app.yourdomain.com via env",
+              "Only registered barber shops are listed publicly",
+              "See real service menus before booking",
+              "Check barber profile and customer reviews",
+              "Join live walk-in queue when needed",
+              "Booking confirmation and reminder-ready workflow",
             ].map((text) => (
               <li
                 key={text}
-                  className="flex gap-3 rounded-xl border border-amber-200/80 bg-white p-4 text-sm leading-relaxed text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-300"
+                  className="card-clean flex gap-3 p-4 text-sm leading-relaxed text-slate-300"
               >
                 <span
-                  className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-amber-500/80"
+                  className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-blue-400"
                   aria-hidden
                 />
                 {text}
@@ -303,22 +300,16 @@ export default async function Home() {
           </ul>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
-              href="/platform"
-              className="inline-flex items-center justify-center rounded-full bg-amber-700 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-amber-800 dark:bg-amber-200 dark:text-zinc-900 dark:hover:bg-white"
+              href="/shops"
+              className="inline-flex items-center justify-center rounded-full bg-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-400"
             >
-              View all platform pages
-            </Link>
-            <Link
-              href="/app"
-              className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 dark:bg-amber-100 dark:text-zinc-900 dark:hover:bg-white"
-            >
-              Open account &amp; staff demo
+              Browse all shops
             </Link>
             <Link
               href="/book"
-              className="inline-flex items-center justify-center rounded-full border border-zinc-300 bg-white/60 px-6 py-3 text-sm font-semibold text-zinc-800 backdrop-blur hover:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-900/60 dark:text-zinc-100"
+              className="inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-900 px-6 py-3 text-sm font-semibold text-slate-200 backdrop-blur hover:border-blue-400"
             >
-              Book an appointment
+              Start booking now
             </Link>
           </div>
         </section>
@@ -363,10 +354,10 @@ export default async function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-amber-200/80 bg-white/80 dark:border-zinc-800 dark:bg-zinc-950">
+      <footer className="border-t border-slate-800 bg-[#0a1220]">
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-slate-400">
               © {new Date().getFullYear()} Prime Barbershop. All rights reserved.
             </p>
             <div

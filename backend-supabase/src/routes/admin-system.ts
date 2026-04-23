@@ -361,6 +361,7 @@ export function mountAdminSystemRoutes(router: Router): void {
               id: sub.id,
               status: sub.status,
               plan_key: sub.plan_key,
+              active_from: sub.created_at,
               trial_ends_at: sub.trial_ends_at,
               current_period_end: sub.current_period_end
             }

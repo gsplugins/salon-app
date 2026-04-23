@@ -43,7 +43,44 @@ export type BookingRow = {
   status: string;
   source: string;
   notes: string | null;
+  payment?: {
+    id: number;
+    method: string;
+    amount_cents: number;
+    currency: string;
+    status: string;
+    transaction_id: string | null;
+    tip_cents: number;
+    created_at: string;
+  } | null;
+  review?: {
+    id: number;
+    rating: number;
+    comment: string | null;
+    owner_reply: string | null;
+    created_at: string | null;
+  } | null;
 };
+
+export async function createCustomerBookingPayment(
+  accessToken: string,
+  bookingId: number,
+  body: {
+    method: "manual" | "bkash";
+    tip_cents?: number;
+    trx_id?: string | null;
+    payer_mobile?: string | null;
+    note?: string | null;
+  }
+): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson<{ data: Record<string, unknown> }>(`/me/bookings/${bookingId}/payments`, {
+    method: "POST",
+    accessToken,
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
 
 /** Display label for one or more services on a booking (API may send line_items or legacy service only). */
 export function bookingServicesLabel(b: Pick<BookingRow, "service" | "line_items">): string {
@@ -325,6 +362,9 @@ export type ShopClientRow = {
   customer_name: string;
   visit_count: number;
   last_visit_at: string;
+  last_service_name?: string | null;
+  is_suspended?: boolean;
+  is_removed?: boolean;
 };
 
 export type CatalogServiceRow = {
@@ -478,9 +518,70 @@ export async function refundOwnerSalonPayment(
 }
 
 export async function fetchShopClients(
-  accessToken: string
+  accessToken: string,
+  opts?: { include_removed?: boolean }
 ): Promise<{ ok: true; data: ShopClientRow[] } | { ok: false; body: ApiErrorBody }> {
-  const res = await authJson<{ data: ShopClientRow[] }>("/my/shop/clients", { accessToken });
+  const q = opts?.include_removed ? "?include_removed=1" : "";
+  const res = await authJson<{ data: ShopClientRow[] }>(`/my/shop/clients${q}`, { accessToken });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
+export type ShopCustomerDetails = {
+  customer_mobile: string;
+  customer_name: string | null;
+  is_suspended: boolean;
+  is_removed: boolean;
+  control_note: string | null;
+  control_updated_at: string | null;
+  user: {
+    id: string;
+    name: string;
+    mobile: string;
+    is_locked: boolean;
+    created_at: string;
+  } | null;
+  shops: {
+    shop_id: number;
+    shop_name: string;
+    shop_slug: string;
+    visit_count: number;
+    last_visit_at: string;
+  }[];
+  current_shop_service_history: {
+    booking_id: number;
+    starts_at: string;
+    status: string;
+    service_name: string | null;
+    duration_minutes: number | null;
+    price_cents: number | null;
+  }[];
+};
+
+export async function fetchShopCustomerDetails(
+  accessToken: string,
+  mobile: string
+): Promise<{ ok: true; data: ShopCustomerDetails } | { ok: false; body: ApiErrorBody }> {
+  const enc = encodeURIComponent(mobile);
+  const res = await authJson<{ data: ShopCustomerDetails }>(`/my/shop/customers/${enc}/details`, { accessToken });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
+export async function patchShopCustomerStatus(
+  accessToken: string,
+  mobile: string,
+  body: { action: "suspend" | "unsuspend" | "remove" | "restore"; note?: string | null }
+): Promise<{ ok: true; data: { customer_mobile: string; is_suspended: boolean; is_removed: boolean } } | { ok: false; body: ApiErrorBody }> {
+  const enc = encodeURIComponent(mobile);
+  const res = await authJson<{ data: { customer_mobile: string; is_suspended: boolean; is_removed: boolean } }>(
+    `/my/shop/customers/${enc}/status`,
+    {
+      method: "PATCH",
+      accessToken,
+      body: JSON.stringify(body)
+    }
+  );
   if (!res.ok) return { ok: false, body: res.body };
   return { ok: true, data: res.data.data };
 }
@@ -701,6 +802,7 @@ export type SystemShopRow = {
     id: number;
     status: string;
     plan_key: string;
+    active_from?: string | null;
     trial_ends_at: string | null;
     current_period_end: string | null;
   };
@@ -936,6 +1038,7 @@ export type PublicShopDetailPayload = {
     created_at: string | null;
     staff_name: string | null;
     customer_name?: string | null;
+    customer_photo_url?: string | null;
   }[];
 };
 
@@ -974,10 +1077,24 @@ export type PublicBarberProfilePayload = {
   bio: string | null;
   photo_url: string | null;
   specialties: unknown;
+  position_title?: string | null;
+  staff_role?: string | null;
+  experience_years?: number | null;
+  address?: string | null;
+  work_mobile?: string | null;
   weekly_schedule: unknown;
   shop: { id: number; name: string; slug: string };
+  services?: { id: number; name: string; duration_minutes: number; price_cents: number | null }[];
+  stats?: { completed_bookings: number };
   reviews_summary: { count: number; avg_rating: number | null };
-  recent_reviews: { id: number; rating: number; comment: string | null; created_at: string | null }[];
+  recent_reviews: {
+    id: number;
+    rating: number;
+    comment: string | null;
+    created_at: string | null;
+    customer_name?: string | null;
+    customer_photo_url?: string | null;
+  }[];
 };
 
 export async function fetchPublicBarberProfile(

@@ -31,6 +31,13 @@ export type StaffBookingRow = {
   ends_at: string;
   status: string;
   notes: string | null;
+  review?: {
+    id: number;
+    rating: number;
+    comment: string | null;
+    owner_reply: string | null;
+    created_at: string | null;
+  } | null;
   service: {
     id: number;
     name: string;
@@ -99,7 +106,7 @@ export type StaffProfilePayload = {
   work_mobile: string | null;
   email: string | null;
   specialties: string[];
-  shop: { id: number; name: string; slug: string } | null;
+  shop: { id: number; name: string; slug: string; is_active?: boolean } | null;
   commission_percent: number | string | null;
   availability_status: string;
   portal_settings: Record<string, unknown>;

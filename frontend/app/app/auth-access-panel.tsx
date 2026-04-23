@@ -32,22 +32,22 @@ export function AuthAccessPanel() {
   }, [token]);
 
   if (!ready) {
-    return <aside className="rounded-3xl border border-zinc-200/90 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60" />;
+    return <aside className="section-wrap p-5" />;
   }
 
   if (dashboardPath) {
     return (
-      <aside className="rounded-3xl border border-zinc-200/90 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
+      <aside className="section-wrap p-5">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
           You are signed in
         </p>
-        <h3 className="mt-2 text-lg font-semibold text-zinc-900 dark:text-white">Continue to your dashboard</h3>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+        <h3 className="mt-2 text-lg font-semibold text-white">Continue to your dashboard</h3>
+        <p className="mt-2 text-sm text-slate-300">
           Your session is active. Open your role-based workspace directly.
         </p>
         <Link
           href={dashboardPath}
-          className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+          className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-400"
         >
           Open dashboard
           <ArrowRight className="h-4 w-4" />
@@ -57,25 +57,25 @@ export function AuthAccessPanel() {
   }
 
   return (
-    <aside className="rounded-3xl border border-zinc-200/90 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-800 dark:text-rose-200">
+    <aside className="section-wrap p-5">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-300">
         Account access
       </p>
-      <h3 className="mt-2 text-lg font-semibold text-zinc-900 dark:text-white">Sign in to continue</h3>
-      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+      <h3 className="mt-2 text-lg font-semibold text-white">Sign in to continue</h3>
+      <p className="mt-2 text-sm text-slate-300">
         If you cannot log in yet, create an account first. This matches a typical real-life barbershop portal flow.
       </p>
       <div className="mt-4 space-y-2">
         <Link
           href="/app/auth?tab=login"
-          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-400"
         >
           <LogIn className="h-4 w-4" />
           Login
         </Link>
         <Link
           href="/app/auth?tab=register"
-          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 dark:border-zinc-600 dark:text-zinc-100"
+          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-blue-400"
         >
           <UserPlus className="h-4 w-4" />
           Register

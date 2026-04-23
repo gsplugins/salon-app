@@ -97,8 +97,8 @@ export function PlatformFeatureHub() {
       {SECTIONS.map((section) => (
         <section key={section.title} className="space-y-4">
           <div>
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">{section.title}</h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">{section.description}</p>
+            <h2 className="text-lg font-semibold text-white">{section.title}</h2>
+            <p className="text-sm text-slate-300">{section.description}</p>
           </div>
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {section.items.map((item) => {
@@ -107,17 +107,17 @@ export function PlatformFeatureHub() {
                 <li key={item.href + item.label}>
                   <Link
                     href={item.href}
-                    className="flex gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:border-rose-200 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/60 dark:hover:border-rose-900/50"
+                    className="card-clean flex gap-3 p-4 transition hover:border-blue-400"
                   >
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-800 dark:bg-rose-950/50 dark:text-rose-200">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-blue-300">
                       <Icon className="h-5 w-5" aria-hidden />
                     </span>
                     <span className="min-w-0">
-                      <span className="block font-medium text-zinc-900 dark:text-white">{item.label}</span>
+                      <span className="block font-medium text-white">{item.label}</span>
                       {item.hint ? (
-                        <span className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-400">{item.hint}</span>
+                        <span className="mt-0.5 block text-xs text-slate-300">{item.hint}</span>
                       ) : (
-                        <span className="mt-0.5 block font-mono text-[11px] text-zinc-400 dark:text-zinc-500">
+                        <span className="mt-0.5 block font-mono text-[11px] text-slate-400">
                           {item.href}
                         </span>
                       )}

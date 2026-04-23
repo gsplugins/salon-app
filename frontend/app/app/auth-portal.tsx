@@ -30,9 +30,9 @@ function slugifyShopSlug(input: string): string {
 function SectionCard(props: { title: string; subtitle: string; children: React.ReactNode }) {
   const { title, subtitle, children } = props;
   return (
-    <section className="rounded-3xl border border-zinc-200/80 bg-gradient-to-b from-white to-zinc-50/40 p-6 shadow-sm ring-1 ring-zinc-100/80 dark:border-zinc-800 dark:from-zinc-900/80 dark:to-zinc-950/70 dark:ring-zinc-800/60">
-      <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">{title}</h2>
-      <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{subtitle}</p>
+    <section className="section-wrap p-6">
+      <h2 className="text-lg font-semibold text-white">{title}</h2>
+      <p className="mt-1 text-sm text-slate-300">{subtitle}</p>
       <div className="mt-5">{children}</div>
     </section>
   );
@@ -305,34 +305,34 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
   return (
     <div className="w-full space-y-6">
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-sm shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-          <p className="text-xs font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-300">Customer</p>
-          <p className="mt-1 text-zinc-600 dark:text-zinc-400">Book, track appointments, and loyalty points with mobile login.</p>
+        <div className="card-clean p-4 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">Customer</p>
+          <p className="mt-1 text-slate-300">Book, track appointments, and loyalty points with mobile login.</p>
         </div>
-        <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-sm shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-          <p className="text-xs font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-300">Shop team</p>
-          <p className="mt-1 text-zinc-600 dark:text-zinc-400">Manager and staff access with role-aware dashboards.</p>
+        <div className="card-clean p-4 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">Shop team</p>
+          <p className="mt-1 text-slate-300">Manager and staff access with role-aware dashboards.</p>
         </div>
-        <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 text-sm shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-          <p className="text-xs font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-300">Secure</p>
-          <p className="mt-1 text-zinc-600 dark:text-zinc-400">JWT session, refresh tokens, SMS OTP reset flow.</p>
+        <div className="card-clean p-4 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">Secure</p>
+          <p className="mt-1 text-slate-300">JWT session, refresh tokens, SMS OTP reset flow.</p>
         </div>
       </div>
 
       {accessToken && me ? (
-        <section className="rounded-2xl border border-zinc-200/90 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
+        <section className="section-wrap p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-800 dark:text-rose-200">Signed in</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-300">Signed in</p>
               <h2 className="mt-1 text-lg font-semibold text-zinc-900 dark:text-white">
                 {me.name} · {roleLabel}
               </h2>
-              <p className="text-xs text-zinc-500">{me.mobile}</p>
+              <p className="text-xs text-slate-400">{me.mobile}</p>
             </div>
             {primaryPath ? (
               <Link
                 href={primaryPath}
-                className="inline-flex min-h-10 items-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                className="inline-flex min-h-10 items-center gap-2 rounded-full bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-400"
               >
                 Open dashboard
                 <ArrowRight className="h-4 w-4" />
@@ -341,7 +341,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
           </div>
           <ul className="mt-4 grid gap-2 sm:grid-cols-3">
             {featureChips.map((chip) => (
-              <li key={chip} className="rounded-xl border border-zinc-200 bg-zinc-50/80 px-3 py-2 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-950/40 dark:text-zinc-300">
+              <li key={chip} className="card-clean px-3 py-2 text-sm text-slate-200">
                 {chip}
               </li>
             ))}
@@ -365,18 +365,18 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
             </button>
           </div>
           {canAccessBarberStaffRoutes(me) ? (
-            <p className="mt-3 text-xs text-zinc-500">
+            <p className="mt-3 text-xs text-slate-400">
               Open the{" "}
-              <Link href="/staff/dashboard" className="font-semibold text-rose-800 underline dark:text-rose-200">
+              <Link href="/staff/dashboard" className="font-semibold text-blue-300 underline">
                 staff portal
               </Link>{" "}
               for schedule, earnings, and profile.
             </p>
           ) : null}
           {canAccessCustomerPortal(me) ? (
-            <p className="mt-3 text-xs text-zinc-500">
+            <p className="mt-3 text-xs text-slate-400">
               Open the{" "}
-              <Link href="/customer/dashboard" className="font-semibold text-rose-800 underline dark:text-rose-200">
+              <Link href="/customer/dashboard" className="font-semibold text-blue-300 underline">
                 customer portal
               </Link>{" "}
               for bookings and loyalty.
@@ -397,8 +397,8 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
         </div>
       ) : null}
 
-      <div className="rounded-3xl border border-zinc-200/90 bg-white p-4 shadow-sm ring-1 ring-zinc-100/70 dark:border-zinc-800 dark:bg-zinc-900/60 dark:ring-zinc-800/60 sm:p-6">
-        <div className="mb-5 flex flex-wrap gap-2 border-b border-zinc-100 pb-4 dark:border-zinc-800">
+      <div className="section-wrap p-4 sm:p-6">
+        <div className="mb-5 flex flex-wrap gap-2 border-b border-slate-800 pb-4">
           <button
             type="button"
             onClick={() => {
@@ -408,8 +408,8 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
             }}
             className={`min-h-10 rounded-full px-4 py-2 text-sm font-semibold transition ${
               mode === "login"
-                ? "bg-zinc-900 text-white shadow-sm dark:bg-rose-100 dark:text-zinc-900"
-                : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                ? "bg-blue-500 text-white shadow-sm"
+                : "bg-slate-900 text-slate-300 hover:bg-slate-800"
             }`}
           >
             Login
@@ -422,8 +422,8 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
             }}
             className={`min-h-10 rounded-full px-4 py-2 text-sm font-semibold transition ${
               mode === "register"
-                ? "bg-zinc-900 text-white shadow-sm dark:bg-rose-100 dark:text-zinc-900"
-                : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                ? "bg-blue-500 text-white shadow-sm"
+                : "bg-slate-900 text-slate-300 hover:bg-slate-800"
             }`}
           >
             Registration
@@ -436,10 +436,10 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
             subtitle="Use your mobile and password. Role-based features unlock automatically after login."
           >
             <form onSubmit={handleLogin} className="space-y-4">
-              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              <label className="block text-xs font-medium text-slate-400">
                 Mobile number
                 <input
-                  className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-slate-100 shadow-sm"
                   value={loginMobile}
                   onChange={(e) => setLoginMobile(e.target.value)}
                   autoComplete="tel"
@@ -448,12 +448,12 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                   required
                 />
               </label>
-              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              <label className="block text-xs font-medium text-slate-400">
                 Password
                 <div className="relative mt-1">
                   <input
                     type={showLoginPassword ? "text" : "password"}
-                    className="w-full rounded-xl border border-zinc-200 bg-white py-2.5 pl-3 pr-11 text-sm shadow-sm dark:border-zinc-700 dark:bg-zinc-950"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-900 py-2.5 pl-3 pr-11 text-sm text-slate-100 shadow-sm"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     autoComplete="current-password"
@@ -461,7 +461,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                   />
                   <button
                     type="button"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
                     onClick={() => setShowLoginPassword((v) => !v)}
                     aria-label={showLoginPassword ? "Hide password" : "Show password"}
                   >
@@ -472,15 +472,15 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full min-h-11 rounded-full bg-zinc-900 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-900 dark:hover:bg-white"
+                className="w-full min-h-11 rounded-full bg-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-400 disabled:opacity-60"
               >
                 {busy ? "Signing in..." : "Sign in"}
               </button>
-              <p className="text-center text-xs text-zinc-500">
+              <p className="text-center text-xs text-slate-400">
                 New here?{" "}
                 <button
                   type="button"
-                  className="font-medium text-rose-800 underline dark:text-rose-200"
+                  className="font-medium text-blue-300 underline"
                   onClick={() => {
                     setMode("register");
                     setRegisterMode("customer");
@@ -490,10 +490,10 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                   Create an account
                 </button>
               </p>
-              <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500">
+              <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
                 <button
                   type="button"
-                  className="font-medium text-rose-800 underline dark:text-rose-200"
+                  className="font-medium text-blue-300 underline"
                   onClick={() => {
                     setLoginView("forgot");
                     setNotice(null);
@@ -503,7 +503,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                 </button>
                 <button
                   type="button"
-                  className="font-medium text-rose-800 underline dark:text-rose-200"
+                  className="font-medium text-blue-300 underline"
                   onClick={() => {
                     setLoginView("reset");
                     setNotice(null);
@@ -528,26 +528,26 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                   onClick={() => setRegisterMode("customer")}
                   className={`rounded-2xl border px-4 py-4 text-left transition ${
                     registerMode === "customer"
-                      ? "border-rose-400 bg-rose-50/90 ring-1 ring-rose-200 dark:border-rose-700 dark:bg-rose-950/40 dark:ring-rose-800"
-                      : "border-zinc-200 bg-white hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-950/40"
+                      ? "border-blue-400 bg-slate-900 ring-1 ring-blue-500/30"
+                      : "border-slate-700 bg-slate-900 hover:border-blue-400"
                   }`}
                 >
-                  <Sparkles className="h-6 w-6 text-rose-600 dark:text-rose-300" aria-hidden />
+                  <Sparkles className="h-6 w-6 text-blue-300" aria-hidden />
                   <p className="mt-2 font-semibold text-zinc-900 dark:text-white">Customer</p>
-                  <p className="mt-1 text-xs text-zinc-500">Book visits and track loyalty.</p>
+                  <p className="mt-1 text-xs text-slate-400">Book visits and track loyalty.</p>
                 </button>
                 <button
                   type="button"
                   onClick={() => setRegisterMode("shop")}
                   className={`rounded-2xl border px-4 py-4 text-left transition ${
                     registerMode === "shop"
-                      ? "border-rose-400 bg-rose-50/90 ring-1 ring-rose-200 dark:border-rose-700 dark:bg-rose-950/40 dark:ring-rose-800"
-                      : "border-zinc-200 bg-white hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-950/40"
+                      ? "border-blue-400 bg-slate-900 ring-1 ring-blue-500/30"
+                      : "border-slate-700 bg-slate-900 hover:border-blue-400"
                   }`}
                 >
-                  <Store className="h-6 w-6 text-rose-600 dark:text-rose-300" aria-hidden />
+                  <Store className="h-6 w-6 text-blue-300" aria-hidden />
                   <p className="mt-2 font-semibold text-zinc-900 dark:text-white">Shop owner</p>
-                  <p className="mt-1 text-xs text-zinc-500">Create business and booking link.</p>
+                  <p className="mt-1 text-xs text-slate-400">Create business and booking link.</p>
                 </button>
               </div>
 
@@ -665,7 +665,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full min-h-11 rounded-full bg-zinc-900 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-900"
+                className="w-full min-h-11 rounded-full bg-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-400 disabled:opacity-60"
               >
                 {busy ? "Please wait..." : registerMode === "shop" ? "Create shop account" : "Create customer account"}
               </button>
@@ -750,7 +750,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full min-h-11 rounded-full bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-900"
+                className="w-full min-h-11 rounded-full bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
               >
                 {busy ? "Updating..." : "Update password"}
               </button>
@@ -766,8 +766,8 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
         ) : null}
       </div>
 
-      <p className="text-center text-xs text-zinc-500">
-        <Link href="/" className="font-medium text-rose-800 hover:underline dark:text-rose-200">
+      <p className="text-center text-xs text-slate-400">
+        <Link href="/" className="font-medium text-blue-300 hover:underline">
           Back to marketing site
         </Link>
       </p>

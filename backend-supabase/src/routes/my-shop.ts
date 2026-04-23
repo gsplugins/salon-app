@@ -5,7 +5,12 @@ import { supabaseAdmin } from "../lib/supabase.js";
 import { fail, okData } from "../lib/http.js";
 import { normalizeMobile } from "../lib/mobile.js";
 import { bookingToRow } from "../presenters/booking.js";
-import { notifyCustomerBookingEvent } from "../lib/customer-notifications.js";
+import {
+  notifyCustomerBookingEvent,
+  notifyCustomerBookingStatusChange,
+  notifyCustomerReviewReply,
+  notifyCustomerStatusChange
+} from "../lib/customer-notifications.js";
 import type { ShopRow } from "../salon-types.js";
 import { shopMemberRole } from "../lib/shop-resolution.js";
 
@@ -108,6 +113,12 @@ async function customerRiskProfileByMobile(shopId: number, mobile: string) {
     risk_level: riskLevel,
     last_visit_at: list[0]?.starts_at ?? null
   };
+}
+
+async function canManageCustomers(user: { id: string; role: string }, shopId: number): Promise<boolean> {
+  if (user.role === "super_admin") return true;
+  const role = await shopMemberRole(user.id, shopId);
+  return role === "owner" || role === "manager" || user.role === "shop_owner";
 }
 
 async function staffCatalogRow(staffId: number): Promise<Record<string, unknown> | null> {
@@ -263,28 +274,81 @@ export function mountMyShopRoutes(router: Router): void {
     const { shop, staffScopeId } = req.salon!;
     let q = supabaseAdmin
       .from("salon_bookings")
-      .select("customer_mobile,customer_name,starts_at")
+      .select("customer_mobile,customer_name,starts_at,salon_service_id")
       .eq("shop_id", shop.id)
       .order("starts_at", { ascending: false })
       .limit(2000);
     if (staffScopeId != null) q = q.eq("salon_staff_id", staffScopeId);
     const rows = await q;
-    const byMobile = new Map<string, { customer_mobile: string; customer_name: string; visit_count: number; last_visit_at: string }>();
-    for (const row of (rows.data ?? []) as { customer_mobile: string; customer_name: string; starts_at: string }[]) {
+    const byMobile = new Map<
+      string,
+      {
+        customer_mobile: string;
+        customer_name: string;
+        visit_count: number;
+        last_visit_at: string;
+        last_service_id: number | null;
+      }
+    >();
+    for (const row of (rows.data ?? []) as { customer_mobile: string; customer_name: string; starts_at: string; salon_service_id: number | null }[]) {
       const ex = byMobile.get(row.customer_mobile);
       if (!ex) {
         byMobile.set(row.customer_mobile, {
           customer_mobile: row.customer_mobile,
           customer_name: row.customer_name,
           visit_count: 1,
-          last_visit_at: row.starts_at
+          last_visit_at: row.starts_at,
+          last_service_id: row.salon_service_id ?? null
         });
       } else {
         ex.visit_count += 1;
-        if (row.starts_at > ex.last_visit_at) ex.last_visit_at = row.starts_at;
+        if (row.starts_at > ex.last_visit_at) {
+          ex.last_visit_at = row.starts_at;
+          ex.last_service_id = row.salon_service_id ?? null;
+        }
       }
     }
-    return okData(res, [...byMobile.values()].sort((a, b) => (a.last_visit_at < b.last_visit_at ? 1 : -1)).slice(0, 200));
+
+    const serviceIds = [...new Set([...byMobile.values()].map((x) => x.last_service_id).filter((x): x is number => x != null))];
+    const serviceMap = new Map<number, string>();
+    if (serviceIds.length) {
+      const sv = await supabaseAdmin.from("salon_services").select("id,name").in("id", serviceIds);
+      for (const row of (sv.data ?? []) as { id: number; name: string }[]) {
+        serviceMap.set(row.id, row.name);
+      }
+    }
+
+    const mobiles = [...byMobile.keys()];
+    const ctrlMap = new Map<string, { is_suspended: boolean; is_removed: boolean }>();
+    if (mobiles.length) {
+      const controls = await supabaseAdmin
+        .from("shop_customer_controls")
+        .select("customer_mobile,is_suspended,is_removed")
+        .eq("shop_id", shop.id)
+        .in("customer_mobile", mobiles);
+      for (const c of (controls.data ?? []) as { customer_mobile: string; is_suspended: boolean; is_removed: boolean }[]) {
+        ctrlMap.set(c.customer_mobile, { is_suspended: Boolean(c.is_suspended), is_removed: Boolean(c.is_removed) });
+      }
+    }
+
+    const includeRemoved = String(req.query.include_removed ?? "") === "1";
+    const out = [...byMobile.values()]
+      .map((row) => {
+        const ctrl = ctrlMap.get(row.customer_mobile) ?? { is_suspended: false, is_removed: false };
+        return {
+          customer_mobile: row.customer_mobile,
+          customer_name: row.customer_name,
+          visit_count: row.visit_count,
+          last_visit_at: row.last_visit_at,
+          last_service_name: row.last_service_id != null ? serviceMap.get(row.last_service_id) ?? null : null,
+          is_suspended: ctrl.is_suspended,
+          is_removed: ctrl.is_removed
+        };
+      })
+      .filter((row) => includeRemoved || !row.is_removed)
+      .sort((a, b) => (a.last_visit_at < b.last_visit_at ? 1 : -1))
+      .slice(0, 200);
+    return okData(res, out);
   });
 
   r.get("/my/shop/customers/:mobile/profile", async (req: Request, res: Response) => {
@@ -293,6 +357,166 @@ export function mountMyShopRoutes(router: Router): void {
     if (!mobile) return fail(res, 422, "Invalid mobile.");
     const profile = await customerRiskProfileByMobile(shop.id, mobile);
     return okData(res, profile);
+  });
+
+  r.get("/my/shop/customers/:mobile/details", async (req: Request, res: Response) => {
+    const { shop } = req.salon!;
+    const mobile = decodeURIComponent(req.params.mobile);
+    if (!mobile) return fail(res, 422, "Invalid mobile.");
+
+    const controls = await supabaseAdmin
+      .from("shop_customer_controls")
+      .select("is_suspended,is_removed,note,updated_at")
+      .eq("shop_id", shop.id)
+      .eq("customer_mobile", mobile)
+      .maybeSingle();
+    const status = (controls.data as { is_suspended: boolean; is_removed: boolean; note: string | null; updated_at: string } | null) ?? null;
+
+    const userRow = await supabaseAdmin
+      .from("users")
+      .select("id,name,mobile,is_locked,created_at")
+      .eq("mobile", mobile)
+      .maybeSingle();
+
+    const shopBookings = await supabaseAdmin
+      .from("salon_bookings")
+      .select("id,shop_id,customer_name,starts_at,status,salon_service_id")
+      .eq("customer_mobile", mobile)
+      .order("starts_at", { ascending: false })
+      .limit(500);
+    const bookingRows = (shopBookings.data ?? []) as {
+      id: number;
+      shop_id: number;
+      customer_name: string;
+      starts_at: string;
+      status: string;
+      salon_service_id: number | null;
+    }[];
+    const shopIds = [...new Set(bookingRows.map((x) => x.shop_id))];
+    const svcIds = [...new Set(bookingRows.map((x) => x.salon_service_id).filter((x): x is number => x != null))];
+
+    const shopMap = new Map<number, { id: number; name: string; slug: string }>();
+    if (shopIds.length) {
+      const shops = await supabaseAdmin.from("shops").select("id,name,slug").in("id", shopIds);
+      for (const s of (shops.data ?? []) as { id: number; name: string; slug: string }[]) {
+        shopMap.set(s.id, s);
+      }
+    }
+    const svcMap = new Map<number, { name: string; duration_minutes: number; price_cents: number | null }>();
+    if (svcIds.length) {
+      const sv = await supabaseAdmin.from("salon_services").select("id,name,duration_minutes,price_cents").in("id", svcIds);
+      for (const s of (sv.data ?? []) as { id: number; name: string; duration_minutes: number; price_cents: number | null }[]) {
+        svcMap.set(s.id, { name: s.name, duration_minutes: s.duration_minutes, price_cents: s.price_cents });
+      }
+    }
+
+    const shopsSummaryMap = new Map<number, { shop_id: number; shop_name: string; shop_slug: string; visit_count: number; last_visit_at: string }>();
+    for (const b of bookingRows) {
+      const cur = shopsSummaryMap.get(b.shop_id);
+      if (!cur) {
+        const info = shopMap.get(b.shop_id);
+        shopsSummaryMap.set(b.shop_id, {
+          shop_id: b.shop_id,
+          shop_name: info?.name ?? `Shop ${b.shop_id}`,
+          shop_slug: info?.slug ?? "",
+          visit_count: 1,
+          last_visit_at: b.starts_at
+        });
+      } else {
+        cur.visit_count += 1;
+        if (b.starts_at > cur.last_visit_at) cur.last_visit_at = b.starts_at;
+      }
+    }
+
+    const inShopHistory = bookingRows
+      .filter((b) => b.shop_id === shop.id)
+      .slice(0, 50)
+      .map((b) => {
+        const svc = b.salon_service_id != null ? svcMap.get(b.salon_service_id) : null;
+        return {
+          booking_id: b.id,
+          starts_at: b.starts_at,
+          status: b.status,
+          service_name: svc?.name ?? null,
+          duration_minutes: svc?.duration_minutes ?? null,
+          price_cents: svc?.price_cents ?? null
+        };
+      });
+
+    return okData(res, {
+      customer_mobile: mobile,
+      customer_name: bookingRows[0]?.customer_name ?? null,
+      is_suspended: Boolean(status?.is_suspended),
+      is_removed: Boolean(status?.is_removed),
+      control_note: status?.note ?? null,
+      control_updated_at: status?.updated_at ?? null,
+      user:
+        userRow.data != null
+          ? {
+              id: (userRow.data as { id: string }).id,
+              name: (userRow.data as { name: string }).name,
+              mobile: (userRow.data as { mobile: string }).mobile,
+              is_locked: Boolean((userRow.data as { is_locked: boolean }).is_locked),
+              created_at: (userRow.data as { created_at: string }).created_at
+            }
+          : null,
+      shops: [...shopsSummaryMap.values()].sort((a, b) => (a.last_visit_at < b.last_visit_at ? 1 : -1)),
+      current_shop_service_history: inShopHistory
+    });
+  });
+
+  r.patch("/my/shop/customers/:mobile/status", async (req: Request, res: Response) => {
+    const { shop, user } = req.salon!;
+    const allowed = await canManageCustomers(user, shop.id);
+    if (!allowed) return fail(res, 403, "Only owner or manager can manage customers.");
+
+    const mobile = decodeURIComponent(req.params.mobile);
+    if (!mobile) return fail(res, 422, "Invalid mobile.");
+    const parsed = z
+      .object({
+        action: z.enum(["suspend", "unsuspend", "remove", "restore"]),
+        note: z.string().max(500).nullable().optional()
+      })
+      .safeParse(req.body);
+    if (!parsed.success) return fail(res, 422, "Validation failed.");
+
+    const existing = await supabaseAdmin
+      .from("shop_customer_controls")
+      .select("id,is_suspended,is_removed")
+      .eq("shop_id", shop.id)
+      .eq("customer_mobile", mobile)
+      .maybeSingle();
+    const base = (existing.data as { id: number; is_suspended: boolean; is_removed: boolean } | null) ?? null;
+    const merged = {
+      is_suspended: parsed.data.action === "unsuspend" ? false : parsed.data.action === "suspend" ? true : Boolean(base?.is_suspended),
+      is_removed: parsed.data.action === "restore" ? false : parsed.data.action === "remove" ? true : Boolean(base?.is_removed)
+    };
+
+    const upsert = await supabaseAdmin.from("shop_customer_controls").upsert(
+      {
+        shop_id: shop.id,
+        customer_mobile: mobile,
+        is_suspended: merged.is_suspended,
+        is_removed: merged.is_removed,
+        note: parsed.data.note ?? null,
+        updated_at: new Date().toISOString()
+      },
+      { onConflict: "shop_id,customer_mobile" }
+    );
+    if (upsert.error) return fail(res, 500, "Could not update customer status.");
+
+    await notifyCustomerStatusChange({
+      shopId: shop.id,
+      customerMobile: mobile,
+      action: parsed.data.action,
+      note: parsed.data.note ?? null
+    });
+
+    return okData(res, {
+      customer_mobile: mobile,
+      is_suspended: merged.is_suspended,
+      is_removed: merged.is_removed
+    });
   });
 
   r.get("/my/shop/services-catalog", async (req: Request, res: Response) => {
@@ -624,6 +848,18 @@ export function mountMyShopRoutes(router: Router): void {
     if (!parsed.success) return fail(res, 422, "Validation failed.");
     const mobile = normalizeMobile(parsed.data.customer_mobile);
     if (!mobile) return fail(res, 422, "Invalid mobile number.");
+    const ctrl = await supabaseAdmin
+      .from("shop_customer_controls")
+      .select("is_suspended,is_removed")
+      .eq("shop_id", shop.id)
+      .eq("customer_mobile", mobile)
+      .maybeSingle();
+    if ((ctrl.data as { is_suspended?: boolean; is_removed?: boolean } | null)?.is_removed) {
+      return fail(res, 403, "Customer is removed from this shop.");
+    }
+    if ((ctrl.data as { is_suspended?: boolean; is_removed?: boolean } | null)?.is_suspended) {
+      return fail(res, 403, "Customer is suspended in this shop.");
+    }
     const svc = await supabaseAdmin
       .from("salon_services")
       .select("*")
@@ -693,6 +929,13 @@ export function mountMyShopRoutes(router: Router): void {
     }
     await supabaseAdmin.from("salon_bookings").update(upd).eq("id", bookingId);
     const nextStatus = typeof upd.status === "string" ? upd.status : booking.status;
+    if (nextStatus !== booking.status && nextStatus !== "confirmed" && nextStatus !== "completed") {
+      await notifyCustomerBookingStatusChange({
+        bookingId,
+        fromStatus: booking.status,
+        toStatus: nextStatus
+      });
+    }
     if (nextStatus === "confirmed" && booking.status !== "confirmed") {
       await notifyCustomerBookingEvent({ bookingId, type: "booking_confirmed" });
     }
@@ -1001,7 +1244,7 @@ export function mountMyShopRoutes(router: Router): void {
   });
 
   r.patch("/my/shop/reviews/:reviewId", async (req: Request, res: Response) => {
-    const { shop } = req.salon!;
+    const { shop, user } = req.salon!;
     const reviewId = Number(req.params.reviewId);
     const schema = z.object({ owner_reply: z.string().max(5000) });
     const parsed = schema.safeParse(req.body);
@@ -1014,6 +1257,14 @@ export function mountMyShopRoutes(router: Router): void {
       .select("*")
       .single();
     if (upd.error || !upd.data) return fail(res, 404, "Not found.");
+    const reply = parsed.data.owner_reply.trim();
+    if (reply.length > 0) {
+      await notifyCustomerReviewReply({
+        reviewId,
+        ownerReply: reply,
+        actorName: user.name
+      });
+    }
     return okData(res, upd.data);
   });
 

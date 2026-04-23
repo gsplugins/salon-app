@@ -12,15 +12,15 @@ export const metadata = {
 
 export default function StaffAppPage() {
   return (
-    <div className="min-h-[100dvh] bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
-      <header className="border-b border-zinc-200/80 bg-zinc-50/90 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90">
+    <div className="min-h-[100dvh] text-slate-100">
+      <header className="border-b border-slate-800 bg-[#0a1220]/95 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-4 pb-5 pt-4 sm:px-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-800/80 dark:text-rose-200/80">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-300">
                 Account center
               </p>
-              <h1 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-white sm:text-xl">
+              <h1 className="text-lg font-semibold tracking-tight text-white sm:text-xl">
                 Lumière authentication workspace
               </h1>
             </div>
@@ -32,7 +32,7 @@ export default function StaffAppPage() {
           <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             <Link
               href="/customer/home"
-              className="group inline-flex min-h-11 items-center justify-between rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:border-rose-200 hover:text-rose-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-rose-900/50 dark:hover:text-rose-100"
+              className="card-clean group inline-flex min-h-11 items-center justify-between px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-blue-400 hover:text-blue-200"
             >
               <span className="inline-flex items-center gap-2">
                 <Compass className="h-4 w-4" />
@@ -42,7 +42,7 @@ export default function StaffAppPage() {
             </Link>
             <Link
               href="/staff/dashboard"
-              className="group inline-flex min-h-11 items-center justify-between rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:border-rose-200 hover:text-rose-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-rose-900/50 dark:hover:text-rose-100"
+              className="card-clean group inline-flex min-h-11 items-center justify-between px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-blue-400 hover:text-blue-200"
             >
               <span className="inline-flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
@@ -52,7 +52,7 @@ export default function StaffAppPage() {
             </Link>
             <Link
               href="/owner/dashboard"
-              className="group inline-flex min-h-11 items-center justify-between rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:border-rose-200 hover:text-rose-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-rose-900/50 dark:hover:text-rose-100"
+              className="card-clean group inline-flex min-h-11 items-center justify-between px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-blue-400 hover:text-blue-200"
             >
               <span className="inline-flex items-center gap-2">
                 <LayoutDashboard className="h-4 w-4" />
@@ -62,7 +62,7 @@ export default function StaffAppPage() {
             </Link>
             <Link
               href="/admin/dashboard"
-              className="group inline-flex min-h-11 items-center justify-between rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:border-rose-200 hover:text-rose-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-rose-900/50 dark:hover:text-rose-100"
+              className="card-clean group inline-flex min-h-11 items-center justify-between px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-blue-400 hover:text-blue-200"
             >
               <span className="inline-flex items-center gap-2">
                 <Shield className="h-4 w-4" />
@@ -72,12 +72,12 @@ export default function StaffAppPage() {
             </Link>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-            <Link href="/platform" className="font-medium text-rose-800 hover:underline dark:text-rose-200">
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+            <Link href="/platform" className="font-medium text-blue-300 hover:underline">
               Site map
             </Link>
             <span>•</span>
-            <Link href="/" className="hover:text-rose-800 dark:hover:text-rose-200">
+            <Link href="/" className="hover:text-blue-300">
               Home
             </Link>
             <span>•</span>
@@ -87,39 +87,39 @@ export default function StaffAppPage() {
       </header>
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-          <section className="rounded-3xl border border-zinc-200/90 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60 sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-800/80 dark:text-rose-200/80">
+          <section className="section-wrap p-6 sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-300">
               Real-life flow
             </p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">
               Choose your portal, then continue with secure sign-in.
             </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-300">
               Customers, barbers, managers, and admins all use one authentication system.
               If you are not signed in, use the right-side panel to go to login or registration.
             </p>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <Link
                 href="/customer/home"
-                className="rounded-2xl border border-zinc-200 bg-zinc-50/70 px-4 py-3 text-sm font-medium text-zinc-700 transition hover:border-rose-200 hover:text-rose-900 dark:border-zinc-700 dark:bg-zinc-950/40 dark:text-zinc-200"
+                className="card-clean px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-blue-400 hover:text-blue-200"
               >
                 Customer booking and loyalty
               </Link>
               <Link
                 href="/staff/dashboard"
-                className="rounded-2xl border border-zinc-200 bg-zinc-50/70 px-4 py-3 text-sm font-medium text-zinc-700 transition hover:border-rose-200 hover:text-rose-900 dark:border-zinc-700 dark:bg-zinc-950/40 dark:text-zinc-200"
+                className="card-clean px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-blue-400 hover:text-blue-200"
               >
                 Staff schedule and appointments
               </Link>
               <Link
                 href="/owner/dashboard"
-                className="rounded-2xl border border-zinc-200 bg-zinc-50/70 px-4 py-3 text-sm font-medium text-zinc-700 transition hover:border-rose-200 hover:text-rose-900 dark:border-zinc-700 dark:bg-zinc-950/40 dark:text-zinc-200"
+                className="card-clean px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-blue-400 hover:text-blue-200"
               >
                 Manager operations and analytics
               </Link>
               <Link
                 href="/admin/dashboard"
-                className="rounded-2xl border border-zinc-200 bg-zinc-50/70 px-4 py-3 text-sm font-medium text-zinc-700 transition hover:border-rose-200 hover:text-rose-900 dark:border-zinc-700 dark:bg-zinc-950/40 dark:text-zinc-200"
+                className="card-clean px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-blue-400 hover:text-blue-200"
               >
                 Platform-wide admin controls
               </Link>

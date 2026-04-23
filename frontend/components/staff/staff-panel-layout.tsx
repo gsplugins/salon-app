@@ -75,6 +75,7 @@ export function StaffPanelLayout(props: { accessToken: string; children: React.R
   }, [load]);
 
   const shopName = profile?.shop?.name ?? "Your salon";
+  const shopInactive = profile?.shop?.is_active === false;
   const st = profile?.availability_status ?? "available";
 
   const header =
@@ -103,37 +104,48 @@ export function StaffPanelLayout(props: { accessToken: string; children: React.R
       brandLabel="Staff"
       brandHref="/staff/dashboard"
       sidebarContextLine={shopName}
-      primaryNav={PRIMARY}
-      secondaryNav={SECONDARY}
+      primaryNav={shopInactive ? [] : PRIMARY}
+      secondaryNav={shopInactive ? [] : SECONDARY}
       header={header}
       headerTrailing={
         <div className="flex items-center gap-2">
           <span className="hidden sm:inline-flex">
             <AuthHeaderProfile />
           </span>
-          <Link
-            href="/staff/notifications"
-            className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
-            aria-label="Notifications"
-          >
-            <Bell className="h-5 w-5" />
-            {unread > 0 ? (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
-                {unread > 99 ? "99+" : unread}
-              </span>
-            ) : null}
-          </Link>
+          {!shopInactive ? (
+            <Link
+              href="/staff/notifications"
+              className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+              aria-label="Notifications"
+            >
+              <Bell className="h-5 w-5" />
+              {unread > 0 ? (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
+                  {unread > 99 ? "99+" : unread}
+                </span>
+              ) : null}
+            </Link>
+          ) : null}
         </div>
       }
       footerLink={{ href: "/app", label: "Account portal" }}
     >
-      <StaffActAsBar accessToken={accessToken} onStaffContextChange={() => void load()} />
+      {!shopInactive ? <StaffActAsBar accessToken={accessToken} onStaffContextChange={() => void load()} /> : null}
       <div className="mb-4 flex justify-end sm:hidden">
         <div className="flex items-center gap-2 rounded-2xl border border-zinc-200/80 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
           <AuthHeaderProfile />
         </div>
       </div>
-      {props.children}
+      {shopInactive ? (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-4 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+          <p className="font-semibold">Shop subscription inactive</p>
+          <p className="mt-1">
+            Your shop is currently inactive. Ask the shop owner/manager to upgrade or renew the plan to continue using staff tools.
+          </p>
+        </div>
+      ) : (
+        props.children
+      )}
     </PortalPanelShell>
   );
 }

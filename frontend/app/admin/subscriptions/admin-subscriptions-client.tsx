@@ -24,6 +24,24 @@ import {
   postSubscriptionPlan,
   type SubscriptionPlanRow,
 } from "@/lib/admin-api";
+import { fetchSystemShops, type Paginated, type SystemShopRow } from "@/lib/salon-api";
+
+const SUBSCRIBERS_PER_PAGE = 20;
+
+function formatDate(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return "—";
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(parsed);
+}
+
+function daysLeftUntil(iso: string | null | undefined): number | null {
+  if (!iso) return null;
+  const target = new Date(iso).getTime();
+  if (Number.isNaN(target)) return null;
+  const diffMs = target - Date.now();
+  return Math.ceil(diffMs / 86_400_000);
+}
 
 const planSchema = z.object({
   slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(64),
@@ -46,8 +64,13 @@ type PlanForm = z.output<typeof planSchema>;
 
 function Body({ token }: { token: string }) {
   const [rows, setRows] = useState<SubscriptionPlanRow[] | null>(null);
+  const [subscribers, setSubscribers] = useState<Paginated<SystemShopRow> | null>(null);
   const [editing, setEditing] = useState<SubscriptionPlanRow | "new" | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [subscriberPage, setSubscriberPage] = useState(1);
+  const [subscriberSearchDraft, setSubscriberSearchDraft] = useState("");
+  const [subscriberSearch, setSubscriberSearch] = useState("");
+  const [subscriberStatus, setSubscriberStatus] = useState<"all" | "active" | "expired" | "trialing">("all");
 
   const load = useCallback(async () => {
     const res = await fetchSubscriptionPlans(token);
@@ -59,9 +82,26 @@ function Body({ token }: { token: string }) {
     setRows(res.data);
   }, [token]);
 
+  const loadSubscribers = useCallback(async () => {
+    const res = await fetchSystemShops(token, {
+      page: subscriberPage,
+      search: subscriberSearch || undefined,
+    });
+    if (!res.ok) {
+      toast.error(formatApiError(res.body));
+      setSubscribers({ data: [], current_page: 1, last_page: 1, per_page: SUBSCRIBERS_PER_PAGE, total: 0 });
+      return;
+    }
+    setSubscribers(res.data);
+  }, [subscriberPage, subscriberSearch, token]);
+
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    void loadSubscribers();
+  }, [loadSubscribers]);
 
   const form = useForm<PlanForm>({
     resolver: zodResolver(planSchema) as Resolver<PlanForm>,
@@ -171,23 +211,155 @@ function Body({ token }: { token: string }) {
     void load();
   }
 
-  if (!rows) {
+  if (!rows || !subscribers) {
     return (
       <AdminWorkspaceFrame title="Subscription plans" subtitle="Catalog pricing, trials, and feature flags.">
-        <Skeleton className="h-48 w-full rounded-2xl" />
+        <div className="space-y-4">
+          <Skeleton className="h-48 w-full rounded-2xl" />
+          <Skeleton className="h-56 w-full rounded-2xl" />
+        </div>
       </AdminWorkspaceFrame>
     );
   }
+
+  const visibleSubscribers = subscribers.data.filter((shop) => {
+    if (!shop.subscription) return false;
+    if (subscriberStatus === "all") return true;
+    if (subscriberStatus === "trialing") return shop.subscription.status === "trialing";
+    const daysLeft = daysLeftUntil(shop.subscription.current_period_end);
+    if (subscriberStatus === "expired") return daysLeft !== null && daysLeft < 0;
+    if (subscriberStatus === "active") return daysLeft === null || daysLeft >= 0;
+    return true;
+  });
 
   return (
     <AdminWorkspaceFrame
       title="Subscription plans"
       subtitle="Create and manage Free, Basic, Pro, and Enterprise-style plans. Shops reference these rows via manual assignment or future checkout."
     >
-      <div className="mb-4 flex flex-wrap justify-end gap-2">
-        <Button type="button" onClick={() => setEditing("new")}>
-          New plan
-        </Button>
+      <div className="mb-4 space-y-4">
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
+          <div className="mb-3 flex flex-wrap items-end gap-2">
+            <div className="min-w-[220px] flex-1">
+              <Label htmlFor="subscriber-search">Search shop</Label>
+              <Input
+                id="subscriber-search"
+                className="mt-1"
+                placeholder="Shop name or slug"
+                value={subscriberSearchDraft}
+                onChange={(e) => setSubscriberSearchDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter") return;
+                  setSubscriberPage(1);
+                  setSubscriberSearch(subscriberSearchDraft.trim());
+                }}
+              />
+            </div>
+            <div className="min-w-[180px]">
+              <Label htmlFor="subscriber-status">Subscription status</Label>
+              <select
+                id="subscriber-status"
+                className="mt-1 h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                value={subscriberStatus}
+                onChange={(e) => setSubscriberStatus(e.target.value as "all" | "active" | "expired" | "trialing")}
+              >
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="trialing">Trialing</option>
+                <option value="expired">Expired</option>
+              </select>
+            </div>
+            <Button
+              type="button"
+              onClick={() => {
+                setSubscriberPage(1);
+                setSubscriberSearch(subscriberSearchDraft.trim());
+              }}
+            >
+              Apply
+            </Button>
+          </div>
+
+          <Table>
+            <THead>
+              <TR>
+                <TH>Shop</TH>
+                <TH>Plan</TH>
+                <TH>Status</TH>
+                <TH>Active from</TH>
+                <TH>Expires</TH>
+                <TH>Days left</TH>
+              </TR>
+            </THead>
+            <TBody>
+              {visibleSubscribers.map((shop) => {
+                const sub = shop.subscription!;
+                const daysLeft = daysLeftUntil(sub.current_period_end);
+                return (
+                  <TR key={shop.id}>
+                    <TD>
+                      <div className="font-medium">{shop.name}</div>
+                      <div className="font-mono text-xs text-zinc-500">/{shop.slug}</div>
+                    </TD>
+                    <TD className="font-medium">{sub.plan_key}</TD>
+                    <TD>
+                      <Badge variant={sub.status === "active" ? "success" : "warning"}>{sub.status}</Badge>
+                    </TD>
+                    <TD>{formatDate(sub.active_from)}</TD>
+                    <TD>{formatDate(sub.current_period_end)}</TD>
+                    <TD>
+                      {daysLeft === null ? (
+                        "—"
+                      ) : daysLeft < 0 ? (
+                        <span className="font-medium text-red-600 dark:text-red-400">{Math.abs(daysLeft)} days overdue</span>
+                      ) : (
+                        <span className="font-medium text-emerald-700 dark:text-emerald-400">{daysLeft} days</span>
+                      )}
+                    </TD>
+                  </TR>
+                );
+              })}
+              {visibleSubscribers.length === 0 ? (
+                <TR>
+                  <TD colSpan={6} className="py-8 text-center text-zinc-500">
+                    No subscribers found for this filter.
+                  </TD>
+                </TR>
+              ) : null}
+            </TBody>
+          </Table>
+
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
+            <span className="text-zinc-500">
+              Page {subscribers.current_page} of {subscribers.last_page} · {subscribers.total} total subscribers
+            </span>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={subscriberPage <= 1}
+                onClick={() => setSubscriberPage((p) => Math.max(1, p - 1))}
+              >
+                Previous
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={subscriberPage >= subscribers.last_page}
+                onClick={() => setSubscriberPage((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap justify-between gap-2">
+          <h2 className="text-lg font-semibold">Subscription plan catalog</h2>
+          <Button type="button" onClick={() => setEditing("new")}>
+            New plan
+          </Button>
+        </div>
       </div>
 
       <Table>

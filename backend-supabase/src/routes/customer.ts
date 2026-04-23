@@ -226,4 +226,97 @@ export function mountCustomerRoutes(router: Router): void {
     if (inserted.error || !inserted.data) return fail(res, 500, "Could not save review.");
     return okData(res, inserted.data, 201);
   });
+
+  router.post("/me/bookings/:bookingId/payments", async (req: Request, res: Response) => {
+    const user = await authUser(req);
+    if (!user) return fail(res, 401, "Unauthenticated.");
+    const bookingId = Number(req.params.bookingId);
+    if (!Number.isFinite(bookingId)) return fail(res, 422, "Invalid booking id.");
+
+    const parsed = z
+      .object({
+        method: z.enum(["manual", "bkash"]),
+        tip_cents: z.number().int().min(0).max(10_000_000).optional(),
+        trx_id: z.string().max(255).optional().nullable(),
+        payer_mobile: z.string().max(32).optional().nullable(),
+        note: z.string().max(1000).optional().nullable()
+      })
+      .safeParse(req.body);
+    if (!parsed.success) return fail(res, 422, "Validation failed.");
+
+    const bookingRes = await supabaseAdmin
+      .from("salon_bookings")
+      .select("id,shop_id,status,salon_service_id,total_price_cents,customer_user_id,customer_mobile")
+      .eq("id", bookingId)
+      .maybeSingle();
+    const booking = bookingRes.data as
+      | {
+          id: number;
+          shop_id: number;
+          status: string;
+          salon_service_id: number;
+          total_price_cents: number | null;
+          customer_user_id: string | null;
+          customer_mobile: string;
+        }
+      | null;
+    if (!booking) return fail(res, 404, "Booking not found.");
+    const canPay = booking.customer_user_id === user.id || booking.customer_mobile === user.mobile;
+    if (!canPay) return fail(res, 403, "Forbidden.");
+    if (booking.status !== "completed") return fail(res, 422, "Payment is allowed after service completion.");
+
+    const exists = await supabaseAdmin
+      .from("salon_payments")
+      .select("id,status")
+      .eq("salon_booking_id", booking.id)
+      .in("status", ["pending", "completed"])
+      .order("id", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (exists.data) return fail(res, 409, "Payment already exists for this booking.");
+
+    let baseAmount = Number(booking.total_price_cents ?? 0);
+    if (!baseAmount || baseAmount <= 0) {
+      const svc = await supabaseAdmin.from("salon_services").select("price_cents").eq("id", booking.salon_service_id).maybeSingle();
+      baseAmount = Number((svc.data as { price_cents: number | null } | null)?.price_cents ?? 0);
+    }
+    if (baseAmount <= 0) return fail(res, 422, "Booking amount is not available.");
+
+    const tipCents = Number(parsed.data.tip_cents ?? 0);
+    const totalCents = baseAmount + tipCents;
+
+    const paymentIns = await supabaseAdmin
+      .from("salon_payments")
+      .insert({
+        shop_id: booking.shop_id,
+        salon_booking_id: booking.id,
+        method: parsed.data.method,
+        amount_cents: totalCents,
+        currency: "BDT",
+        transaction_id: parsed.data.trx_id ?? null,
+        status: "completed",
+        metadata: {
+          source: "customer_portal",
+          base_amount_cents: baseAmount,
+          tip_cents: tipCents,
+          note: parsed.data.note ?? null
+        }
+      })
+      .select("*")
+      .single();
+    if (paymentIns.error || !paymentIns.data) return fail(res, 500, "Could not save payment.");
+
+    if (parsed.data.method === "bkash") {
+      await supabaseAdmin.from("bkash_payments").insert({
+        shop_id: booking.shop_id,
+        amount_paisa: totalCents,
+        trx_id: parsed.data.trx_id ?? null,
+        status: "completed",
+        payer_mobile: parsed.data.payer_mobile ?? user.mobile,
+        note: parsed.data.note ?? null
+      });
+    }
+
+    return okData(res, paymentIns.data, 201);
+  });
 }

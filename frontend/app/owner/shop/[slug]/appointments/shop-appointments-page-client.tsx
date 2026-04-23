@@ -185,6 +185,7 @@ function FormBody({ accessToken }: { accessToken: string }) {
                 <TH>Customer</TH>
                 <TH>Service</TH>
                 <TH>Staff</TH>
+                <TH>Rating</TH>
                 <TH>Status</TH>
                 <TH />
               </TR>
@@ -192,7 +193,7 @@ function FormBody({ accessToken }: { accessToken: string }) {
             <TBody>
               {sorted.length === 0 ? (
                 <TR>
-                  <TD colSpan={6} className="text-center text-sm text-zinc-500">
+                  <TD colSpan={7} className="text-center text-sm text-zinc-500">
                     No appointments in this range.
                   </TD>
                 </TR>
@@ -208,6 +209,7 @@ function FormBody({ accessToken }: { accessToken: string }) {
                     </TD>
                     <TD className="text-sm">{b.service.name}</TD>
                     <TD className="text-sm">{b.staff.name}</TD>
+                    <TD className="text-sm">{b.review ? `${b.review.rating}/5` : "—"}</TD>
                     <TD className="text-sm capitalize">{b.status.replace("_", " ")}</TD>
                     <TD className="text-right">
                       <Button type="button" variant="ghost" className="text-xs" onClick={() => {
@@ -244,6 +246,10 @@ function FormBody({ accessToken }: { accessToken: string }) {
               </p>
               <p>
                 <span className="text-zinc-500">Staff:</span> {active.staff.name}
+              </p>
+              <p>
+                <span className="text-zinc-500">Customer rating:</span>{" "}
+                {active.review ? `${active.review.rating}/5${active.review.comment ? ` - ${active.review.comment}` : ""}` : "No rating yet"}
               </p>
               <div className="rounded-xl border border-zinc-100 p-3 text-xs dark:border-zinc-800">
                 <p className="font-semibold uppercase tracking-wide text-zinc-500">Customer fraud/risk check</p>

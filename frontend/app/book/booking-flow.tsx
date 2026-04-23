@@ -56,10 +56,10 @@ function formatMoneyFromCents(cents: number | null | undefined): string {
 
 const STEPS: { n: Step; label: string }[] = [
   { n: 1, label: "Services" },
-  { n: 2, label: "Stylist" },
+  { n: 2, label: "Barber" },
   { n: 3, label: "Date" },
   { n: 4, label: "Time" },
-  { n: 5, label: "Confirm" },
+  { n: 5, label: "Details" },
 ];
 
 export function BookingFlow({ shopSlug }: { shopSlug: string }) {
@@ -317,31 +317,31 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
 
   return (
     <div className="mx-auto max-w-lg">
-      <div className="mb-8 rounded-2xl border border-rose-100/80 bg-gradient-to-br from-white to-rose-50/50 p-5 shadow-sm dark:border-zinc-800 dark:from-zinc-900/80 dark:to-zinc-950/80">
+      <div className="section-wrap mb-8 p-5">
         <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-100">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/20 text-blue-200">
             <Store className="h-5 w-5" aria-hidden />
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-rose-800/80 dark:text-rose-200/80">
+            <p className="text-xs font-medium uppercase tracking-wider text-blue-300">
               Book online
             </p>
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-white">
               {shopTitle ?? shopSlug}
             </h2>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              Pick one or more services, a time, and your contact. The shop can share updates by SMS or WhatsApp.
+            <p className="mt-1 text-sm text-slate-300">
+              Choose your service, select a barber, and reserve your preferred time in under 1 minute.
             </p>
             {signedInCustomer ? (
               <p className="mt-2 text-xs font-medium text-emerald-800 dark:text-emerald-200">
                 Signed in — after booking you will be taken to your appointments. Use your account mobile below.
               </p>
             ) : (
-              <p className="mt-2 text-xs text-zinc-500">
-                <Link href="/app" className="font-medium text-rose-800 underline dark:text-rose-200">
+              <p className="mt-2 text-xs text-slate-400">
+                <Link href="/app" className="font-medium text-blue-300 underline">
                   Create a customer account
                 </Link>{" "}
-                to track bookings in one place.
+                to track all your bookings and reminders.
               </p>
             )}
           </div>
@@ -362,14 +362,14 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
       )}
 
       <nav className="mb-6" aria-label="Booking steps">
-        <ol className="flex flex-wrap items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400">
+        <ol className="flex flex-wrap items-center gap-1 text-xs text-slate-400">
           {STEPS.map((s, idx) => (
             <li key={s.n} className="flex items-center gap-1">
               {idx > 0 ? <span className="px-0.5 text-zinc-300 dark:text-zinc-600">/</span> : null}
               <span
                 className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-medium ${
                   step === s.n
-                    ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
+                    ? "bg-blue-500 text-white"
                     : step > s.n
                       ? "bg-emerald-100 text-emerald-950 dark:bg-emerald-950/50 dark:text-emerald-100"
                       : "bg-zinc-100 dark:bg-zinc-800"
@@ -383,15 +383,15 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
         </ol>
       </nav>
 
-      <div className="rounded-2xl border border-rose-100/80 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+      <div className="section-wrap p-6">
         {step === 1 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Choose services</h2>
+            <h2 className="text-lg font-semibold text-white">Choose services</h2>
             <div className="space-y-2">
               {services.map((s) => (
                 <label
                   key={s.id}
-                  className="flex cursor-pointer items-start gap-3 rounded-xl border border-zinc-200 p-3 transition hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800/50"
+                  className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-700 p-3 transition hover:bg-slate-900"
                 >
                   <input
                     type="checkbox"
@@ -400,8 +400,8 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                     className="mt-1"
                   />
                   <span className="flex-1">
-                    <span className="font-medium text-zinc-900 dark:text-white">{s.name}</span>
-                    <span className="mt-0.5 block text-xs text-zinc-500">
+                    <span className="font-medium text-white">{s.name}</span>
+                    <span className="mt-0.5 block text-xs text-slate-400">
                       {s.duration_minutes} min
                       {s.price_cents != null ? ` · ${formatMoneyFromCents(s.price_cents)}` : ""}
                       {s.category ? ` · ${s.category}` : ""}
@@ -417,7 +417,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
               type="button"
               disabled={orderedServiceIds.length === 0 || busy}
               onClick={() => setStep(2)}
-              className="w-full rounded-full bg-zinc-900 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-900"
+              className="w-full rounded-full bg-blue-500 py-2.5 text-sm font-semibold text-white hover:bg-blue-400 disabled:opacity-50"
             >
               Continue
             </button>
@@ -426,8 +426,8 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
 
         {step === 2 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Stylist preference</h2>
-            <p className="text-xs text-zinc-500">
+            <h2 className="text-lg font-semibold text-white">Barber preference</h2>
+            <p className="text-xs text-slate-400">
               Pick someone who can do all selected services, or any available team member (
               {bookingTotals.selected.map((s) => s.name).join(", ") || "—"}).
             </p>
@@ -441,7 +441,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
               {staff.map((s) => (
                 <label
                   key={s.name + String(s.id)}
-                  className="flex cursor-pointer items-center gap-3 rounded-xl border border-zinc-200 p-3 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800/50"
+                  className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-700 p-3 hover:bg-slate-900"
                 >
                   <input
                     type="radio"
@@ -466,7 +466,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                 type="button"
                 disabled={staff.length === 0 || busy}
                 onClick={() => setStep(3)}
-                className="flex-1 rounded-full bg-zinc-900 py-2.5 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                className="flex-1 rounded-full bg-blue-500 py-2.5 text-sm font-semibold text-white hover:bg-blue-400"
               >
                 Continue
               </button>
@@ -476,8 +476,8 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
 
         {step === 3 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Pick a date</h2>
-            <label className="block text-xs font-medium text-zinc-500">
+            <h2 className="text-lg font-semibold text-white">Pick a date</h2>
+            <label className="block text-xs font-medium text-slate-400">
               <span className="mb-1 flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" aria-hidden />
                 Date
@@ -488,7 +488,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                 max={maxDate}
                 value={dateYmd}
                 onChange={(e) => setDateYmd(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
               />
             </label>
             <div className="flex gap-2">
@@ -503,7 +503,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
               <button
                 type="button"
                 onClick={() => setStep(4)}
-                className="flex-1 rounded-full bg-zinc-900 py-2.5 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                className="flex-1 rounded-full bg-blue-500 py-2.5 text-sm font-semibold text-white hover:bg-blue-400"
               >
                 Continue
               </button>
@@ -513,7 +513,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
 
         {step === 4 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Available times</h2>
+            <h2 className="text-lg font-semibold text-white">Available times</h2>
             {queueStatus ? (
               <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
                 <p>
@@ -538,8 +538,8 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                     onClick={() => setStartsAt(iso)}
                     className={`rounded-xl border px-3 py-2 text-sm font-medium ${
                       startsAt === iso
-                        ? "border-zinc-900 bg-zinc-900 text-white dark:border-rose-100 dark:bg-rose-100 dark:text-zinc-900"
-                        : "border-zinc-200 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800/50"
+                        ? "border-blue-400 bg-blue-500 text-white"
+                        : "border-slate-700 hover:bg-slate-900"
                     }`}
                   >
                     {formatSlotLabel(iso)}
@@ -560,7 +560,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                 type="button"
                 disabled={startsAt === null}
                 onClick={() => setStep(5)}
-                className="flex-1 rounded-full bg-zinc-900 py-2.5 text-sm font-semibold text-white disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-900"
+                className="flex-1 rounded-full bg-blue-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:bg-blue-400"
               >
                 Continue
               </button>
@@ -570,25 +570,25 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
 
         {step === 5 && (
           <form onSubmit={submitBooking} className="space-y-4">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Your details</h2>
-            <p className="text-xs text-zinc-500">
+            <h2 className="text-lg font-semibold text-white">Your details</h2>
+            <p className="text-xs text-slate-400">
               The salon uses this to confirm your visit. Pending requests are reviewed by the team.
             </p>
             <div>
-              <label className="block text-xs font-medium text-zinc-500">Name</label>
+              <label className="block text-xs font-medium text-slate-400">Name</label>
               <input
                 required
-                className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 autoComplete="name"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-zinc-500">Mobile</label>
+              <label className="block text-xs font-medium text-slate-400">Mobile</label>
               <input
                 required
-                className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
                 value={customerMobile}
                 onChange={(e) => setCustomerMobile(e.target.value)}
                 autoComplete="tel"
@@ -599,10 +599,10 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
               ) : null}
             </div>
             <div>
-              <label className="block text-xs font-medium text-zinc-500">Notes for the salon (optional)</label>
+              <label className="block text-xs font-medium text-slate-400">Notes for the barber team (optional)</label>
               <textarea
                 rows={2}
-                className="mt-1 w-full resize-none rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                className="mt-1 w-full resize-none rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Allergies, parking, preferred chair…"
@@ -645,7 +645,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                 </label>
               </div>
             </div>
-            <div className="rounded-xl bg-zinc-50 p-3 text-xs text-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-300">
+            <div className="rounded-xl bg-slate-900 p-3 text-xs text-slate-300">
               <p>
                 <strong>{bookingTotals.selected.map((s) => s.name).join(", ")}</strong>
                 {bookingTotals.totalCents != null ? ` · Total ${formatMoneyFromCents(bookingTotals.totalCents)}` : ""}
@@ -695,7 +695,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                   startsAt === null ||
                   (bookingTotals.advanceAmount > 0 && !confirmAdvancePayment)
                 }
-                className="flex-1 rounded-full bg-zinc-900 py-2.5 text-sm font-semibold text-white disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-900"
+                className="flex-1 rounded-full bg-blue-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:bg-blue-400"
               >
                 {busy ? "…" : "Confirm booking"}
               </button>
@@ -704,8 +704,8 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
         )}
       </div>
 
-      <p className="mt-6 text-center text-sm text-zinc-500">
-        <Link href="/" className="font-medium text-rose-800 hover:underline dark:text-rose-200">
+      <p className="mt-6 text-center text-sm text-slate-400">
+        <Link href="/" className="font-medium text-blue-300 hover:underline">
           ← Back to home
         </Link>
       </p>

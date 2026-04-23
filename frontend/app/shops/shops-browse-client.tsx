@@ -53,14 +53,12 @@ export function ShopsBrowseClient() {
   }
 
   return (
-    <div className="min-h-screen bg-[#faf8f6] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+    <div className="min-h-screen text-slate-100">
       <PublicHeader />
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-white">
-          Shops
-        </h1>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Search by name/address and filter by division, district, and city.
+        <h1 className="text-3xl font-semibold tracking-tight text-white">Find your nearest barbershop</h1>
+        <p className="mt-2 text-sm text-slate-300">
+          Search by area, compare verified shops, then book your preferred slot.
         </p>
 
         <form onSubmit={submitSearch} className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -69,40 +67,40 @@ export function ShopsBrowseClient() {
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="Search shops…"
-              className="w-full rounded-xl border border-zinc-200 bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm outline-none ring-rose-500/30 focus:border-rose-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
+              placeholder="Search by shop name or area..."
+              className="w-full rounded-xl border border-slate-700 bg-slate-900 py-2.5 pl-10 pr-4 text-sm text-slate-100 shadow-sm outline-none ring-blue-500/20 focus:border-blue-400 focus:ring-2"
             />
           </div>
           <input
             value={division}
             onChange={(e) => setDivision(e.target.value)}
-            placeholder="Division"
-            className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm shadow-sm outline-none ring-rose-500/30 focus:border-rose-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
+            placeholder="Division (optional)"
+            className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 shadow-sm outline-none ring-blue-500/20 focus:border-blue-400 focus:ring-2"
           />
           <input
             value={district}
             onChange={(e) => setDistrict(e.target.value)}
-            placeholder="District"
-            className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm shadow-sm outline-none ring-rose-500/30 focus:border-rose-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
+            placeholder="District (optional)"
+            className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 shadow-sm outline-none ring-blue-500/20 focus:border-blue-400 focus:ring-2"
           />
           <input
             value={city}
             onChange={(e) => setCity(e.target.value)}
-            placeholder="City"
-            className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm shadow-sm outline-none ring-rose-500/30 focus:border-rose-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
+            placeholder="City / neighborhood"
+            className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 shadow-sm outline-none ring-blue-500/20 focus:border-blue-400 focus:ring-2"
           />
           <button
             type="submit"
-            className="rounded-xl bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 dark:bg-rose-100 dark:text-zinc-900 lg:col-span-1"
+            className="rounded-xl bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-400 lg:col-span-1"
           >
-            Apply filters
+            Find shops
           </button>
         </form>
 
         {busy || rows === null ? (
           <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <li key={i} className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900/50">
+              <li key={i} className="card-clean p-5">
                 <Skeleton className="h-6 w-3/4" />
                 <Skeleton className="mt-3 h-4 w-full" />
                 <Skeleton className="mt-2 h-4 w-2/3" />
@@ -114,7 +112,7 @@ export function ShopsBrowseClient() {
             <EmptyState
               icon={Store}
               title="No shops match"
-              description="Try another search term, or ask your favorite salon to enable public booking."
+              description="Try another area or remove filters to see more registered barbershops."
               action={
                 <button
                   type="button"
@@ -122,7 +120,7 @@ export function ShopsBrowseClient() {
                     setDraft("");
                     setQ("");
                   }}
-                  className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                  className="rounded-full bg-blue-500 px-4 py-2 text-sm font-semibold text-white"
                 >
                   Clear search
                 </button>
@@ -135,31 +133,31 @@ export function ShopsBrowseClient() {
               <li key={s.id}>
                 <Link
                   href={`/shops/${s.id}`}
-                  className="flex h-full flex-col rounded-2xl border border-rose-100/80 bg-white p-5 shadow-sm transition hover:border-rose-200 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
+                  className="card-clean flex h-full flex-col p-5 transition hover:border-blue-400"
                 >
                   {s.logo_url ? (
                     // eslint-disable-next-line @next/next/no-img-element -- remote URLs from API
                     <img src={s.logo_url} alt={`${s.name} logo`} className="mb-3 h-10 w-10 rounded-full object-cover" />
                   ) : null}
-                  <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">{s.name}</h2>
+                  <h2 className="text-lg font-semibold text-white">{s.name}</h2>
                   {s.description ? (
-                    <p className="mt-2 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">
+                    <p className="mt-2 line-clamp-2 text-sm text-slate-300">
                       {s.description}
                     </p>
                   ) : null}
                   {s.address ? (
-                    <p className="mt-3 flex items-start gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-rose-700/80" />
+                    <p className="mt-3 flex items-start gap-2 text-sm text-slate-300">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-300" />
                       {s.address}
                     </p>
                   ) : (
-                    <p className="mt-3 text-sm text-zinc-500">Slug: {s.slug}</p>
+                    <p className="mt-3 text-sm text-slate-400">Online booking available</p>
                   )}
-                  <p className="mt-2 text-xs text-zinc-500">
-                    {[s.city, s.district, s.division].filter(Boolean).join(", ") || "Location not tagged"}
+                  <p className="mt-2 text-xs text-slate-400">
+                    {[s.city, s.district, s.division].filter(Boolean).join(", ") || "Location details coming soon"}
                   </p>
-                  <span className="mt-4 text-sm font-medium text-rose-800 dark:text-rose-200">
-                    View details →
+                  <span className="mt-4 text-sm font-medium text-blue-300">
+                    View shop and book →
                   </span>
                 </Link>
               </li>

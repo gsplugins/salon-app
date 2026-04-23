@@ -3,7 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "../lib/supabase.js";
 import { fail, okData } from "../lib/http.js";
 import { bookingToRow } from "../presenters/booking.js";
-import { notifyCustomerBookingEvent } from "../lib/customer-notifications.js";
+import { notifyCustomerBookingEvent, notifyCustomerBookingStatusChange } from "../lib/customer-notifications.js";
 
 async function staffFromContext(req: Request): Promise<{ id: number; shop_id: number; name: string } | null> {
   const s = req.salon;
@@ -111,7 +111,7 @@ export function mountStaffRoutes(router: Router): void {
       .select("photo_url,availability_status,commission_percent,shop_id")
       .eq("id", staff.id)
       .single();
-    const shop = await supabaseAdmin.from("shops").select("id,name,slug").eq("id", staff.shop_id).single();
+    const shop = await supabaseAdmin.from("shops").select("id,name,slug,is_active").eq("id", staff.shop_id).single();
     const revenueRows = await supabaseAdmin
       .from("salon_bookings")
       .select("salon_service_id,status")
@@ -194,6 +194,13 @@ export function mountStaffRoutes(router: Router): void {
       .update({ status: parsed.data.status, ...(parsed.data.notes !== undefined ? { notes: parsed.data.notes } : {}) })
       .eq("id", bookingId);
     const prevStatus = (row.data as { status: string }).status;
+    if (parsed.data.status !== prevStatus && parsed.data.status !== "confirmed" && parsed.data.status !== "completed") {
+      await notifyCustomerBookingStatusChange({
+        bookingId,
+        fromStatus: prevStatus,
+        toStatus: parsed.data.status
+      });
+    }
     if (parsed.data.status === "confirmed" && prevStatus !== "confirmed") {
       await notifyCustomerBookingEvent({ bookingId, type: "booking_confirmed" });
     }
@@ -578,7 +585,7 @@ export function mountStaffRoutes(router: Router): void {
     const staff = await staffFromContext(req);
     if (!staff) return fail(res, 403, "No staff profile for this shop.");
     const row = await supabaseAdmin.from("salon_staff").select("*").eq("id", staff.id).single();
-    const shop = await supabaseAdmin.from("shops").select("id,name,slug").eq("id", staff.shop_id).single();
+    const shop = await supabaseAdmin.from("shops").select("id,name,slug,is_active").eq("id", staff.shop_id).single();
     const s = row.data as Record<string, unknown>;
     return okData(res, {
       id: s.id,
@@ -612,7 +619,7 @@ export function mountStaffRoutes(router: Router): void {
     await supabaseAdmin.from("salon_staff").update(upd).eq("id", staff.id);
     const row = await supabaseAdmin.from("salon_staff").select("*").eq("id", staff.id).single();
     const s = row.data as Record<string, unknown>;
-    const shop = await supabaseAdmin.from("shops").select("id,name,slug").eq("id", staff.shop_id).single();
+    const shop = await supabaseAdmin.from("shops").select("id,name,slug,is_active").eq("id", staff.shop_id).single();
     return okData(res, {
       id: s.id,
       shop_id: s.shop_id,

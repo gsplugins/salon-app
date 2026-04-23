@@ -8,7 +8,7 @@ select
   gen_random_uuid(),
   'Platform Super Admin',
   '+8801711111111',
-  '$2a$10$6vczW0EDbtpXIywPOT32HuoX6Jt1rzoRSXHWmQoMHGBkPgR8JR7DO',
+  '$2a$10$ekPS758F/XGYU0Z6UuclPuGy/3cB7z1qWd4JZY1bAEzJWEeAZldyK',
   'super_admin',
   false
 where not exists (
