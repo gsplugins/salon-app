@@ -66,3 +66,11 @@ Test accounts for local development are defined in `backend-supabase/supabase/se
 Super Admin :
 mobile : 01711111111
 pas : Admin@12345
+
+shop 2:
+01740568444
+
+Customer :
+
+DB PASS-Salon APP :salonapp@@@904367
+

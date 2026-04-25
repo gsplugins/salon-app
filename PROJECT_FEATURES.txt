@@ -1,0 +1,145 @@
+Salon App - Project Features Overview
+=====================================
+
+Last updated: 2026-04-25
+Purpose: quick handover summary for explaining the project to other developers/stakeholders.
+
+Stack
+-----
+- Frontend: Next.js (Customer, Staff/Barber, Owner, Admin portals)
+- Backend: Node.js + Express + Supabase (`backend-supabase`)
+- Auth: JWT + refresh token
+- Payments/Channels available in platform: bKash, Stripe, SMS, WhatsApp, SMTP email
+
+
+1) Core Authentication and Identity
+-----------------------------------
+- Role-aware registration/login flows (customer, barber/staff, owner)
+- JWT login, token refresh, logout/revoke flow
+- Password change + OTP-based password reset flow
+- `me` identity/profile endpoints
+- User profile image (`photo_url`) support
+
+
+2) Public Discovery and Booking
+-------------------------------
+- Public shop directory + individual shop detail pages
+- Public barber/staff profile browsing
+- Public queue visibility and queue join endpoint
+- Service/staff availability lookup endpoints
+- Public booking creation with selected service(s), staff, date/time
+
+
+3) Customer Portal
+------------------
+- Dashboard/home and explore experience
+- Appointments list with update/cancel/complete actions
+- Loyalty points + loyalty transactions
+- Customer notifications (list/read/read-all)
+- Customer reviews (submit + history)
+- Profile, favorites, payments pages
+
+NEW in latest update:
+- Waitlist UI page (`/customer/waitlist`)
+- Join waitlist from booking flow when no slots are available
+
+
+4) Owner (My Shop) Portal
+-------------------------
+- Shop profile/settings management
+- Shop performance/stats endpoints
+- Customer list and customer relation tools
+- Service catalog CRUD
+- Staff catalog CRUD + staff account creation
+- Booking list/create/update
+- Blocked slots management
+- Branch management
+- Inventory CRUD + service-material mapping
+- Review moderation + owner reply
+- Analytics summary
+- Payments management/refund flow
+- Queue management
+
+NEW in latest update:
+- Owner waitlist API endpoint (`GET /my/shop/waitlist`)
+
+
+5) Staff/Barber Portal
+----------------------
+- Staff dashboard
+- Appointment list/update + reschedule request
+- Schedule endpoints + leave requests
+- Customer list/history + private notes
+- Assigned services visibility
+- Earnings summary
+- Notifications (list/read/read-all/clear)
+- Availability status + availability block slots
+- Reviews visibility
+- Profile read/update support
+- Barber today/history views
+
+
+6) Admin / Super Admin
+----------------------
+- Platform settings management
+- Subscription plan CRUD + assignment flows
+- Audit logs listing/export
+- Notification templates management
+- Channel toggles (SMS/WhatsApp/Email/etc.)
+- Integration settings (Stripe, SMTP, SMS, Google Calendar, WhatsApp)
+- Admin webhooks management + test trigger
+- Admin analytics summary
+- Role/permission management
+- User impersonation + user deletion tools
+- Billing operations (bKash + salon payments + invoice endpoint)
+
+
+7) System Management APIs
+-------------------------
+- System-level shop CRUD and moderation actions
+- System-level users list/update
+- Admin/system password reset actions
+- Subscription extension + subscription patch endpoints
+- System-level bKash operations (list/create)
+
+
+8) Database and Platform Design
+-------------------------------
+- Supabase schema covers users, roles, shops, members, subscriptions, services, staff,
+  bookings, queue, blocked slots, reviews, payments, notifications, audits, webhooks
+- Booking pricing/cart fields + advance payment tracking
+- OTP table for reset flow
+- Scalable indexes and booking line-item normalization
+- Migration-driven schema evolution
+
+NEW in latest update:
+- Waitlist schema migration added:
+  - `waitlist` table
+  - indexes for lookup and customer history
+  - trigger on booking cancellation to notify first matching waitlist customer
+
+
+9) New Feature Roadmap Status (From Current Feature Plan)
+----------------------------------------------------------
+- Feature 1 (Waitlist System): PARTIALLY IMPLEMENTED
+  - Implemented:
+    - DB table + indexes + cancellation trigger notification
+    - `POST /waitlist/join`
+    - `GET /waitlist/my`
+    - `DELETE /waitlist/:id`
+    - `GET /my/shop/waitlist`
+    - Booking flow "Join waitlist" button (no-slot case)
+    - Customer waitlist page
+  - Remaining for full completion:
+    - Owner waitlist tab/page UI (visual management view)
+    - Integration with centralized notification template system (currently creates notification record directly)
+
+- Features 2 to 12 (Referral, Chat, Packages, Tips extension, Gift Cards, Smart Reminders,
+  Commission tracking expansion, Retail/POS, Staff Performance dashboard, WhatsApp booking bot,
+  Low stock alerts): NOT IMPLEMENTED YET in this update cycle
+
+
+10) Current Known Gap / Technical Note
+--------------------------------------
+- Existing TypeScript typing issues still exist around backend `src/routes/public.ts`
+  and should be cleaned for a fully clean build/lint state across the whole codebase.
