@@ -15,6 +15,7 @@ import {
   fetchSalonStaff,
   fetchShopMeta,
   formatApiError,
+  joinWaitlist,
   type SalonServiceRow,
   type SalonStaffOption,
 } from "@/lib/salon-api";
@@ -54,6 +55,14 @@ function formatMoneyFromCents(cents: number | null | undefined): string {
   }
 }
 
+function serviceAudienceLabel(a: SalonServiceRow["audience"] | undefined): string | null {
+  if (!a || a === "all") return null;
+  if (a === "men") return "Men";
+  if (a === "women") return "Women";
+  if (a === "kids") return "Kids";
+  return null;
+}
+
 const STEPS: { n: Step; label: string }[] = [
   { n: 1, label: "Services" },
   { n: 2, label: "Barber" },
@@ -91,6 +100,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderChannel, setReminderChannel] = useState<"sms" | "whatsapp">("sms");
   const [reminderLeadHours, setReminderLeadHours] = useState<2 | 24>(24);
+  const [waitlistBusy, setWaitlistBusy] = useState(false);
   const pendingStaffParam = useRef<number | null>(null);
   const didPrefillFromQuery = useRef(false);
 
@@ -313,6 +323,29 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
     setDateYmd(formatYmd(new Date()));
   }
 
+  async function submitWaitlistJoin() {
+    if (!accessToken) {
+      setNotice({ type: "err", text: "Please sign in as a customer first to join the waitlist." });
+      return;
+    }
+    if (shopId == null || orderedServiceIds.length === 0) return;
+    setWaitlistBusy(true);
+    setNotice(null);
+    const res = await joinWaitlist(accessToken, {
+      shop_id: shopId,
+      service_id: orderedServiceIds[0],
+      staff_id: staffId,
+      preferred_date: dateYmd,
+    });
+    setWaitlistBusy(false);
+    if (!res.ok) {
+      setNotice({ type: "err", text: formatApiError(res.body) });
+      return;
+    }
+    setNotice({ type: "ok", text: "You joined the waitlist. We will notify you when a matching slot opens." });
+    toast.success("Joined waitlist.");
+  }
+
   const selectedStaffLabel = staff.find((s) => s.id === staffId)?.name ?? "Any available";
 
   return (
@@ -405,7 +438,31 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                       {s.duration_minutes} min
                       {s.price_cents != null ? ` · ${formatMoneyFromCents(s.price_cents)}` : ""}
                       {s.category ? ` · ${s.category}` : ""}
+                      {serviceAudienceLabel(s.audience) ? ` · ${serviceAudienceLabel(s.audience)}` : ""}
                     </span>
+                    {(s.description?.trim() ||
+                      s.requires_patch_test ||
+                      s.consultation_first ||
+                      (s.min_notice_hours ?? 0) > 0 ||
+                      (s.deposit_cents ?? 0) > 0) && (
+                      <span className="mt-1.5 block text-[11px] leading-snug text-slate-500">
+                        {s.description?.trim() ? <span className="block">{s.description.trim()}</span> : null}
+                        {s.requires_patch_test ? (
+                          <span className="mt-0.5 block text-amber-200/90">Patch / allergy test may be required.</span>
+                        ) : null}
+                        {s.consultation_first ? (
+                          <span className="mt-0.5 block text-sky-200/90">Salon may ask for a quick consult before the service.</span>
+                        ) : null}
+                        {(s.min_notice_hours ?? 0) > 0 ? (
+                          <span className="mt-0.5 block">
+                            Book at least {s.min_notice_hours} hour(s) ahead — first available slots follow this rule.
+                          </span>
+                        ) : null}
+                        {(s.deposit_cents ?? 0) > 0 ? (
+                          <span className="mt-0.5 block">Typical deposit: {formatMoneyFromCents(s.deposit_cents)} (confirm with salon).</span>
+                        ) : null}
+                      </span>
+                    )}
                   </span>
                 </label>
               ))}
@@ -528,7 +585,20 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                 Loading slots…
               </p>
             ) : slots.length === 0 ? (
-              <p className="text-sm text-zinc-500">No openings that day. Try another date or stylist.</p>
+              <div className="space-y-3">
+                <p className="text-sm text-zinc-500">No openings that day. Try another date or stylist.</p>
+                <button
+                  type="button"
+                  disabled={!accessToken || waitlistBusy || shopId == null || orderedServiceIds.length === 0}
+                  onClick={() => void submitWaitlistJoin()}
+                  className="rounded-full border border-blue-400 px-4 py-2 text-sm font-semibold text-blue-200 disabled:opacity-50"
+                >
+                  {waitlistBusy ? "Joining waitlist..." : "Join waitlist"}
+                </button>
+                {!accessToken ? (
+                  <p className="text-xs text-slate-500">Sign in as a customer to join waitlist and receive alerts.</p>
+                ) : null}
+              </div>
             ) : (
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {slots.map((iso) => (

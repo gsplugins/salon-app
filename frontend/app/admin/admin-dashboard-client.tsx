@@ -6,22 +6,32 @@ import { toast } from "sonner";
 import { LayoutDashboard } from "lucide-react";
 import { SuperAdminGate } from "@/components/auth/super-admin-gate";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchSystemShops, formatApiError } from "@/lib/salon-api";
+import { fetchAdminAuditLogs, fetchSystemShops, formatApiError, type AdminAuditLogRow } from "@/lib/salon-api";
 
 function Body({ token }: { token: string }) {
   const [total, setTotal] = useState<number | null>(null);
+  const [newShopNotifications, setNewShopNotifications] = useState<AdminAuditLogRow[]>([]);
   const [busy, setBusy] = useState(true);
 
   const load = useCallback(async () => {
     setBusy(true);
-    const res = await fetchSystemShops(token, { page: 1 });
+    const [shopsRes, notificationsRes] = await Promise.all([
+      fetchSystemShops(token, { page: 1 }),
+      fetchAdminAuditLogs(token, { action: "system.shop.created_by_user", page: 1 })
+    ]);
     setBusy(false);
-    if (!res.ok) {
-      toast.error(formatApiError(res.body));
+    if (!shopsRes.ok) {
+      toast.error(formatApiError(shopsRes.body));
       setTotal(null);
       return;
     }
-    setTotal(res.data.total);
+    if (!notificationsRes.ok) {
+      toast.error(formatApiError(notificationsRes.body));
+      setNewShopNotifications([]);
+    } else {
+      setNewShopNotifications(notificationsRes.data.data.slice(0, 5));
+    }
+    setTotal(shopsRes.data.total);
   }, [token]);
 
   useEffect(() => {
@@ -66,6 +76,34 @@ function Body({ token }: { token: string }) {
             Use Shops and Users in the sidebar to approve locations, extend subscriptions, and manage accounts.
           </p>
         </div>
+      </div>
+
+      <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-base font-semibold text-zinc-900 dark:text-white">New shop signup notifications</h2>
+          <Link href="/admin/audit-logs" className="text-xs font-medium text-rose-800 underline dark:text-rose-200">
+            View all logs
+          </Link>
+        </div>
+        {newShopNotifications.length === 0 ? (
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">No new shop signup notifications yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {newShopNotifications.map((log) => {
+              const m = (log.metadata ?? {}) as Record<string, unknown>;
+              return (
+                <div key={log.id} className="rounded-xl border border-zinc-200 p-3 text-sm dark:border-zinc-700">
+                  <p className="font-medium text-zinc-900 dark:text-white">
+                    New shop: {String(m.shop_name ?? "Unnamed")} ({String(m.shop_slug ?? "-")})
+                  </p>
+                  <p className="text-zinc-600 dark:text-zinc-400">
+                    Owner mobile: {String(m.owner_mobile ?? "-")} - {new Date(log.created_at).toLocaleString()}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

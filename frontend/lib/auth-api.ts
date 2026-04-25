@@ -38,10 +38,15 @@ export async function authJson<T = unknown>(
   const { accessToken, ...rest } = (init ?? {}) as RequestInit & { accessToken?: string };
   void accessToken;
 
-  const directBase =
+  const directBaseFromEnv =
     typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL
       ? String(process.env.NEXT_PUBLIC_API_URL).trim().replace(/\/$/, "")
       : "";
+  const localDirectFallback =
+    typeof window !== "undefined" && /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname)
+      ? "http://127.0.0.1:4000/api"
+      : "";
+  const directBase = directBaseFromEnv || localDirectFallback;
   const toDirectUrl = (sameOriginApiPath: string): string | null => {
     if (!directBase) return null;
     const p = sameOriginApiPath.startsWith("/api") ? sameOriginApiPath : `/api${sameOriginApiPath.startsWith("/") ? sameOriginApiPath : `/${sameOriginApiPath}`}`;
@@ -164,6 +169,29 @@ export async function patchAuthMe(
   body: { name?: string; photo_url?: string | null }
 ): Promise<{ ok: true; data: Pick<AuthMePayload, "id" | "name" | "mobile" | "photo_url" | "role"> } | { ok: false; status: number; body: ApiErrorBody }> {
   return authJson("/auth/me", { method: "PATCH", accessToken, body: JSON.stringify(body) });
+}
+
+export async function uploadAuthProfilePhoto(
+  accessToken: string,
+  dataUrl: string
+): Promise<{ ok: true; data: { url: string; path: string } } | { ok: false; status: number; body: ApiErrorBody }> {
+  const res = await authJson<{ url: string; path: string } | { data: { url: string; path: string } }>("/auth/me/photo-upload", {
+    method: "POST",
+    accessToken,
+    body: JSON.stringify({ data_url: dataUrl }),
+  });
+  if (!res.ok) return res;
+  const payload = (res.data as { data?: { url?: string; path?: string }; url?: string; path?: string }) ?? {};
+  const directUrl = typeof payload.url === "string" ? payload.url : "";
+  const directPath = typeof payload.path === "string" ? payload.path : "";
+  const nestedUrl = typeof payload.data?.url === "string" ? payload.data.url : "";
+  const nestedPath = typeof payload.data?.path === "string" ? payload.data.path : "";
+  const url = directUrl || nestedUrl;
+  const path = directPath || nestedPath;
+  if (!url || !path) {
+    return { ok: false, status: 500, body: { message: "Upload succeeded but response format was invalid." } };
+  }
+  return { ok: true, data: { url, path } };
 }
 
 export function formatApiError(body: ApiErrorBody): string {

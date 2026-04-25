@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Eye, EyeOff, Sparkles, Store } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Loader2, Sparkles, Store } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { authJson, fetchAuthMe, formatApiError, type ApiErrorBody, type AuthMePayload } from "@/lib/auth-api";
 import { broadcastSalonAuthChange } from "@/lib/auth-events";
@@ -302,8 +302,24 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
     setLoginView(initialTab === "forgot" ? "forgot" : initialTab === "reset" ? "reset" : "login");
   }, [initialTab]);
 
+  useEffect(() => {
+    if (!accessToken || !me || !primaryPath) return;
+    router.replace(primaryPath);
+  }, [accessToken, me, primaryPath, router]);
+
   return (
     <div className="w-full space-y-6">
+      {busy ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+          <div className="rounded-2xl border border-zinc-200 bg-white px-5 py-4 text-sm font-medium text-zinc-900 shadow-xl dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100">
+            <span className="inline-flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              Processing...
+            </span>
+          </div>
+        </div>
+      ) : null}
+
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="card-clean p-4 text-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">Customer</p>
@@ -461,6 +477,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                   />
                   <button
                     type="button"
+                    disabled={busy}
                     className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
                     onClick={() => setShowLoginPassword((v) => !v)}
                     aria-label={showLoginPassword ? "Hide password" : "Show password"}
@@ -481,6 +498,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                 <button
                   type="button"
                   className="font-medium text-blue-300 underline"
+                  disabled={busy}
                   onClick={() => {
                     setMode("register");
                     setRegisterMode("customer");
@@ -494,6 +512,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                 <button
                   type="button"
                   className="font-medium text-blue-300 underline"
+                  disabled={busy}
                   onClick={() => {
                     setLoginView("forgot");
                     setNotice(null);
@@ -525,6 +544,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               <div className="grid gap-3 sm:grid-cols-2">
                 <button
                   type="button"
+                  disabled={busy}
                   onClick={() => setRegisterMode("customer")}
                   className={`rounded-2xl border px-4 py-4 text-left transition ${
                     registerMode === "customer"
@@ -538,6 +558,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                 </button>
                 <button
                   type="button"
+                  disabled={busy}
                   onClick={() => setRegisterMode("shop")}
                   className={`rounded-2xl border px-4 py-4 text-left transition ${
                     registerMode === "shop"
@@ -631,6 +652,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                     />
                     <button
                       type="button"
+                      disabled={busy}
                       className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                       onClick={() => setShowRegPassword((v) => !v)}
                       aria-label={showRegPassword ? "Hide password" : "Show password"}
@@ -652,6 +674,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                     />
                     <button
                       type="button"
+                      disabled={busy}
                       className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                       onClick={() => setShowRegPassword2((v) => !v)}
                       aria-label={showRegPassword2 ? "Hide password" : "Show password"}
@@ -694,6 +717,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               </button>
               <button
                 type="button"
+                disabled={busy}
                 className="w-full min-h-11 rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800"
                 onClick={() => setLoginView("login")}
               >
@@ -756,6 +780,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               </button>
               <button
                 type="button"
+                disabled={busy}
                 className="w-full min-h-11 rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800"
                 onClick={() => setLoginView("login")}
               >

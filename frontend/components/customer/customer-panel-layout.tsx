@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { Bell, Calendar, Compass, CreditCard, Gift, Heart, Home, Star, Store, User } from "lucide-react";
+import { Bell, Calendar, Clock3, Compass, CreditCard, Gift, Heart, Home, Star, Store, User } from "lucide-react";
 import { fetchAuthMe, type AuthMePayload } from "@/lib/auth-api";
+import { SALON_AUTH_CHANGE_EVENT } from "@/lib/auth-events";
 import { fetchCustomerLoyalty, fetchCustomerNotifications } from "@/lib/salon-api";
 import { AuthHeaderProfile } from "@/components/auth-header-profile";
 import { PortalPanelShell, type PortalNavItem } from "@/components/portal/portal-panel-shell";
@@ -19,6 +20,7 @@ const PRIMARY: PortalNavItem[] = [
 
 const SECONDARY: PortalNavItem[] = [
   { href: "/customer/notifications", label: "Notifications", icon: Bell },
+  { href: "/customer/waitlist", label: "Waitlist", icon: Clock3 },
   { href: "/customer/favorites", label: "Favorites", icon: Heart },
   { href: "/customer/payments", label: "Payments", icon: CreditCard },
   { href: "/customer/reviews", label: "Reviews", icon: Star },
@@ -48,6 +50,16 @@ export function CustomerPanelLayout(props: { accessToken: string; children: Reac
   useEffect(() => {
     void load();
   }, [load, pathname]);
+
+  useEffect(() => {
+    const onAuthChanged = () => void load();
+    window.addEventListener(SALON_AUTH_CHANGE_EVENT, onAuthChanged);
+    window.addEventListener("focus", onAuthChanged);
+    return () => {
+      window.removeEventListener(SALON_AUTH_CHANGE_EVENT, onAuthChanged);
+      window.removeEventListener("focus", onAuthChanged);
+    };
+  }, [load]);
 
   const header =
     me != null

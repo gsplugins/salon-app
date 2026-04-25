@@ -9,6 +9,14 @@ export type SalonServiceRow = {
   buffer_after_minutes?: number;
   is_active?: boolean;
   sort_order?: number;
+  description?: string | null;
+  audience?: "all" | "men" | "women" | "kids";
+  aftercare?: string | null;
+  requires_patch_test?: boolean;
+  consultation_first?: boolean;
+  min_notice_hours?: number;
+  online_bookable?: boolean;
+  deposit_cents?: number | null;
 };
 
 export type SalonStaffOption = { id: number | null; name: string };
@@ -363,6 +371,7 @@ export type ShopClientRow = {
   visit_count: number;
   last_visit_at: string;
   last_service_name?: string | null;
+  customer_type?: "regular" | "other";
   is_suspended?: boolean;
   is_removed?: boolean;
 };
@@ -371,11 +380,20 @@ export type CatalogServiceRow = {
   id: number;
   name: string;
   category: string | null;
+  description?: string | null;
   duration_minutes: number;
   buffer_after_minutes: number;
   price_cents: number | null;
   is_active: boolean;
   sort_order: number;
+  audience?: "all" | "men" | "women" | "kids";
+  staff_notes?: string | null;
+  aftercare?: string | null;
+  requires_patch_test?: boolean;
+  consultation_first?: boolean;
+  min_notice_hours?: number;
+  online_bookable?: boolean;
+  deposit_cents?: number | null;
 };
 
 export type CatalogStaffRow = {
@@ -534,6 +552,12 @@ export type ShopCustomerDetails = {
   is_removed: boolean;
   control_note: string | null;
   control_updated_at: string | null;
+  relation?: {
+    linked: boolean;
+    linked_at: string | null;
+    updated_at: string | null;
+    customer_type: "regular" | "other";
+  };
   user: {
     id: string;
     name: string;
@@ -557,6 +581,64 @@ export type ShopCustomerDetails = {
     price_cents: number | null;
   }[];
 };
+
+export async function createShopCustomerRelation(
+  accessToken: string,
+  body: { customer_mobile: string; customer_name?: string | null; customer_type?: "regular" | "other" }
+): Promise<
+  | {
+      ok: true;
+      data: {
+        customer_mobile: string;
+        customer_name: string | null;
+        customer_user_id: string | null;
+        customer_type: "regular" | "other";
+        source: string;
+        created_at: string;
+        updated_at: string;
+      };
+    }
+  | { ok: false; body: ApiErrorBody }
+> {
+  const res = await authJson<{
+    data: {
+      customer_mobile: string;
+      customer_name: string | null;
+      customer_user_id: string | null;
+      customer_type: "regular" | "other";
+      source: string;
+      created_at: string;
+      updated_at: string;
+    };
+  }>("/my/shop/customers", {
+    method: "POST",
+    accessToken,
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
+export async function patchShopCustomerType(
+  accessToken: string,
+  mobile: string,
+  customer_type: "regular" | "other"
+): Promise<
+  | { ok: true; data: { customer_mobile: string; customer_type: "regular" | "other"; updated_at: string } }
+  | { ok: false; body: ApiErrorBody }
+> {
+  const enc = encodeURIComponent(mobile);
+  const res = await authJson<{ data: { customer_mobile: string; customer_type: "regular" | "other"; updated_at: string } }>(
+    `/my/shop/customers/${enc}/type`,
+    {
+      method: "PATCH",
+      accessToken,
+      body: JSON.stringify({ customer_type })
+    }
+  );
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
 
 export async function fetchShopCustomerDetails(
   accessToken: string,
@@ -599,11 +681,20 @@ export async function createServiceCatalog(
   body: {
     name: string;
     category?: string | null;
+    description?: string | null;
     duration_minutes: number;
     buffer_after_minutes?: number;
     price_cents?: number | null;
     is_active?: boolean;
     sort_order?: number;
+    audience?: "all" | "men" | "women" | "kids";
+    staff_notes?: string | null;
+    aftercare?: string | null;
+    requires_patch_test?: boolean;
+    consultation_first?: boolean;
+    min_notice_hours?: number;
+    online_bookable?: boolean;
+    deposit_cents?: number | null;
   }
 ): Promise<{ ok: true; data: CatalogServiceRow } | { ok: false; body: ApiErrorBody }> {
   const res = await authJson<{ data: CatalogServiceRow }>("/my/shop/services-catalog", {
@@ -621,11 +712,20 @@ export async function updateServiceCatalog(
   body: Partial<{
     name: string;
     category: string | null;
+    description: string | null;
     duration_minutes: number;
     buffer_after_minutes: number;
     price_cents: number | null;
     is_active: boolean;
     sort_order: number;
+    audience: "all" | "men" | "women" | "kids";
+    staff_notes: string | null;
+    aftercare: string | null;
+    requires_patch_test: boolean;
+    consultation_first: boolean;
+    min_notice_hours: number;
+    online_bookable: boolean;
+    deposit_cents: number | null;
   }>
 ): Promise<{ ok: true; data: CatalogServiceRow } | { ok: false; body: ApiErrorBody }> {
   const res = await authJson<{ data: CatalogServiceRow }>(`/my/shop/services-catalog/${serviceId}`, {
@@ -835,6 +935,17 @@ export type Paginated<T> = {
   total: number;
 };
 
+export type AdminAuditLogRow = {
+  id: number;
+  admin_user_id: string | null;
+  action: string;
+  target_type: string | null;
+  target_id: string | null;
+  ip: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+};
+
 export async function fetchSystemShops(
   accessToken: string,
   opts?: {
@@ -856,6 +967,23 @@ export async function fetchSystemShops(
   const q = params.toString() ? `?${params.toString()}` : "";
   const res = await authJson<Paginated<SystemShopRow>>(`/system/shops${q}`, {
     accessToken,
+  });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data };
+}
+
+export async function fetchAdminAuditLogs(
+  accessToken: string,
+  opts?: { action?: string; page?: number; from?: string; to?: string }
+): Promise<{ ok: true; data: Paginated<AdminAuditLogRow> } | { ok: false; body: ApiErrorBody }> {
+  const params = new URLSearchParams();
+  if (opts?.action) params.set("action", opts.action);
+  if (opts?.page && opts.page > 1) params.set("page", String(opts.page));
+  if (opts?.from) params.set("from", opts.from);
+  if (opts?.to) params.set("to", opts.to);
+  const q = params.toString() ? `?${params.toString()}` : "";
+  const res = await authJson<Paginated<AdminAuditLogRow>>(`/admin/audit-logs${q}`, {
+    accessToken
   });
   if (!res.ok) return { ok: false, body: res.body };
   return { ok: true, data: res.data };
@@ -1012,9 +1140,17 @@ export type PublicShopDetailPayload = {
     id: number;
     name: string;
     category: string | null;
+    description?: string | null;
     duration_minutes: number;
     buffer_after_minutes: number;
     price_cents: number | null;
+    audience?: "all" | "men" | "women" | "kids";
+    aftercare?: string | null;
+    requires_patch_test?: boolean;
+    consultation_first?: boolean;
+    min_notice_hours?: number;
+    online_bookable?: boolean;
+    deposit_cents?: number | null;
   }[];
   staff: {
     id: number;
@@ -1166,6 +1302,17 @@ export type CustomerNotificationRow = {
   salon_booking_id: number | null;
 };
 
+export type WaitlistRow = {
+  id: number;
+  shop_id: number;
+  service_id: number;
+  staff_id: number | null;
+  preferred_date: string;
+  status: "waiting" | "notified" | "booked" | "expired" | "cancelled" | string;
+  notified_at: string | null;
+  created_at: string;
+};
+
 export async function fetchCustomerReviews(
   accessToken: string
 ): Promise<{ ok: true; data: CustomerReviewRow[] } | { ok: false; body: ApiErrorBody }> {
@@ -1209,6 +1356,36 @@ export async function markAllCustomerNotificationsRead(
   accessToken: string
 ): Promise<{ ok: true } | { ok: false; body: ApiErrorBody }> {
   const res = await authJson("/me/notifications/read-all", { method: "POST", accessToken });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true };
+}
+
+export async function joinWaitlist(
+  accessToken: string,
+  body: { shop_id: number; service_id: number; preferred_date: string; staff_id?: number | null }
+): Promise<{ ok: true; data: WaitlistRow } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson<{ data: WaitlistRow }>("/waitlist/join", {
+    method: "POST",
+    accessToken,
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
+export async function fetchMyWaitlist(
+  accessToken: string
+): Promise<{ ok: true; data: WaitlistRow[] } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson<{ data: WaitlistRow[] }>("/waitlist/my", { accessToken });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
+export async function removeMyWaitlistEntry(
+  accessToken: string,
+  waitlistId: number
+): Promise<{ ok: true } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson(`/waitlist/${waitlistId}`, { method: "DELETE", accessToken });
   if (!res.ok) return { ok: false, body: res.body };
   return { ok: true };
 }
@@ -1298,6 +1475,28 @@ export type InventoryRow = {
   quantity: string;
   unit: string;
   low_stock_threshold: string | null;
+  sku?: string | null;
+  cost_price_cents?: number | null;
+  supplier_notes?: string | null;
+};
+
+export type ServiceInventoryLinkRow = {
+  id: number;
+  salon_service_id: number;
+  inventory_item_id: number;
+  quantity_per_service: string;
+  staff_note: string | null;
+  material_cost_cents: number | null;
+  product: {
+    id: number;
+    name: string;
+    unit: string;
+    quantity: string;
+    low_stock_threshold: string | null;
+    sku: string | null;
+    cost_price_cents: number | null;
+    supplier_notes: string | null;
+  } | null;
 };
 
 export async function fetchOwnerInventory(
@@ -1308,9 +1507,49 @@ export async function fetchOwnerInventory(
   return { ok: true, data: res.data.data };
 }
 
+export async function fetchServiceInventoryLinks(
+  accessToken: string,
+  serviceId: number
+): Promise<{ ok: true; data: ServiceInventoryLinkRow[] } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson<{ data: ServiceInventoryLinkRow[] }>(`/my/shop/services-catalog/${serviceId}/inventory`, {
+    accessToken,
+  });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
+export async function putServiceInventoryLinks(
+  accessToken: string,
+  serviceId: number,
+  body: {
+    items: {
+      inventory_item_id: number;
+      quantity_per_service: number;
+      staff_note?: string | null;
+      material_cost_cents?: number | null;
+    }[];
+  }
+): Promise<{ ok: true; data: { saved: number } } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson<{ data: { saved: number } }>(`/my/shop/services-catalog/${serviceId}/inventory`, {
+    method: "PUT",
+    accessToken,
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
 export async function createOwnerInventory(
   accessToken: string,
-  body: { name: string; quantity: number; unit?: string; low_stock_threshold?: number | null }
+  body: {
+    name: string;
+    quantity: number;
+    unit?: string;
+    low_stock_threshold?: number | null;
+    sku?: string | null;
+    cost_price_cents?: number | null;
+    supplier_notes?: string | null;
+  }
 ): Promise<{ ok: true; data: InventoryRow } | { ok: false; body: ApiErrorBody }> {
   const res = await authJson<{ data: InventoryRow }>("/my/shop/inventory", {
     method: "POST",
@@ -1324,7 +1563,15 @@ export async function createOwnerInventory(
 export async function patchOwnerInventory(
   accessToken: string,
   id: number,
-  body: Partial<{ name: string; quantity: number; unit: string; low_stock_threshold: number | null }>
+  body: Partial<{
+    name: string;
+    quantity: number;
+    unit: string;
+    low_stock_threshold: number | null;
+    sku: string | null;
+    cost_price_cents: number | null;
+    supplier_notes: string | null;
+  }>
 ): Promise<{ ok: true; data: InventoryRow } | { ok: false; body: ApiErrorBody }> {
   const res = await authJson<{ data: InventoryRow }>(`/my/shop/inventory/${id}`, {
     method: "PATCH",

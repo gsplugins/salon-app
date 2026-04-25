@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { fetchAuthMe, formatApiError, patchAuthMe } from "@/lib/auth-api";
+import { fetchAuthMe, formatApiError, patchAuthMe, uploadAuthProfilePhoto } from "@/lib/auth-api";
 import { fetchStaffProfile, patchStaffProfile, type StaffProfilePayload } from "@/lib/staff-api";
 import { useSalonAccessToken } from "@/hooks/use-salon-access-token";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,6 +33,7 @@ export function StaffProfileClient() {
   const [readOnly, setReadOnly] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const retriedMissingProfile = useRef(false);
 
   const load = useCallback(async () => {
@@ -215,12 +216,26 @@ export function StaffProfileClient() {
               accept="image/*"
               className="mt-2"
               onChange={(e) => {
+                if (!token) return;
                 const file = e.target.files?.[0];
                 if (!file) return;
+                if (!file.type.startsWith("image/")) {
+                  toast.error("Please choose an image file.");
+                  return;
+                }
                 const reader = new FileReader();
-                reader.onload = () => {
+                reader.onload = async () => {
                   const result = typeof reader.result === "string" ? reader.result : "";
-                  if (result) pf.setValue("photo_url", result);
+                  if (!result) return;
+                  setUploadingPhoto(true);
+                  const up = await uploadAuthProfilePhoto(token, result);
+                  setUploadingPhoto(false);
+                  if (!up.ok) {
+                    toast.error(formatApiError(up.body));
+                    return;
+                  }
+                  pf.setValue("photo_url", up.data.url, { shouldDirty: true });
+                  toast.success("Photo uploaded. Save profile to apply.");
                 };
                 reader.readAsDataURL(file);
               }}
@@ -236,8 +251,8 @@ export function StaffProfileClient() {
           <Label htmlFor="p-spec">Specialties (one per line)</Label>
           <Textarea id="p-spec" className="mt-1 min-h-[88px]" disabled={readOnly} {...pf.register("specialtiesText")} />
         </div>
-        <Button type="submit" className="min-h-11" disabled={readOnly || pf.formState.isSubmitting}>
-          Save profile
+        <Button type="submit" className="min-h-11" disabled={readOnly || pf.formState.isSubmitting || uploadingPhoto}>
+          {uploadingPhoto ? "Uploading..." : "Save profile"}
         </Button>
       </form>
 

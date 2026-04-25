@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useSalonAccessToken } from "@/hooks/use-salon-access-token";
-import { fetchAuthMe, formatApiError, patchAuthMe, type AuthMePayload } from "@/lib/auth-api";
+import { fetchAuthMe, formatApiError, patchAuthMe, type AuthMePayload, uploadAuthProfilePhoto } from "@/lib/auth-api";
 
 export function AccountPhotoCard() {
   const token = useSalonAccessToken();
   const [me, setMe] = useState<AuthMePayload | null>(null);
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [photoUrl, setPhotoUrl] = useState("");
 
   const load = useCallback(async () => {
@@ -39,7 +40,7 @@ export function AccountPhotoCard() {
           </div>
         )}
         <input
-          value={photoUrl}
+          value={photoUrl ?? ""}
           onChange={(e) => setPhotoUrl(e.target.value)}
           placeholder="https://..."
           className="min-w-[220px] flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
@@ -47,13 +48,30 @@ export function AccountPhotoCard() {
         <input
           type="file"
           accept="image/*"
-          onChange={(e) => {
+          disabled={uploading || busy}
+          onChange={async (e) => {
             const file = e.target.files?.[0];
             if (!file) return;
+            if (!token) return;
+            if (!file.type.startsWith("image/")) {
+              toast.error("Please choose an image file.");
+              return;
+            }
             const reader = new FileReader();
-            reader.onload = () => {
+            reader.onload = async () => {
               const result = typeof reader.result === "string" ? reader.result : "";
-              if (result) setPhotoUrl(result);
+              if (!result) return;
+              // Immediate preview; Save can still persist via /auth/me fallback.
+              setPhotoUrl(result);
+              setUploading(true);
+              const up = await uploadAuthProfilePhoto(token, result);
+              setUploading(false);
+              if (!up.ok) {
+                toast("Upload server unavailable. Click Save; we will save this photo anyway.");
+                return;
+              }
+              setPhotoUrl(up.data.url);
+              toast.success("Photo uploaded. Click Save to apply.");
             };
             reader.readAsDataURL(file);
           }}
@@ -61,10 +79,11 @@ export function AccountPhotoCard() {
         />
         <button
           type="button"
-          disabled={busy}
+          disabled={busy || uploading}
           onClick={async () => {
             setBusy(true);
-            const res = await patchAuthMe(token, { photo_url: photoUrl.trim() || null });
+            const safePhotoUrl = (photoUrl ?? "").trim();
+            const res = await patchAuthMe(token, { photo_url: safePhotoUrl || null });
             setBusy(false);
             if (!res.ok) {
               toast.error(formatApiError(res.body));
@@ -75,7 +94,7 @@ export function AccountPhotoCard() {
           }}
           className="rounded-lg bg-blue-500 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-400"
         >
-          {busy ? "Saving..." : "Save"}
+          {uploading ? "Uploading..." : busy ? "Saving..." : "Save"}
         </button>
       </div>
     </section>

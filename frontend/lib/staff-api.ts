@@ -62,13 +62,40 @@ export type StaffCustomerRow = {
   last_visit_at: string;
 };
 
+export type StaffServiceInventoryLine = {
+  inventory_item_id: number | null;
+  name: string;
+  sku: string | null;
+  unit: string;
+  quantity_on_hand: string;
+  low_stock_threshold: string | null;
+  quantity_per_service: number;
+  staff_note: string | null;
+  material_cost_cents: number | null;
+  cost_price_cents: number | null;
+  projected_material_cents: number | null;
+  is_low_stock: boolean;
+};
+
 export type StaffServiceRow = {
   id: number;
   name: string;
   category: string | null;
   description: string | null;
   duration_minutes: number;
+  buffer_after_minutes?: number | null;
   price_cents: number | null;
+  staff_notes?: string | null;
+  aftercare?: string | null;
+  requires_patch_test?: boolean;
+  consultation_first?: boolean;
+  min_notice_hours?: number;
+  online_bookable?: boolean;
+  deposit_cents?: number | null;
+  audience?: string;
+  inventory_lines: StaffServiceInventoryLine[];
+  materials_total_cents: number | null;
+  smart_hints: string[];
 };
 
 export type StaffEarningsSummary = {

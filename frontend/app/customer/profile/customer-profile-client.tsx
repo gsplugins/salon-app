@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { fetchAuthMe, formatApiError, patchAuthMe, type AuthMePayload } from "@/lib/auth-api";
+import { fetchAuthMe, formatApiError, patchAuthMe, type AuthMePayload, uploadAuthProfilePhoto } from "@/lib/auth-api";
+import { broadcastSalonAuthChange } from "@/lib/auth-events";
 import { useSalonAccessToken } from "@/hooks/use-salon-access-token";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ export function CustomerProfileClient() {
   const [me, setMe] = useState<AuthMePayload | null>(null);
   const [busy, setBusy] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [name, setName] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
 
@@ -36,16 +38,29 @@ export function CustomerProfileClient() {
     void load();
   }, [load]);
 
-  function onPickPhoto(file: File | null) {
+  async function onPickPhoto(file: File | null) {
     if (!file) return;
+    if (!token) return;
     if (!file.type.startsWith("image/")) {
       toast.error("Please choose an image file.");
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       const result = typeof reader.result === "string" ? reader.result : "";
-      if (result) setPhotoUrl(result);
+      if (!result) return;
+      // Show immediate preview even before upload finishes.
+      setPhotoUrl(result);
+      setUploading(true);
+      const up = await uploadAuthProfilePhoto(token, result);
+      setUploading(false);
+      if (!up.ok) {
+        // Keep local preview and allow Save fallback instead of blocking with a hard error.
+        toast("Upload server unavailable. Tap Save profile; we will save this photo anyway.");
+        return;
+      }
+      setPhotoUrl(up.data.url);
+      toast.success("Photo uploaded. Save profile to apply.");
     };
     reader.readAsDataURL(file);
   }
@@ -53,12 +68,14 @@ export function CustomerProfileClient() {
   async function saveProfile() {
     if (!token) return;
     setSaving(true);
-    const res = await patchAuthMe(token, { name: name.trim(), photo_url: photoUrl.trim() || null });
+    const safePhotoUrl = (photoUrl ?? "").trim();
+    const res = await patchAuthMe(token, { name: name.trim(), photo_url: safePhotoUrl || null });
     setSaving(false);
     if (!res.ok) {
       toast.error(formatApiError(res.body));
       return;
     }
+    broadcastSalonAuthChange();
     toast.success("Profile updated.");
     void load();
   }
@@ -113,15 +130,15 @@ export function CustomerProfileClient() {
             <span className="text-zinc-500">Profile photo URL</span>
             <br />
             <input
-              value={photoUrl}
+              value={photoUrl ?? ""}
               onChange={(e) => setPhotoUrl(e.target.value)}
               placeholder="https://..."
               className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 font-medium text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white"
             />
           </p>
-          <input type="file" accept="image/*" onChange={(e) => onPickPhoto(e.target.files?.[0] ?? null)} />
-          <Button type="button" disabled={saving} onClick={() => void saveProfile()} className="min-h-11">
-            {saving ? "Saving..." : "Save profile"}
+          <input type="file" accept="image/*" disabled={uploading || saving} onChange={(e) => void onPickPhoto(e.target.files?.[0] ?? null)} />
+          <Button type="button" disabled={saving || uploading} onClick={() => void saveProfile()} className="min-h-11">
+            {uploading ? "Uploading..." : saving ? "Saving..." : "Save profile"}
           </Button>
         </CardContent>
       </Card>
