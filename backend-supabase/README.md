@@ -103,6 +103,7 @@ Supabase + Node.js HTTPS JSON API for the salon product (Next.js and future mobi
 ## Database migrations
 
 Migrations are versioned SQL under `supabase/migrations/`. The first file matches `supabase/schema.sql` (idempotent `IF NOT EXISTS` style).
+For scale readiness, apply the latest index + booking item normalization migration before load testing.
 
 **Option A — Supabase CLI against your hosted project (recommended)**
 
@@ -122,6 +123,10 @@ In Supabase → **SQL Editor**, run `supabase/schema.sql` (same as the initial m
 `npx supabase start`, then `npm run db:reset` migrates and runs `supabase/seed.sql` per `config.toml`.
 
 Useful scripts: `npm run db:new <name>`, `npm run db:push`, `npm run db:reset`, `npm run db:diff`.
+
+## Codebase structure
+
+See `CODEBASE_STRUCTURE.md` for the cleaned backend layout and feature-folder expansion path.
 
 ## Setup
 

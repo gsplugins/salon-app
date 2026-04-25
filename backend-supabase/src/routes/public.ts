@@ -212,6 +212,12 @@ type StaffRow = {
   specialties: unknown;
   is_active: boolean;
   sort_order: number;
+  position_title?: string | null;
+  staff_role?: string | null;
+  experience_years?: number | null;
+  address?: string | null;
+  work_mobile?: string | null;
+  weekly_schedule?: unknown;
 };
 
 function paginationMeta(page: number, perPage: number, total: number) {
@@ -298,9 +304,12 @@ export function mountPublicRoutes(router: Router): void {
 
     const servicesRes = await supabaseAdmin
       .from("salon_services")
-      .select("id,name,category,duration_minutes,buffer_after_minutes,price_cents")
+      .select(
+        "id,name,category,description,duration_minutes,buffer_after_minutes,price_cents,audience,aftercare,requires_patch_test,consultation_first,min_notice_hours,online_bookable,deposit_cents"
+      )
       .eq("shop_id", shopId)
       .eq("is_active", true)
+      .eq("online_bookable", true)
       .order("sort_order");
 
     const staffRes = await supabaseAdmin
@@ -543,9 +552,12 @@ export function mountPublicRoutes(router: Router): void {
     if (!shopRes.data) return fail(res, 404, "Shop not found.");
     const rows = await supabaseAdmin
       .from("salon_services")
-      .select("id,name,duration_minutes,price_cents,category,buffer_after_minutes,is_active,sort_order")
+      .select(
+        "id,name,duration_minutes,price_cents,category,buffer_after_minutes,is_active,sort_order,description,audience,aftercare,requires_patch_test,consultation_first,min_notice_hours,online_bookable,deposit_cents"
+      )
       .eq("shop_id", shopRes.data.id)
       .eq("is_active", true)
+      .eq("online_bookable", true)
       .order("sort_order");
     return okData(res, rows.data ?? []);
   });
@@ -662,10 +674,19 @@ export function mountPublicRoutes(router: Router): void {
 
     const servicesRes = await supabaseAdmin
       .from("salon_services")
-      .select("id,duration_minutes,buffer_after_minutes")
+      .select("id,duration_minutes,buffer_after_minutes,min_notice_hours,online_bookable,is_active")
       .eq("shop_id", shopId)
+      .eq("is_active", true)
+      .eq("online_bookable", true)
       .in("id", serviceIds);
-    const selectedServices = (servicesRes.data ?? []) as { id: number; duration_minutes: number; buffer_after_minutes: number | null }[];
+    const selectedServices = (servicesRes.data ?? []) as {
+      id: number;
+      duration_minutes: number;
+      buffer_after_minutes: number | null;
+      min_notice_hours: number | null;
+      online_bookable: boolean | null;
+      is_active: boolean | null;
+    }[];
     if (selectedServices.length !== serviceIds.length) return fail(res, 422, "Invalid service selection.");
     const requiredDurationMin = Math.max(
       15,
@@ -707,7 +728,13 @@ export function mountPublicRoutes(router: Router): void {
     const dayEnd = combineDateAndMinutesUtc(date, closeMins);
     const minLeadHoursRaw = settings.min_lead_time_hours;
     const minLeadHours = typeof minLeadHoursRaw === "number" ? minLeadHoursRaw : Number(minLeadHoursRaw ?? 0);
-    const leadCutoff = Number.isFinite(minLeadHours) && minLeadHours > 0 ? new Date(Date.now() + minLeadHours * 3600_000) : new Date(0);
+    const shopLeadCutoff =
+      Number.isFinite(minLeadHours) && minLeadHours > 0 ? new Date(Date.now() + minLeadHours * 3600_000) : new Date(0);
+    const serviceNoticeMs = Math.max(
+      0,
+      ...selectedServices.map((s) => Math.max(0, Number(s.min_notice_hours ?? 0)) * 3600_000)
+    );
+    const leadCutoff = new Date(Math.max(shopLeadCutoff.getTime(), Date.now() + serviceNoticeMs));
 
     const blockedRes = await supabaseAdmin
       .from("salon_blocked_slots")
@@ -810,8 +837,12 @@ export function mountPublicRoutes(router: Router): void {
 
     const servicesRes = await supabaseAdmin
       .from("salon_services")
-      .select("id,name,duration_minutes,buffer_after_minutes,price_cents")
+      .select(
+        "id,name,duration_minutes,buffer_after_minutes,price_cents,is_active,online_bookable,min_notice_hours,deposit_cents"
+      )
       .eq("shop_id", shopId)
+      .eq("is_active", true)
+      .eq("online_bookable", true)
       .in("id", serviceIds);
     const rows = (servicesRes.data ?? []) as {
       id: number;
@@ -819,8 +850,25 @@ export function mountPublicRoutes(router: Router): void {
       duration_minutes: number;
       buffer_after_minutes: number | null;
       price_cents: number | null;
+      is_active: boolean | null;
+      online_bookable: boolean | null;
+      min_notice_hours: number | null;
+      deposit_cents: number | null;
     }[];
     if (rows.length !== serviceIds.length) return fail(res, 422, "One or more services are invalid for this shop.");
+
+    const startsAtBooking = new Date(parsed.data.starts_at);
+    const minNoticeHours = Math.max(0, ...rows.map((r) => Math.max(0, Number(r.min_notice_hours ?? 0))));
+    const earliestOk = new Date(Date.now() + minNoticeHours * 3600_000);
+    if (startsAtBooking.getTime() < earliestOk.getTime()) {
+      return fail(
+        res,
+        422,
+        minNoticeHours > 0
+          ? `One or more services require at least ${minNoticeHours} hour(s) advance booking. Please pick a later time.`
+          : "Invalid booking time."
+      );
+    }
 
     const order = new Map(serviceIds.map((id, i) => [id, i]));
     rows.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));

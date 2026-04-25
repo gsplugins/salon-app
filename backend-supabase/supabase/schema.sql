@@ -216,6 +216,17 @@ alter table salon_staff add column if not exists email text;
 alter table salon_staff add column if not exists weekly_schedule jsonb;
 
 alter table salon_services add column if not exists description text;
+alter table salon_services add column if not exists audience text not null default 'all'
+  check (audience in ('all', 'men', 'women', 'kids'));
+alter table salon_services add column if not exists staff_notes text;
+alter table salon_services add column if not exists aftercare text;
+alter table salon_services add column if not exists requires_patch_test boolean not null default false;
+alter table salon_services add column if not exists consultation_first boolean not null default false;
+alter table salon_services add column if not exists min_notice_hours integer not null default 0
+  check (min_notice_hours >= 0 and min_notice_hours <= 720);
+alter table salon_services add column if not exists online_bookable boolean not null default true;
+alter table salon_services add column if not exists deposit_cents integer
+  check (deposit_cents is null or (deposit_cents >= 0 and deposit_cents <= 100000000));
 alter table salon_blocked_slots add column if not exists note text;
 alter table salon_bookings add column if not exists customer_user_id uuid references users(id) on delete set null;
 
@@ -250,6 +261,20 @@ create table if not exists shop_customer_controls (
   unique (shop_id, customer_mobile)
 );
 
+create table if not exists shop_customers (
+  id bigserial primary key,
+  shop_id bigint not null references shops(id) on delete cascade,
+  customer_mobile text not null,
+  customer_user_id uuid references users(id) on delete set null,
+  customer_name text,
+  customer_type text not null default 'regular' check (customer_type in ('regular', 'other')),
+  source text not null default 'manual' check (source in ('manual', 'booking', 'import')),
+  added_by_user_id uuid references users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (shop_id, customer_mobile)
+);
+
 create table if not exists staff_notifications (
   id bigserial primary key,
   salon_staff_id bigint not null references salon_staff(id) on delete cascade,
@@ -278,6 +303,10 @@ create table if not exists customer_notifications (
 create index if not exists idx_leave_staff on staff_leave_requests(salon_staff_id, date);
 create index if not exists idx_notes_staff on staff_customer_notes(salon_staff_id, customer_mobile);
 create index if not exists idx_shop_customer_controls_shop on shop_customer_controls(shop_id, customer_mobile);
+create index if not exists idx_shop_customers_shop_created on shop_customers(shop_id, created_at desc);
+create index if not exists idx_shop_customers_shop_mobile on shop_customers(shop_id, customer_mobile);
+create index if not exists idx_shop_customers_user on shop_customers(customer_user_id) where customer_user_id is not null;
+create index if not exists idx_shop_customers_shop_type on shop_customers(shop_id, customer_type);
 create index if not exists idx_notif_staff on staff_notifications(salon_staff_id, created_at);
 create index if not exists idx_notif_customer_user on customer_notifications(customer_user_id, created_at);
 create index if not exists idx_notif_customer_mobile on customer_notifications(customer_mobile, created_at);
@@ -347,6 +376,7 @@ create table if not exists audit_logs (
   ip text,
   created_at timestamptz not null default now()
 );
+alter table audit_logs add column if not exists metadata jsonb;
 
 create table if not exists bkash_payments (
   id bigserial primary key,
@@ -384,3 +414,97 @@ alter table salon_bookings add column if not exists total_price_cents integer;
 alter table salon_bookings add column if not exists advance_percent_snapshot smallint not null default 0;
 alter table salon_bookings add column if not exists advance_amount_cents integer not null default 0;
 alter table salon_bookings add column if not exists advance_paid_cents integer not null default 0;
+
+-- High-scale performance additions (keep in sync with migrations/*).
+create table if not exists booking_line_items (
+  id bigserial primary key,
+  booking_id bigint not null references salon_bookings(id) on delete cascade,
+  shop_id bigint not null references shops(id) on delete cascade,
+  salon_service_id bigint references salon_services(id) on delete set null,
+  item_name text not null,
+  quantity integer not null default 1 check (quantity > 0),
+  unit_price_cents integer not null default 0 check (unit_price_cents >= 0),
+  total_price_cents integer not null default 0 check (total_price_cents >= 0),
+  duration_minutes integer check (duration_minutes is null or duration_minutes > 0),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_booking_line_items_booking on booking_line_items(booking_id);
+create index if not exists idx_booking_line_items_shop_created on booking_line_items(shop_id, created_at desc);
+
+create index if not exists idx_shops_owner on shops(owner_user_id);
+create index if not exists idx_shops_parent on shops(parent_shop_id);
+create index if not exists idx_users_role_created on users(role, created_at desc);
+create index if not exists idx_shop_members_shop_role_active on shop_members(shop_id, role, is_active);
+create index if not exists idx_shop_members_user_active on shop_members(user_id, is_active);
+create index if not exists idx_subscriptions_status_period on subscriptions(status, current_period_end);
+
+create index if not exists idx_refresh_tokens_user_active_exp
+  on refresh_tokens(user_id, expires_at desc)
+  where revoked_at is null;
+
+create index if not exists idx_services_shop_active_sort on salon_services(shop_id, is_active, sort_order, id);
+create index if not exists idx_salon_services_shop_online on salon_services(shop_id, online_bookable) where is_active = true;
+create index if not exists idx_staff_shop_active_sort on salon_staff(shop_id, is_active, sort_order, id);
+create index if not exists idx_staff_user_active on salon_staff(user_id, is_active) where user_id is not null;
+create index if not exists idx_staff_services_shop_staff on salon_staff_services(shop_id, staff_id);
+create index if not exists idx_staff_services_shop_service on salon_staff_services(shop_id, service_id);
+
+create index if not exists idx_bookings_shop_starts_desc on salon_bookings(shop_id, starts_at desc);
+create index if not exists idx_bookings_staff_starts_desc on salon_bookings(salon_staff_id, starts_at desc);
+create index if not exists idx_bookings_shop_staff_starts on salon_bookings(shop_id, salon_staff_id, starts_at);
+create index if not exists idx_bookings_shop_status_starts on salon_bookings(shop_id, status, starts_at);
+create index if not exists idx_bookings_customer_user_starts on salon_bookings(customer_user_id, starts_at desc) where customer_user_id is not null;
+create index if not exists idx_bookings_mobile_starts on salon_bookings(customer_mobile, starts_at desc);
+
+create index if not exists idx_queue_shop_status_position on queue_entries(shop_id, status, position);
+create index if not exists idx_queue_staff_status on queue_entries(staff_id, status) where staff_id is not null;
+create index if not exists idx_queue_customer_user_active on queue_entries(customer_user_id, created_at desc) where customer_user_id is not null;
+
+create index if not exists idx_blocked_slots_shop_staff_starts on salon_blocked_slots(shop_id, salon_staff_id, starts_at);
+create index if not exists idx_blocked_slots_staff_starts on salon_blocked_slots(salon_staff_id, starts_at) where salon_staff_id is not null;
+
+create index if not exists idx_payments_shop_created on salon_payments(shop_id, created_at desc);
+create index if not exists idx_payments_booking on salon_payments(salon_booking_id) where salon_booking_id is not null;
+create index if not exists idx_payments_status_created on salon_payments(status, created_at desc);
+
+create index if not exists idx_reviews_shop_created on salon_reviews(shop_id, created_at desc);
+create index if not exists idx_reviews_staff_created on salon_reviews(salon_staff_id, created_at desc) where salon_staff_id is not null;
+create index if not exists idx_reviews_customer_created on salon_reviews(customer_user_id, created_at desc) where customer_user_id is not null;
+
+create index if not exists idx_leave_staff_status_date on staff_leave_requests(salon_staff_id, status, date);
+create index if not exists idx_notifications_staff_unread_created on staff_notifications(salon_staff_id, is_read, created_at desc);
+create index if not exists idx_notifications_customer_user_unread_created
+  on customer_notifications(customer_user_id, is_read, created_at desc)
+  where customer_user_id is not null;
+create index if not exists idx_notifications_customer_mobile_unread_created
+  on customer_notifications(customer_mobile, is_read, created_at desc)
+  where customer_mobile is not null;
+create index if not exists idx_audit_logs_admin_created on audit_logs(admin_user_id, created_at desc);
+create index if not exists idx_audit_logs_action_created on audit_logs(action, created_at desc);
+create index if not exists idx_bkash_shop_created on bkash_payments(shop_id, created_at desc);
+
+-- Inventory products + per-service materials (see migrations/20260425140000_inventory_products_and_service_materials.sql).
+alter table inventory_items add column if not exists sku text;
+alter table inventory_items add column if not exists cost_price_cents integer
+  check (cost_price_cents is null or (cost_price_cents >= 0 and cost_price_cents <= 100000000));
+alter table inventory_items add column if not exists supplier_notes text;
+
+create table if not exists salon_service_inventory (
+  id bigserial primary key,
+  shop_id bigint not null references shops(id) on delete cascade,
+  salon_service_id bigint not null references salon_services(id) on delete cascade,
+  inventory_item_id bigint not null references inventory_items(id) on delete cascade,
+  quantity_per_service numeric(12, 4) not null default 1
+    check (quantity_per_service > 0 and quantity_per_service <= 100000),
+  staff_note text,
+  material_cost_cents integer
+    check (material_cost_cents is null or (material_cost_cents >= 0 and material_cost_cents <= 100000000)),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (salon_service_id, inventory_item_id)
+);
+
+create index if not exists idx_service_inventory_service on salon_service_inventory(salon_service_id);
+create index if not exists idx_service_inventory_shop on salon_service_inventory(shop_id);
+create index if not exists idx_service_inventory_item on salon_service_inventory(inventory_item_id);

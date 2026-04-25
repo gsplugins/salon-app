@@ -1,4 +1,5 @@
 import type { Request, Response, Router } from "express";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { supabaseAdmin } from "../lib/supabase.js";
@@ -7,13 +8,79 @@ import { normalizeMobile } from "../lib/mobile.js";
 import { config } from "../config.js";
 import type { DbUser } from "../db-types.js";
 import { resolveManagementShop, shopMemberRole } from "../lib/shop-resolution.js";
-import { formatPostgrestError, hintMissingPublicTables } from "../lib/db-errors.js";
+import { formatPostgrestError, hintMissingPublicTables, hintSupabaseUnreachable } from "../lib/db-errors.js";
 import { okData } from "../lib/http.js";
 
 function bearer(req: Request): string | null {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith("Bearer ")) return null;
   return auth.slice("Bearer ".length).trim();
+}
+
+const PROFILE_PHOTO_BUCKET = "profile-photos";
+let profilePhotoBucketReady = false;
+
+function parseDataUrlImage(input: string): { contentType: string; bytes: Uint8Array; extension: string } | null {
+  const raw = input.trim();
+  const m = /^data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=\s]+)$/.exec(raw);
+  if (!m) return null;
+  const contentType = m[1].toLowerCase();
+  const base64 = m[2].replace(/\s+/g, "");
+  const map: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/jpg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "image/gif": "gif"
+  };
+  const extension = map[contentType];
+  if (!extension) return null;
+  try {
+    const bytes = Uint8Array.from(Buffer.from(base64, "base64"));
+    return { contentType, bytes, extension };
+  } catch {
+    return null;
+  }
+}
+
+async function ensureProfilePhotoBucket(): Promise<void> {
+  if (profilePhotoBucketReady) return;
+  const exists = await supabaseAdmin.storage.getBucket(PROFILE_PHOTO_BUCKET);
+  if (exists.error && !/not found/i.test(exists.error.message)) {
+    throw new Error(`storage bucket check: ${exists.error.message}`);
+  }
+  if (!exists.data) {
+    const created = await supabaseAdmin.storage.createBucket(PROFILE_PHOTO_BUCKET, {
+      public: true,
+      fileSizeLimit: "10MB",
+      allowedMimeTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"]
+    });
+    if (created.error && !/already exists/i.test(created.error.message)) {
+      throw new Error(`storage bucket create: ${created.error.message}`);
+    }
+  }
+  profilePhotoBucketReady = true;
+}
+
+async function uploadProfilePhotoFromDataUrl(userId: string, dataUrl: string): Promise<{ url: string; path: string }> {
+  const decoded = parseDataUrlImage(dataUrl);
+  if (!decoded) {
+    throw new Error("Please upload a valid image (jpg/png/webp/gif).");
+  }
+  if (decoded.bytes.byteLength > 10 * 1024 * 1024) {
+    throw new Error("Image is too large. Max 10MB.");
+  }
+  await ensureProfilePhotoBucket();
+  const objectPath = `${userId}/${Date.now()}-${randomUUID()}.${decoded.extension}`;
+  const upload = await supabaseAdmin.storage
+    .from(PROFILE_PHOTO_BUCKET)
+    .upload(objectPath, decoded.bytes, { contentType: decoded.contentType, upsert: false });
+  if (upload.error) {
+    throw new Error(`Could not upload profile photo: ${upload.error.message}`);
+  }
+  const { data } = supabaseAdmin.storage.from(PROFILE_PHOTO_BUCKET).getPublicUrl(objectPath);
+  if (!data.publicUrl) throw new Error("Could not generate image URL.");
+  return { url: data.publicUrl, path: objectPath };
 }
 
 async function buildTokenBody(user: DbUser): Promise<Record<string, unknown>> {
@@ -53,6 +120,36 @@ async function respondWithTokens(res: Response, status: number, user: DbUser): P
       detail: msg,
       hint: "Confirm table refresh_tokens exists and matches schema (run backend-supabase/supabase/schema.sql in Supabase SQL editor)."
     });
+  }
+}
+
+async function notifySuperAdminShopCreated(input: {
+  shopId: number;
+  ownerUserId: string;
+  ownerMobile: string;
+  shopName: string;
+  shopSlug: string;
+  source: "self_signup";
+  ip?: string | null;
+}): Promise<void> {
+  const metadata = {
+    source: input.source,
+    owner_user_id: input.ownerUserId,
+    owner_mobile: input.ownerMobile,
+    shop_name: input.shopName,
+    shop_slug: input.shopSlug
+  };
+  const ins = await supabaseAdmin.from("audit_logs").insert({
+    admin_user_id: null,
+    action: "system.shop.created_by_user",
+    target_type: "shops",
+    target_id: String(input.shopId),
+    ip: input.ip ?? null,
+    metadata
+  });
+  if (ins.error) {
+    // eslint-disable-next-line no-console
+    console.error("[auth/register-barber] audit log insert", ins.error);
   }
 }
 
@@ -238,6 +335,16 @@ export function mountAuthRoutes(router: Router): void {
         });
       }
 
+      await notifySuperAdminShopCreated({
+        shopId,
+        ownerUserId: user.id,
+        ownerMobile: user.mobile,
+        shopName: parsed.data.shop_name.trim(),
+        shopSlug: parsed.data.shop_slug,
+        source: "self_signup",
+        ip: req.ip
+      });
+
       await respondWithTokens(res, 201, user);
       return;
     } catch (e) {
@@ -268,9 +375,11 @@ export function mountAuthRoutes(router: Router): void {
     if (userLookup.error) {
       // eslint-disable-next-line no-console
       console.error("[auth/login] user lookup", userLookup.error);
-      const hint = hintMissingPublicTables(userLookup.error);
+      const netHint = hintSupabaseUnreachable(userLookup.error);
+      const tableHint = hintMissingPublicTables(userLookup.error);
+      const hint = netHint ?? tableHint;
       return res.status(500).json({
-        message: "Could not look up user.",
+        message: netHint ? "Cannot reach Supabase (network/DNS)." : "Could not look up user.",
         detail: formatPostgrestError(userLookup.error),
         ...(hint ? { hint } : {})
       });
@@ -510,13 +619,49 @@ export function mountAuthRoutes(router: Router): void {
       const body = req.body as Record<string, unknown>;
       const updates: Record<string, unknown> = {};
       if (typeof body.name === "string" && body.name.trim().length > 1) updates.name = body.name.trim();
-      if ("photo_url" in body) updates.photo_url = body.photo_url == null || String(body.photo_url).trim() === "" ? null : String(body.photo_url);
+      if ("photo_url" in body) {
+        if (body.photo_url == null || String(body.photo_url).trim() === "") {
+          updates.photo_url = null;
+        } else {
+          const raw = String(body.photo_url).trim();
+          if (raw.startsWith("data:image/")) {
+            const uploaded = await uploadProfilePhotoFromDataUrl(user.id, raw);
+            updates.photo_url = uploaded.url;
+          } else {
+            updates.photo_url = raw;
+          }
+        }
+      }
       if (Object.keys(updates).length === 0) return res.status(422).json({ message: "Nothing to update." });
       const saved = await supabaseAdmin.from("users").update(updates).eq("id", user.id).select("id,name,mobile,photo_url,role").single();
       if (saved.error || !saved.data) return res.status(500).json({ message: "Could not update profile." });
       return okData(res, saved.data);
-    } catch {
-      return res.status(401).json({ message: "Unauthenticated." });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (/jwt|token|unauth/i.test(msg)) return res.status(401).json({ message: "Unauthenticated." });
+      return res.status(500).json({ message: "Could not update profile.", detail: msg });
+    }
+  });
+
+  router.post("/auth/me/photo-upload", async (req: Request, res: Response) => {
+    const token = bearer(req);
+    if (!token) return res.status(401).json({ message: "Unauthenticated." });
+    try {
+      const payload = verifyAccessToken(token);
+      const userRes = await supabaseAdmin.from("users").select("id").eq("id", payload.sub).maybeSingle();
+      const user = userRes.data as { id: string } | null;
+      if (!user) return res.status(401).json({ message: "Unauthenticated." });
+
+      const parsed = z.object({ data_url: z.string().min(32).max(10_000_000) }).safeParse(req.body);
+      if (!parsed.success) return res.status(422).json({ message: "Validation failed.", errors: parsed.error.flatten() });
+
+      const uploaded = await uploadProfilePhotoFromDataUrl(user.id, parsed.data.data_url);
+      return okData(res, uploaded);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (/jwt|token|unauth/i.test(msg)) return res.status(401).json({ message: "Unauthenticated." });
+      if (/valid image|too large/i.test(msg)) return res.status(422).json({ message: msg });
+      return res.status(500).json({ message: "Could not upload profile photo.", detail: msg });
     }
   });
 }

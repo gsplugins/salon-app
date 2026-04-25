@@ -14,6 +14,31 @@ import {
 import type { ShopRow } from "../salon-types.js";
 import { shopMemberRole } from "../lib/shop-resolution.js";
 
+const SERVICE_SELECT_BASE = "id,name,category,duration_minutes,buffer_after_minutes,price_cents,is_active,sort_order";
+const SERVICE_SELECT_FULL =
+  "id,name,category,description,duration_minutes,buffer_after_minutes,price_cents,is_active,sort_order,audience,staff_notes,aftercare,requires_patch_test,consultation_first,min_notice_hours,online_bookable,deposit_cents";
+
+function isMissingServiceFieldError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const msg = String((err as { message?: unknown }).message ?? "").toLowerCase();
+  return msg.includes("column") && msg.includes("does not exist");
+}
+
+function normalizeServiceRowCompat<T extends Record<string, unknown>>(row: T): T {
+  return {
+    ...row,
+    description: (row.description as string | null | undefined) ?? null,
+    audience: (row.audience as string | undefined) ?? "all",
+    staff_notes: (row.staff_notes as string | null | undefined) ?? null,
+    aftercare: (row.aftercare as string | null | undefined) ?? null,
+    requires_patch_test: Boolean(row.requires_patch_test),
+    consultation_first: Boolean(row.consultation_first),
+    min_notice_hours: typeof row.min_notice_hours === "number" ? row.min_notice_hours : 0,
+    online_bookable: row.online_bookable === undefined ? true : Boolean(row.online_bookable),
+    deposit_cents: (row.deposit_cents as number | null | undefined) ?? null
+  } as T;
+}
+
 function deepMergeSettings(base: Record<string, unknown>, patch: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = { ...base };
   for (const [k, v] of Object.entries(patch)) {
@@ -120,6 +145,15 @@ async function canManageCustomers(user: { id: string; role: string }, shopId: nu
   const role = await shopMemberRole(user.id, shopId);
   return role === "owner" || role === "manager" || user.role === "shop_owner";
 }
+
+async function canManageCatalog(user: { id: string; role: string }, shopId: number): Promise<boolean> {
+  if (user.role === "super_admin") return true;
+  if (user.role === "shop_owner") return true;
+  const role = await shopMemberRole(user.id, shopId);
+  return role === "owner" || role === "manager";
+}
+
+const customerTypeSchema = z.enum(["regular", "other"]);
 
 async function staffCatalogRow(staffId: number): Promise<Record<string, unknown> | null> {
   const st = await supabaseAdmin.from("salon_staff").select("*").eq("id", staffId).maybeSingle();
@@ -279,7 +313,15 @@ export function mountMyShopRoutes(router: Router): void {
       .order("starts_at", { ascending: false })
       .limit(2000);
     if (staffScopeId != null) q = q.eq("salon_staff_id", staffScopeId);
-    const rows = await q;
+    const [rows, linkedCustomers] = await Promise.all([
+      q,
+      supabaseAdmin
+        .from("shop_customers")
+        .select("customer_mobile,customer_name,customer_type,created_at")
+        .eq("shop_id", shop.id)
+        .order("created_at", { ascending: false })
+        .limit(2000)
+    ]);
     const byMobile = new Map<
       string,
       {
@@ -288,6 +330,7 @@ export function mountMyShopRoutes(router: Router): void {
         visit_count: number;
         last_visit_at: string;
         last_service_id: number | null;
+        customer_type: "regular" | "other" | null;
       }
     >();
     for (const row of (rows.data ?? []) as { customer_mobile: string; customer_name: string; starts_at: string; salon_service_id: number | null }[]) {
@@ -298,7 +341,8 @@ export function mountMyShopRoutes(router: Router): void {
           customer_name: row.customer_name,
           visit_count: 1,
           last_visit_at: row.starts_at,
-          last_service_id: row.salon_service_id ?? null
+          last_service_id: row.salon_service_id ?? null,
+          customer_type: null
         });
       } else {
         ex.visit_count += 1;
@@ -318,6 +362,18 @@ export function mountMyShopRoutes(router: Router): void {
       }
     }
 
+    for (const row of (linkedCustomers.data ?? []) as { customer_mobile: string; customer_name: string | null; customer_type: "regular" | "other"; created_at: string }[]) {
+      if (byMobile.has(row.customer_mobile)) continue;
+      byMobile.set(row.customer_mobile, {
+        customer_mobile: row.customer_mobile,
+        customer_name: row.customer_name ?? "Customer",
+        visit_count: 0,
+        last_visit_at: row.created_at,
+        last_service_id: null,
+        customer_type: row.customer_type
+      });
+    }
+
     const mobiles = [...byMobile.keys()];
     const ctrlMap = new Map<string, { is_suspended: boolean; is_removed: boolean }>();
     if (mobiles.length) {
@@ -332,6 +388,11 @@ export function mountMyShopRoutes(router: Router): void {
     }
 
     const includeRemoved = String(req.query.include_removed ?? "") === "1";
+    const relationTypeMap = new Map<string, "regular" | "other">();
+    for (const row of (linkedCustomers.data ?? []) as { customer_mobile: string; customer_type: "regular" | "other" }[]) {
+      relationTypeMap.set(row.customer_mobile, row.customer_type);
+    }
+
     const out = [...byMobile.values()]
       .map((row) => {
         const ctrl = ctrlMap.get(row.customer_mobile) ?? { is_suspended: false, is_removed: false };
@@ -341,6 +402,7 @@ export function mountMyShopRoutes(router: Router): void {
           visit_count: row.visit_count,
           last_visit_at: row.last_visit_at,
           last_service_name: row.last_service_id != null ? serviceMap.get(row.last_service_id) ?? null : null,
+          customer_type: relationTypeMap.get(row.customer_mobile) ?? row.customer_type ?? "regular",
           is_suspended: ctrl.is_suspended,
           is_removed: ctrl.is_removed
         };
@@ -349,6 +411,60 @@ export function mountMyShopRoutes(router: Router): void {
       .sort((a, b) => (a.last_visit_at < b.last_visit_at ? 1 : -1))
       .slice(0, 200);
     return okData(res, out);
+  });
+
+  r.post("/my/shop/customers", async (req: Request, res: Response) => {
+    const { shop, user } = req.salon!;
+    const allowed = await canManageCustomers(user, shop.id);
+    if (!allowed) return fail(res, 403, "Only owner or manager can manage customers.");
+
+    const parsed = z
+      .object({
+        customer_mobile: z.string().min(8).max(32),
+        customer_name: z.string().min(1).max(255).nullable().optional(),
+        customer_type: customerTypeSchema.optional()
+      })
+      .safeParse(req.body);
+    if (!parsed.success) return fail(res, 422, "Validation failed.");
+
+    const customerMobile = normalizeMobile(parsed.data.customer_mobile);
+    if (!customerMobile) return fail(res, 422, "Invalid mobile number.");
+    const customerName = parsed.data.customer_name?.trim() || null;
+    const customerType = parsed.data.customer_type ?? "regular";
+
+    const alreadyInAnotherShop = await supabaseAdmin
+      .from("shop_customers")
+      .select("shop_id")
+      .eq("customer_mobile", customerMobile)
+      .neq("shop_id", shop.id)
+      .limit(1)
+      .maybeSingle();
+    if (alreadyInAnotherShop.data) {
+      return fail(res, 422, "Customer is already linked to another shop.");
+    }
+
+    const userLookup = await supabaseAdmin.from("users").select("id").eq("mobile", customerMobile).maybeSingle();
+    const customerUserId = (userLookup.data as { id: string } | null)?.id ?? null;
+    const upsert = await supabaseAdmin
+      .from("shop_customers")
+      .upsert(
+        {
+          shop_id: shop.id,
+          customer_mobile: customerMobile,
+          customer_user_id: customerUserId,
+          customer_name: customerName,
+          customer_type: customerType,
+          source: "manual",
+          added_by_user_id: user.id,
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: "shop_id,customer_mobile" }
+      )
+      .select("customer_mobile,customer_name,customer_user_id,customer_type,source,created_at,updated_at")
+      .single();
+    if (upsert.error || !upsert.data) return fail(res, 500, "Could not link customer to shop.");
+
+    return okData(res, upsert.data, 201);
   });
 
   r.get("/my/shop/customers/:mobile/profile", async (req: Request, res: Response) => {
@@ -363,6 +479,13 @@ export function mountMyShopRoutes(router: Router): void {
     const { shop } = req.salon!;
     const mobile = decodeURIComponent(req.params.mobile);
     if (!mobile) return fail(res, 422, "Invalid mobile.");
+
+    const relation = await supabaseAdmin
+      .from("shop_customers")
+      .select("customer_name,customer_type,created_at,updated_at")
+      .eq("shop_id", shop.id)
+      .eq("customer_mobile", mobile)
+      .maybeSingle();
 
     const controls = await supabaseAdmin
       .from("shop_customer_controls")
@@ -445,11 +568,19 @@ export function mountMyShopRoutes(router: Router): void {
 
     return okData(res, {
       customer_mobile: mobile,
-      customer_name: bookingRows[0]?.customer_name ?? null,
+      customer_name: bookingRows[0]?.customer_name ?? (relation.data as { customer_name?: string | null } | null)?.customer_name ?? null,
       is_suspended: Boolean(status?.is_suspended),
       is_removed: Boolean(status?.is_removed),
       control_note: status?.note ?? null,
       control_updated_at: status?.updated_at ?? null,
+      relation: relation.data
+        ? {
+            linked: true,
+            linked_at: (relation.data as { created_at: string }).created_at,
+            updated_at: (relation.data as { updated_at: string }).updated_at,
+            customer_type: (relation.data as { customer_type: "regular" | "other" }).customer_type
+          }
+        : { linked: false, linked_at: null, updated_at: null, customer_type: "regular" as const },
       user:
         userRow.data != null
           ? {
@@ -463,6 +594,32 @@ export function mountMyShopRoutes(router: Router): void {
       shops: [...shopsSummaryMap.values()].sort((a, b) => (a.last_visit_at < b.last_visit_at ? 1 : -1)),
       current_shop_service_history: inShopHistory
     });
+  });
+
+  r.patch("/my/shop/customers/:mobile/type", async (req: Request, res: Response) => {
+    const { shop, user } = req.salon!;
+    const allowed = await canManageCustomers(user, shop.id);
+    if (!allowed) return fail(res, 403, "Only owner or manager can manage customers.");
+
+    const mobile = decodeURIComponent(req.params.mobile);
+    if (!mobile) return fail(res, 422, "Invalid mobile.");
+    const parsed = z.object({ customer_type: customerTypeSchema }).safeParse(req.body);
+    if (!parsed.success) return fail(res, 422, "Validation failed.");
+
+    const upd = await supabaseAdmin
+      .from("shop_customers")
+      .update({
+        customer_type: parsed.data.customer_type,
+        updated_at: new Date().toISOString()
+      })
+      .eq("shop_id", shop.id)
+      .eq("customer_mobile", mobile)
+      .select("customer_mobile,customer_type,updated_at")
+      .maybeSingle();
+    if (upd.error) return fail(res, 500, "Could not update customer type.");
+    if (!upd.data) return fail(res, 404, "Customer relation not found in this shop.");
+
+    return okData(res, upd.data);
   });
 
   r.patch("/my/shop/customers/:mobile/status", async (req: Request, res: Response) => {
@@ -521,29 +678,70 @@ export function mountMyShopRoutes(router: Router): void {
 
   r.get("/my/shop/services-catalog", async (req: Request, res: Response) => {
     const { shop } = req.salon!;
-    const rows = await supabaseAdmin
+    const fullRows = await supabaseAdmin
       .from("salon_services")
-      .select("id,name,category,duration_minutes,buffer_after_minutes,price_cents,is_active,sort_order")
+      .select(SERVICE_SELECT_FULL)
       .eq("shop_id", shop.id)
       .order("sort_order");
-    return okData(res, rows.data ?? []);
+    if (!fullRows.error) return okData(res, (fullRows.data ?? []).map((r) => normalizeServiceRowCompat(r as Record<string, unknown>)));
+    if (!isMissingServiceFieldError(fullRows.error)) return fail(res, 500, "Could not load services.");
+    const baseRows = await supabaseAdmin.from("salon_services").select(SERVICE_SELECT_BASE).eq("shop_id", shop.id).order("sort_order");
+    if (baseRows.error) return fail(res, 500, "Could not load services.");
+    return okData(res, (baseRows.data ?? []).map((r) => normalizeServiceRowCompat(r as Record<string, unknown>)));
   });
 
   r.post("/my/shop/services-catalog", async (req: Request, res: Response) => {
     const { user, shop } = req.salon!;
-    if (user.role === "barber") return fail(res, 403, "Only owner or manager can manage catalog.");
+    const allowed = await canManageCatalog(user, shop.id);
+    if (!allowed) return fail(res, 403, "Only owner or manager can manage catalog.");
     const schema = z.object({
       name: z.string().max(255),
       category: z.string().max(64).nullable().optional(),
+      description: z.string().max(4000).nullable().optional(),
       duration_minutes: z.number().int().min(5).max(480),
       buffer_after_minutes: z.number().int().min(0).max(120).optional(),
       price_cents: z.number().int().min(0).nullable().optional(),
       is_active: z.boolean().optional(),
-      sort_order: z.number().int().min(0).max(65535).optional()
+      sort_order: z.number().int().min(0).max(65535).optional(),
+      audience: z.enum(["all", "men", "women", "kids"]).optional(),
+      staff_notes: z.string().max(4000).nullable().optional(),
+      aftercare: z.string().max(4000).nullable().optional(),
+      requires_patch_test: z.boolean().optional(),
+      consultation_first: z.boolean().optional(),
+      min_notice_hours: z.number().int().min(0).max(720).optional(),
+      online_bookable: z.boolean().optional(),
+      deposit_cents: z.number().int().min(0).max(100_000_000).nullable().optional()
     });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) return fail(res, 422, "Validation failed.");
-    const ins = await supabaseAdmin
+    const fullInsert = await supabaseAdmin
+      .from("salon_services")
+      .insert({
+        shop_id: shop.id,
+        name: parsed.data.name,
+        category: parsed.data.category ?? null,
+        description: parsed.data.description ?? null,
+        duration_minutes: parsed.data.duration_minutes,
+        buffer_after_minutes: parsed.data.buffer_after_minutes ?? 0,
+        price_cents: parsed.data.price_cents ?? null,
+        is_active: parsed.data.is_active ?? true,
+        sort_order: parsed.data.sort_order ?? 0,
+        audience: parsed.data.audience ?? "all",
+        staff_notes: parsed.data.staff_notes ?? null,
+        aftercare: parsed.data.aftercare ?? null,
+        requires_patch_test: parsed.data.requires_patch_test ?? false,
+        consultation_first: parsed.data.consultation_first ?? false,
+        min_notice_hours: parsed.data.min_notice_hours ?? 0,
+        online_bookable: parsed.data.online_bookable ?? true,
+        deposit_cents: parsed.data.deposit_cents ?? null
+      })
+      .select(SERVICE_SELECT_FULL)
+      .single();
+    if (!fullInsert.error && fullInsert.data) {
+      return okData(res, normalizeServiceRowCompat(fullInsert.data as Record<string, unknown>), 201);
+    }
+    if (!isMissingServiceFieldError(fullInsert.error)) return fail(res, 500, "Could not create service.");
+    const baseInsert = await supabaseAdmin
       .from("salon_services")
       .insert({
         shop_id: shop.id,
@@ -555,37 +753,73 @@ export function mountMyShopRoutes(router: Router): void {
         is_active: parsed.data.is_active ?? true,
         sort_order: parsed.data.sort_order ?? 0
       })
-      .select("id,name,category,duration_minutes,buffer_after_minutes,price_cents,is_active,sort_order")
+      .select(SERVICE_SELECT_BASE)
       .single();
-    if (ins.error || !ins.data) return fail(res, 500, "Could not create service.");
-    return okData(res, ins.data, 201);
+    if (baseInsert.error || !baseInsert.data) return fail(res, 500, "Could not create service.");
+    return okData(res, normalizeServiceRowCompat(baseInsert.data as Record<string, unknown>), 201);
   });
 
   r.patch("/my/shop/services-catalog/:serviceId", async (req: Request, res: Response) => {
     const { user, shop } = req.salon!;
-    if (user.role === "barber") return fail(res, 403, "Only owner or manager can manage catalog.");
+    const allowed = await canManageCatalog(user, shop.id);
+    if (!allowed) return fail(res, 403, "Only owner or manager can manage catalog.");
     const serviceId = Number(req.params.serviceId);
     const partial = z
       .object({
         name: z.string().max(255).optional(),
         category: z.string().max(64).nullable().optional(),
+        description: z.string().max(4000).nullable().optional(),
         duration_minutes: z.number().int().min(5).max(480).optional(),
         buffer_after_minutes: z.number().int().min(0).max(120).optional(),
         price_cents: z.number().int().min(0).nullable().optional(),
         is_active: z.boolean().optional(),
-        sort_order: z.number().int().min(0).max(65535).optional()
+        sort_order: z.number().int().min(0).max(65535).optional(),
+        audience: z.enum(["all", "men", "women", "kids"]).optional(),
+        staff_notes: z.string().max(4000).nullable().optional(),
+        aftercare: z.string().max(4000).nullable().optional(),
+        requires_patch_test: z.boolean().optional(),
+        consultation_first: z.boolean().optional(),
+        min_notice_hours: z.number().int().min(0).max(720).optional(),
+        online_bookable: z.boolean().optional(),
+        deposit_cents: z.number().int().min(0).max(100_000_000).nullable().optional()
       })
       .safeParse(req.body);
     if (!partial.success) return fail(res, 422, "Validation failed.");
     const patch = partial.data as Record<string, unknown>;
-    const upd = await supabaseAdmin.from("salon_services").update(patch).eq("id", serviceId).eq("shop_id", shop.id).select("*").single();
-    if (upd.error || !upd.data) return fail(res, 404, "Not found.");
-    return okData(res, upd.data);
+    const fullUpdate = await supabaseAdmin.from("salon_services").update(patch).eq("id", serviceId).eq("shop_id", shop.id).select(SERVICE_SELECT_FULL).single();
+    if (!fullUpdate.error && fullUpdate.data) {
+      return okData(res, normalizeServiceRowCompat(fullUpdate.data as Record<string, unknown>));
+    }
+    if (!isMissingServiceFieldError(fullUpdate.error)) return fail(res, 404, "Not found.");
+    const fallbackPatch: Record<string, unknown> = { ...patch };
+    for (const key of [
+      "description",
+      "audience",
+      "staff_notes",
+      "aftercare",
+      "requires_patch_test",
+      "consultation_first",
+      "min_notice_hours",
+      "online_bookable",
+      "deposit_cents"
+    ]) {
+      delete fallbackPatch[key];
+    }
+    const baseUpdate = await supabaseAdmin
+      .from("salon_services")
+      .update(fallbackPatch)
+      .eq("id", serviceId)
+      .eq("shop_id", shop.id)
+      .select(SERVICE_SELECT_BASE)
+      .single();
+    if (baseUpdate.error || !baseUpdate.data) return fail(res, 404, "Not found.");
+    return okData(res, normalizeServiceRowCompat(baseUpdate.data as Record<string, unknown>));
   });
 
   r.delete("/my/shop/services-catalog/:serviceId", async (req: Request, res: Response) => {
     const { user, shop } = req.salon!;
-    if (user.role === "barber") return fail(res, 403, "Only owner or manager can manage catalog.");
+    const allowed = await canManageCatalog(user, shop.id);
+    if (!allowed) return fail(res, 403, "Only owner or manager can manage catalog.");
     const serviceId = Number(req.params.serviceId);
     const bk = await supabaseAdmin.from("salon_bookings").select("id").eq("salon_service_id", serviceId).limit(1).maybeSingle();
     if (bk.data) {
@@ -596,6 +830,91 @@ export function mountMyShopRoutes(router: Router): void {
     await supabaseAdmin.from("salon_staff_services").delete().eq("service_id", serviceId);
     await supabaseAdmin.from("salon_services").delete().eq("id", serviceId).eq("shop_id", shop.id);
     return res.json({ message: "Service removed." });
+  });
+
+  r.get("/my/shop/services-catalog/:serviceId/inventory", async (req: Request, res: Response) => {
+    const { shop } = req.salon!;
+    const serviceId = Number(req.params.serviceId);
+    const svc = await supabaseAdmin.from("salon_services").select("id").eq("id", serviceId).eq("shop_id", shop.id).maybeSingle();
+    if (!svc.data) return fail(res, 404, "Service not found.");
+    const rows = await supabaseAdmin
+      .from("salon_service_inventory")
+      .select(
+        "id,salon_service_id,inventory_item_id,quantity_per_service,staff_note,material_cost_cents,inventory_items(id,name,unit,quantity,low_stock_threshold,sku,cost_price_cents,supplier_notes)"
+      )
+      .eq("shop_id", shop.id)
+      .eq("salon_service_id", serviceId);
+    const data = [];
+    for (const row of (rows.data ?? []) as Record<string, unknown>[]) {
+      const inv = row.inventory_items as Record<string, unknown> | Record<string, unknown>[] | null | undefined;
+      const item = Array.isArray(inv) ? inv[0] : inv;
+      data.push({
+        id: row.id,
+        salon_service_id: row.salon_service_id,
+        inventory_item_id: row.inventory_item_id,
+        quantity_per_service: String(row.quantity_per_service ?? "1"),
+        staff_note: row.staff_note ?? null,
+        material_cost_cents: row.material_cost_cents ?? null,
+        product: item
+          ? {
+              id: item.id,
+              name: item.name,
+              unit: item.unit,
+              quantity: String(item.quantity ?? "0"),
+              low_stock_threshold: item.low_stock_threshold != null ? String(item.low_stock_threshold) : null,
+              sku: item.sku ?? null,
+              cost_price_cents: item.cost_price_cents ?? null,
+              supplier_notes: item.supplier_notes ?? null
+            }
+          : null
+      });
+    }
+    return okData(res, data);
+  });
+
+  r.put("/my/shop/services-catalog/:serviceId/inventory", async (req: Request, res: Response) => {
+    const { user, shop } = req.salon!;
+    const allowed = await canManageCatalog(user, shop.id);
+    if (!allowed) return fail(res, 403, "Only owner or manager can manage catalog.");
+    const serviceId = Number(req.params.serviceId);
+    const svc = await supabaseAdmin.from("salon_services").select("id").eq("id", serviceId).eq("shop_id", shop.id).maybeSingle();
+    if (!svc.data) return fail(res, 404, "Service not found.");
+    const linkSchema = z.object({
+      inventory_item_id: z.number().int().positive(),
+      quantity_per_service: z.number().positive().max(100_000),
+      staff_note: z.string().max(2000).nullable().optional(),
+      material_cost_cents: z.number().int().min(0).max(100_000_000).nullable().optional()
+    });
+    const parsed = z.object({ items: z.array(linkSchema).max(200) }).safeParse(req.body);
+    if (!parsed.success) return fail(res, 422, "Validation failed.");
+    const seen = new Set<number>();
+    for (const it of parsed.data.items) {
+      if (seen.has(it.inventory_item_id)) return fail(res, 422, "Duplicate inventory item in list.");
+      seen.add(it.inventory_item_id);
+    }
+    if (parsed.data.items.length) {
+      const invIds = parsed.data.items.map((i) => i.inventory_item_id);
+      const invOk = await supabaseAdmin.from("inventory_items").select("id").eq("shop_id", shop.id).in("id", invIds);
+      const got = new Set((invOk.data ?? []).map((x: { id: number }) => x.id));
+      for (const id of invIds) {
+        if (!got.has(id)) return fail(res, 422, "Invalid inventory item for this shop.");
+      }
+    }
+    await supabaseAdmin.from("salon_service_inventory").delete().eq("salon_service_id", serviceId).eq("shop_id", shop.id);
+    if (parsed.data.items.length) {
+      const inserts = parsed.data.items.map((i) => ({
+        shop_id: shop.id,
+        salon_service_id: serviceId,
+        inventory_item_id: i.inventory_item_id,
+        quantity_per_service: i.quantity_per_service,
+        staff_note: i.staff_note ?? null,
+        material_cost_cents: i.material_cost_cents ?? null,
+        updated_at: new Date().toISOString()
+      }));
+      const ins = await supabaseAdmin.from("salon_service_inventory").insert(inserts);
+      if (ins.error) return fail(res, 500, "Could not save service materials.");
+    }
+    return okData(res, { saved: parsed.data.items.length });
   });
 
   r.get("/my/shop/staff-catalog", async (req: Request, res: Response) => {
@@ -831,6 +1150,54 @@ export function mountMyShopRoutes(router: Router): void {
       if (b) list.push(b);
     }
     return okData(res, list);
+  });
+
+  r.get("/my/shop/waitlist", async (req: Request, res: Response) => {
+    const { shop, user } = req.salon!;
+    if (user.role === "barber") return fail(res, 403, "Only owner or manager can view waitlist.");
+    const preferredDate = typeof req.query.preferred_date === "string" ? req.query.preferred_date : null;
+    const status = typeof req.query.status === "string" ? req.query.status : null;
+    let q = supabaseAdmin
+      .from("waitlist")
+      .select("id,shop_id,service_id,staff_id,customer_id,customer_mobile,preferred_date,status,notified_at,created_at")
+      .eq("shop_id", shop.id)
+      .order("created_at", { ascending: true })
+      .limit(500);
+    if (preferredDate) q = q.eq("preferred_date", preferredDate);
+    if (status) q = q.eq("status", status);
+    const rows = await q;
+
+    const serviceIds = [...new Set((rows.data ?? []).map((x: { service_id: number }) => x.service_id))];
+    const staffIds = [...new Set((rows.data ?? []).map((x: { staff_id: number | null }) => x.staff_id).filter((x): x is number => x != null))];
+    const serviceMap = new Map<number, { id: number; name: string }>();
+    const staffMap = new Map<number, { id: number; name: string }>();
+    if (serviceIds.length) {
+      const sv = await supabaseAdmin.from("salon_services").select("id,name").in("id", serviceIds);
+      for (const s of (sv.data ?? []) as { id: number; name: string }[]) serviceMap.set(s.id, s);
+    }
+    if (staffIds.length) {
+      const st = await supabaseAdmin.from("salon_staff").select("id,name").in("id", staffIds);
+      for (const s of (st.data ?? []) as { id: number; name: string }[]) staffMap.set(s.id, s);
+    }
+    const out = (rows.data ?? []).map(
+      (r: {
+        id: number;
+        shop_id: number;
+        service_id: number;
+        staff_id: number | null;
+        customer_id: string | null;
+        customer_mobile: string | null;
+        preferred_date: string;
+        status: string;
+        notified_at: string | null;
+        created_at: string;
+      }) => ({
+        ...r,
+        service: serviceMap.get(r.service_id) ?? null,
+        staff: r.staff_id != null ? (staffMap.get(r.staff_id) ?? null) : null
+      })
+    );
+    return okData(res, out);
   });
 
   r.post("/my/shop/bookings", async (req: Request, res: Response) => {
@@ -1149,7 +1516,10 @@ export function mountMyShopRoutes(router: Router): void {
       name: z.string(),
       quantity: z.number().min(0),
       unit: z.string().optional(),
-      low_stock_threshold: z.number().nullable().optional()
+      low_stock_threshold: z.number().nullable().optional(),
+      sku: z.string().max(128).nullable().optional(),
+      cost_price_cents: z.number().int().min(0).max(100_000_000).nullable().optional(),
+      supplier_notes: z.string().max(4000).nullable().optional()
     });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) return fail(res, 422, "Validation failed.");
@@ -1160,7 +1530,10 @@ export function mountMyShopRoutes(router: Router): void {
         name: parsed.data.name,
         quantity: parsed.data.quantity,
         unit: parsed.data.unit ?? "unit",
-        low_stock_threshold: parsed.data.low_stock_threshold ?? null
+        low_stock_threshold: parsed.data.low_stock_threshold ?? null,
+        sku: parsed.data.sku ?? null,
+        cost_price_cents: parsed.data.cost_price_cents ?? null,
+        supplier_notes: parsed.data.supplier_notes ?? null
       })
       .select("*")
       .single();
@@ -1185,7 +1558,10 @@ export function mountMyShopRoutes(router: Router): void {
         name: z.string().optional(),
         quantity: z.number().min(0).optional(),
         unit: z.string().max(32).optional(),
-        low_stock_threshold: z.number().nullable().optional()
+        low_stock_threshold: z.number().nullable().optional(),
+        sku: z.string().max(128).nullable().optional(),
+        cost_price_cents: z.number().int().min(0).max(100_000_000).nullable().optional(),
+        supplier_notes: z.string().max(4000).nullable().optional()
       })
       .safeParse(req.body);
     if (!partial.success) return fail(res, 422, "Validation failed.");

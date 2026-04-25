@@ -18,6 +18,100 @@ async function authUser(req: Request): Promise<{ id: string; mobile: string } | 
 }
 
 export function mountCustomerRoutes(router: Router): void {
+  const waitlistJoinSchema = z.object({
+    shop_id: z.number().int().positive(),
+    service_id: z.number().int().positive(),
+    preferred_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    staff_id: z.number().int().positive().nullable().optional()
+  });
+
+  router.post("/waitlist/join", async (req: Request, res: Response) => {
+    const user = await authUser(req);
+    if (!user) return fail(res, 401, "Unauthenticated.");
+    const parsed = waitlistJoinSchema.safeParse(req.body);
+    if (!parsed.success) return fail(res, 422, "Validation failed.");
+
+    const shopOk = await supabaseAdmin.from("shops").select("id").eq("id", parsed.data.shop_id).eq("is_active", true).maybeSingle();
+    if (!shopOk.data) return fail(res, 422, "Invalid shop.");
+
+    const serviceOk = await supabaseAdmin
+      .from("salon_services")
+      .select("id")
+      .eq("id", parsed.data.service_id)
+      .eq("shop_id", parsed.data.shop_id)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!serviceOk.data) return fail(res, 422, "Invalid service.");
+
+    let staffId: number | null = parsed.data.staff_id ?? null;
+    if (staffId != null) {
+      const staffOk = await supabaseAdmin
+        .from("salon_staff")
+        .select("id")
+        .eq("id", staffId)
+        .eq("shop_id", parsed.data.shop_id)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (!staffOk.data) return fail(res, 422, "Invalid staff.");
+    }
+
+    const existing = await supabaseAdmin
+      .from("waitlist")
+      .select("id,status")
+      .eq("shop_id", parsed.data.shop_id)
+      .eq("service_id", parsed.data.service_id)
+      .eq("preferred_date", parsed.data.preferred_date)
+      .eq("customer_id", user.id)
+      .in("status", ["waiting", "notified"])
+      .order("id", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (existing.data) return fail(res, 409, "You are already on the waitlist for this request.");
+
+    const ins = await supabaseAdmin
+      .from("waitlist")
+      .insert({
+        shop_id: parsed.data.shop_id,
+        service_id: parsed.data.service_id,
+        staff_id: staffId,
+        customer_id: user.id,
+        customer_mobile: user.mobile,
+        preferred_date: parsed.data.preferred_date,
+        status: "waiting"
+      })
+      .select("id,shop_id,service_id,staff_id,preferred_date,status,notified_at,created_at")
+      .single();
+    if (ins.error || !ins.data) return fail(res, 500, "Could not join waitlist.");
+    return okData(res, ins.data, 201);
+  });
+
+  router.get("/waitlist/my", async (req: Request, res: Response) => {
+    const user = await authUser(req);
+    if (!user) return fail(res, 401, "Unauthenticated.");
+    const rows = await supabaseAdmin
+      .from("waitlist")
+      .select("id,shop_id,service_id,staff_id,preferred_date,status,notified_at,created_at")
+      .or(`customer_id.eq.${user.id},customer_mobile.eq.${user.mobile}`)
+      .order("created_at", { ascending: false })
+      .limit(300);
+    return okData(res, rows.data ?? []);
+  });
+
+  router.delete("/waitlist/:id", async (req: Request, res: Response) => {
+    const user = await authUser(req);
+    if (!user) return fail(res, 401, "Unauthenticated.");
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) return fail(res, 422, "Invalid waitlist id.");
+
+    const existing = await supabaseAdmin.from("waitlist").select("id,customer_id,customer_mobile").eq("id", id).maybeSingle();
+    const row = existing.data as { id: number; customer_id: string | null; customer_mobile: string | null } | null;
+    if (!row) return fail(res, 404, "Not found.");
+    if (row.customer_id !== user.id && row.customer_mobile !== user.mobile) return fail(res, 403, "Forbidden.");
+
+    await supabaseAdmin.from("waitlist").update({ status: "cancelled" }).eq("id", id);
+    return okData(res, { id, removed: true });
+  });
+
   router.get("/me/appointments", async (req: Request, res: Response) => {
     const user = await authUser(req);
     if (!user) return fail(res, 401, "Unauthenticated.");

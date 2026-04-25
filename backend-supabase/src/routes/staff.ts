@@ -383,9 +383,108 @@ export function mountStaffRoutes(router: Router): void {
     if (!ids.length) return okData(res, []);
     const rows = await supabaseAdmin
       .from("salon_services")
-      .select("id,name,category,description,duration_minutes,price_cents")
+      .select(
+        "id,name,category,description,duration_minutes,buffer_after_minutes,price_cents,staff_notes,aftercare,requires_patch_test,consultation_first,min_notice_hours,online_bookable,deposit_cents,audience"
+      )
       .in("id", ids);
-    return okData(res, rows.data ?? []);
+    const services = (rows.data ?? []) as Record<string, unknown>[];
+    const invRows = await supabaseAdmin
+      .from("salon_service_inventory")
+      .select(
+        "salon_service_id,quantity_per_service,staff_note,material_cost_cents,inventory_items(id,name,unit,quantity,low_stock_threshold,sku,cost_price_cents)"
+      )
+      .eq("shop_id", staff.shop_id)
+      .in("salon_service_id", ids);
+    type InvLine = {
+      salon_service_id: number;
+      quantity_per_service: string | number;
+      staff_note: string | null;
+      material_cost_cents: number | null;
+      inventory_items: Record<string, unknown> | Record<string, unknown>[] | null;
+    };
+    const byService = new Map<number, InvLine[]>();
+    for (const raw of (invRows.data ?? []) as InvLine[]) {
+      const sid = raw.salon_service_id;
+      const list = byService.get(sid) ?? [];
+      list.push(raw);
+      byService.set(sid, list);
+    }
+    const parseQty = (q: unknown): number => {
+      const n = typeof q === "string" ? Number.parseFloat(q) : Number(q);
+      return Number.isFinite(n) ? n : 0;
+    };
+    const out = services.map((svc) => {
+      const sid = Number(svc.id);
+      const lines = byService.get(sid) ?? [];
+      const inventory_lines = [];
+      let materials_sum = 0;
+      let materials_known = true;
+      for (const ln of lines) {
+        const invRaw = ln.inventory_items;
+        const item = (Array.isArray(invRaw) ? invRaw[0] : invRaw) as Record<string, unknown> | null | undefined;
+        const onHand = item ? parseQty(item.quantity) : 0;
+        const lowTh = item?.low_stock_threshold != null ? parseQty(item.low_stock_threshold) : null;
+        const qps = typeof ln.quantity_per_service === "string" ? Number.parseFloat(ln.quantity_per_service) : Number(ln.quantity_per_service);
+        const qtyPer = Number.isFinite(qps) && qps > 0 ? qps : 1;
+        const costUnit = item?.cost_price_cents != null ? Number(item.cost_price_cents) : null;
+        const matOverride = ln.material_cost_cents != null ? Number(ln.material_cost_cents) : null;
+        let projected: number | null = null;
+        if (matOverride != null && Number.isFinite(matOverride)) projected = matOverride;
+        else if (costUnit != null && Number.isFinite(costUnit)) projected = Math.round(qtyPer * costUnit);
+        else materials_known = false;
+        if (projected != null) materials_sum += projected;
+        const is_low = lowTh != null && onHand <= lowTh;
+        inventory_lines.push({
+          inventory_item_id: item ? Number(item.id) : null,
+          name: item ? String(item.name ?? "") : "Unknown product",
+          sku: item?.sku != null ? String(item.sku) : null,
+          unit: item ? String(item.unit ?? "unit") : "unit",
+          quantity_on_hand: item ? String(item.quantity ?? "0") : "0",
+          low_stock_threshold: item?.low_stock_threshold != null ? String(item.low_stock_threshold) : null,
+          quantity_per_service: qtyPer,
+          staff_note: ln.staff_note ?? null,
+          material_cost_cents: ln.material_cost_cents ?? null,
+          cost_price_cents: costUnit,
+          projected_material_cents: projected,
+          is_low_stock: is_low
+        });
+      }
+      const priceCents = svc.price_cents != null ? Number(svc.price_cents) : null;
+      const smart_hints: string[] = [];
+      const hintSet = new Set<string>();
+      const pushHint = (h: string) => {
+        if (!hintSet.has(h)) {
+          hintSet.add(h);
+          smart_hints.push(h);
+        }
+      };
+      if (svc.requires_patch_test === true) {
+        pushHint("Patch / allergy test is required — confirm timing and client readiness before color or chemical work.");
+      }
+      if (svc.consultation_first === true) {
+        pushHint("Consultation is recommended first — align expectations and home care before the full service.");
+      }
+      for (const il of inventory_lines) {
+        if (il.is_low_stock) pushHint(`Low stock: ${il.name} (${il.quantity_on_hand} ${il.unit} on hand). Consider reordering.`);
+      }
+      if (inventory_lines.length && !materials_known) {
+        pushHint("Add a fixed material cost per booking or unit cost on inventory items to estimate supply spend per appointment.");
+      }
+      if (priceCents != null && priceCents > 0 && materials_known && materials_sum > priceCents * 0.35) {
+        pushHint("Estimated material cost is a large share of list price — review quantities, unit costs, or menu pricing.");
+      }
+      if (inventory_lines.length === 0 && (svc.staff_notes == null || String(svc.staff_notes).trim() === "")) {
+        pushHint("No materials linked yet — ask your manager to attach products so stock impact is clearer.");
+      }
+      return {
+        ...svc,
+        inventory_lines,
+        materials_total_cents:
+          inventory_lines.length === 0 ? null : materials_known ? materials_sum : null,
+        smart_hints: smart_hints.slice(0, 8)
+      };
+    });
+    return okData(res, out);
   });
 
   router.get("/staff/earnings/summary", async (req: Request, res: Response) => {
