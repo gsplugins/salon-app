@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Eye, EyeOff, Loader2, Sparkles, Store } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Loader2, LogIn, Sparkles, Store, UserPlus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { authJson, fetchAuthMe, formatApiError, type ApiErrorBody, type AuthMePayload } from "@/lib/auth-api";
 import { broadcastSalonAuthChange } from "@/lib/auth-events";
@@ -30,7 +30,7 @@ function slugifyShopSlug(input: string): string {
 function SectionCard(props: { title: string; subtitle: string; children: React.ReactNode }) {
   const { title, subtitle, children } = props;
   return (
-    <section className="section-wrap p-6">
+    <section className="section-wrap p-6 shadow-sm">
       <h2 className="text-lg font-semibold text-white">{title}</h2>
       <p className="mt-1 text-sm text-slate-300">{subtitle}</p>
       <div className="mt-5">{children}</div>
@@ -414,7 +414,8 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
       ) : null}
 
       <div className="section-wrap p-4 sm:p-6">
-        <div className="mb-5 flex flex-wrap gap-2 border-b border-slate-800 pb-4">
+        <div className="mb-6 rounded-2xl border border-slate-800 bg-[#f7f2fc] p-1.5">
+          <div className="grid grid-cols-2 gap-1">
           <button
             type="button"
             onClick={() => {
@@ -422,12 +423,13 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               setLoginView("login");
               setNotice(null);
             }}
-            className={`min-h-10 rounded-full px-4 py-2 text-sm font-semibold transition ${
+            className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
               mode === "login"
                 ? "bg-blue-500 text-white shadow-sm"
-                : "bg-slate-900 text-slate-300 hover:bg-slate-800"
+                : "text-slate-400 hover:bg-white/80"
             }`}
           >
+            <LogIn className="h-4 w-4" aria-hidden />
             Login
           </button>
           <button
@@ -436,14 +438,16 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               setMode("register");
               setNotice(null);
             }}
-            className={`min-h-10 rounded-full px-4 py-2 text-sm font-semibold transition ${
+            className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
               mode === "register"
                 ? "bg-blue-500 text-white shadow-sm"
-                : "bg-slate-900 text-slate-300 hover:bg-slate-800"
+                : "text-slate-400 hover:bg-white/80"
             }`}
           >
+            <UserPlus className="h-4 w-4" aria-hidden />
             Registration
           </button>
+          </div>
         </div>
 
         {mode === "login" && loginView === "login" ? (
@@ -489,9 +493,14 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full min-h-11 rounded-full bg-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-400 disabled:opacity-60"
+                className="inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-full bg-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-400 disabled:opacity-60"
               >
-                {busy ? "Signing in..." : "Sign in"}
+                {busy ? "Signing in..." : (
+                  <>
+                    <ArrowRight className="h-4 w-4" aria-hidden />
+                    Sign in
+                  </>
+                )}
               </button>
               <p className="text-center text-xs text-slate-400">
                 New here?{" "}

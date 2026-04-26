@@ -1,14 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fff9f5;
-  --foreground: #222222;
-  --surface: #fdecef;
-  --surface-elevated: #fff4f6;
-  --border: #e8d7da;
-  --brand-primary: #b76e79;
-  --brand-primary-hover: #9f5965;
-  --paragraph: #666666;
+  --background: #fcfaf8;
+  --foreground: #1b1b1b;
+  --surface: #f1ebf8;
+  --surface-elevated: #f7f2fc;
+  --border: #e5ddf0;
+  --brand-primary: #7b4b94;
+  --brand-primary-hover: #64397d;
+  --brand-glow: #c8a9e0;
+  --paragraph: #6b6572;
 }
 
 @theme inline {
@@ -43,12 +44,12 @@ textarea:disabled {
 .glass-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  box-shadow: 0 12px 28px rgba(183, 110, 121, 0.12);
+  box-shadow: 0 12px 28px rgba(123, 75, 148, 0.14);
 }
 
 .neon-border {
   border: 1px solid var(--border);
-  box-shadow: 0 0 0 1px rgba(183, 110, 121, 0.12);
+  box-shadow: 0 0 0 1px rgba(200, 169, 224, 0.35);
 }
 
 .section-wrap {
@@ -61,7 +62,7 @@ textarea:disabled {
   border: 1px solid var(--border);
   background: var(--surface-elevated);
   border-radius: 0.9rem;
-  box-shadow: 0 6px 18px rgba(183, 110, 121, 0.08);
+  box-shadow: 0 6px 18px rgba(123, 75, 148, 0.1);
 }
 
 .fade-up {
@@ -132,10 +133,12 @@ textarea:disabled {
 /* Brand palette mappings for common utility classes used across pages. */
 .bg-blue-500 {
   background-color: var(--brand-primary) !important;
+  color: #fcfaf8 !important;
 }
 
 .hover\:bg-blue-400:hover {
   background-color: var(--brand-primary-hover) !important;
+  color: #fcfaf8 !important;
 }
 
 .text-blue-300,
@@ -154,6 +157,10 @@ textarea:disabled {
 }
 
 .text-slate-100 {
+  color: var(--foreground) !important;
+}
+
+.text-white {
   color: var(--foreground) !important;
 }
 

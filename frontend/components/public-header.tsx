@@ -8,7 +8,7 @@ type Props = {
 
 export function PublicHeader({ showMarketingNav }: Props) {
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-800 bg-[#FFF4F6]/95 backdrop-blur-md">
+    <header className="sticky top-0 z-30 border-b border-slate-800 bg-[#F1EBF8]/95 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 sm:px-6">
         <div className="flex min-w-0 flex-1 items-center gap-6">
           <Link href="/" className="shrink-0 text-lg font-bold tracking-tight text-slate-100">
