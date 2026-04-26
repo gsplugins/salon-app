@@ -5,7 +5,7 @@ import { AuthAccessPanel } from "./auth-access-panel";
 import { AccountPhotoCard } from "./account-photo-card";
 
 export const metadata = {
-  title: "Portal hub — Prime Barbershop",
+  title: "Portal hub — BarbarShop",
   description:
     "Role-based portal hub for customer, staff, manager, and super admin.",
 };
@@ -21,7 +21,7 @@ export default function StaffAppPage() {
                 Account center
               </p>
               <h1 className="text-lg font-semibold tracking-tight text-white sm:text-xl">
-                Lumière authentication workspace
+                BarbarShop authentication workspace
               </h1>
             </div>
             <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">

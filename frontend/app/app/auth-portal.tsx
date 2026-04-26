@@ -582,7 +582,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                       onChange={(e) => setShopName(e.target.value)}
                       required
                       autoComplete="organization"
-                      placeholder="Lumière Studio"
+                      placeholder="BarbarShop Studio"
                     />
                   </label>
                   <label className="text-xs font-medium text-zinc-500 sm:col-span-2">

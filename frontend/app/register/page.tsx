@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Create account — Prime Barbershop",
+  title: "Create account — BarbarShop",
 };
 
 /** Canonical auth UI lives under `/app/auth`; this path is a stable alias. */

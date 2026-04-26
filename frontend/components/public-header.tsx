@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { AuthHeaderProfile } from "@/components/auth-header-profile";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 type Props = {
   /** Show anchor links for marketing home sections (#services, #visit, #how-heading). */
@@ -9,11 +8,11 @@ type Props = {
 
 export function PublicHeader({ showMarketingNav }: Props) {
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-800 bg-[#0a1220]/95 backdrop-blur-md">
+    <header className="sticky top-0 z-30 border-b border-slate-800 bg-[#FFF4F6]/95 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 sm:px-6">
         <div className="flex min-w-0 flex-1 items-center gap-6">
           <Link href="/" className="shrink-0 text-lg font-bold tracking-tight text-slate-100">
-            Prime Barbershop
+            BarbarShop
           </Link>
           <nav
             className="hidden min-w-0 flex-1 flex-wrap items-center gap-x-5 gap-y-1 text-sm font-medium md:flex"
@@ -68,7 +67,6 @@ export function PublicHeader({ showMarketingNav }: Props) {
             </Link>
           </nav>
           <AuthHeaderProfile />
-          <ThemeToggle />
         </div>
       </div>
     </header>

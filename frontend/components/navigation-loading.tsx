@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Scissors, Sparkles } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 function isModifiedClick(e: MouseEvent): boolean {
@@ -70,8 +70,10 @@ export function NavigationLoading() {
         <div className="h-full w-full origin-left animate-pulse bg-blue-500" />
       </div>
       {loading ? (
-        <div className="pointer-events-none fixed right-3 top-3 z-[101] rounded-full bg-zinc-900/85 p-2 text-white shadow-lg dark:bg-zinc-100/90 dark:text-zinc-900">
-          <Loader2 className="h-4 w-4 animate-spin" />
+        <div className="pointer-events-none fixed right-3 top-3 z-[101] inline-flex items-center gap-2 rounded-full border border-slate-700 bg-white/90 px-3 py-2 text-[#B76E79] shadow-lg">
+          <Sparkles className="barber-loader-chip h-3.5 w-3.5" />
+          <Scissors className="barber-loader-scissor h-4 w-4" />
+          <Sparkles className="barber-loader-chip h-3.5 w-3.5" />
         </div>
       ) : null}
     </>

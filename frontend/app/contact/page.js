@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Contact | Prime Barbershop",
+  title: "Contact | BarbarShop",
 };
 
 export default function ContactPage() {
@@ -12,7 +12,7 @@ export default function ContactPage() {
         Need help with bookings or shop onboarding? Reach out and our team will assist you.
       </p>
       <div className="mt-6 space-y-2 text-sm text-slate-300">
-        <p>Email: support@primebarbershop.example</p>
+        <p>Email: support@barbarshop.example</p>
         <p>Phone: +1 (503) 555-0128</p>
       </div>
       <div className="mt-8">

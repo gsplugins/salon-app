@@ -9,7 +9,7 @@ export default function BarberLayout({ children }: { children: React.ReactNode }
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex min-w-0 items-center gap-4">
             <Link href="/" className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-800 dark:text-rose-200">
-              Lumière
+              BarbarShop
             </Link>
             <span className="hidden text-xs text-zinc-400 sm:inline">Staff workspace</span>
           </div>

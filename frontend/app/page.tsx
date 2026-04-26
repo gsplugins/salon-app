@@ -92,11 +92,11 @@ export default async function Home() {
 
       <main>
         <section
-          className="relative overflow-hidden border-b border-slate-800 bg-[#0a1220]"
+          className="relative overflow-hidden border-b border-slate-800 bg-[#FDECEF]"
           aria-labelledby="hero-heading"
         >
           <div
-            className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-blue-500/15 blur-3xl"
+            className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#B76E79]/20 blur-3xl"
             aria-hidden
           />
           <div className="relative mx-auto max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
@@ -132,7 +132,7 @@ export default async function Home() {
         <FeaturedShopsSection />
 
         <section
-          className="border-y border-slate-800 bg-[#09111d]"
+          className="border-y border-slate-800 bg-[#FFF4F6]"
           aria-labelledby="how-heading"
         >
           <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
@@ -233,7 +233,7 @@ export default async function Home() {
 
         <section
           id="visit"
-          className="border-y border-slate-800 bg-[#09111d]"
+          className="border-y border-slate-800 bg-[#FFF4F6]"
         >
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:grid-cols-2 sm:px-6 sm:py-20">
             <div>
@@ -328,7 +328,7 @@ export default async function Home() {
           className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16 sm:px-6 sm:py-24"
           aria-labelledby="book-heading"
         >
-          <div className="rounded-3xl bg-gradient-to-br from-zinc-900 to-zinc-800 px-8 py-12 text-center shadow-lg dark:from-amber-950 dark:to-zinc-950 sm:px-12">
+          <div className="rounded-3xl border border-slate-800 bg-gradient-to-br from-[#FDECEF] to-[#FFF9F5] px-8 py-12 text-center shadow-lg sm:px-12">
             <h2
               id="book-heading"
               className="text-2xl font-semibold tracking-tight text-white sm:text-3xl"
@@ -363,11 +363,11 @@ export default async function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-slate-800 bg-[#0a1220]">
+      <footer className="border-t border-slate-800 bg-[#FDECEF]">
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-400">
-              © {new Date().getFullYear()} Prime Barbershop. All rights reserved.
+              © {new Date().getFullYear()} BarbarShop. All rights reserved.
             </p>
             <div
               className={`rounded-xl border px-3 py-2 text-xs ${

@@ -1,17 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #070b14;
-  --foreground: #e6edf8;
-  --surface: #0d1422;
-  --surface-elevated: #121b2d;
-  --border: #223250;
-  --brand-blue: #3b82f6;
-}
-
-.dark {
-  --background: #030712;
-  --foreground: #e2e8f0;
+  --background: #fff9f5;
+  --foreground: #222222;
+  --surface: #fdecef;
+  --surface-elevated: #fff4f6;
+  --border: #e8d7da;
+  --brand-primary: #b76e79;
+  --brand-primary-hover: #9f5965;
+  --paragraph: #666666;
 }
 
 @theme inline {
@@ -22,20 +19,36 @@
 }
 
 body {
-  background: linear-gradient(180deg, #060a12 0%, #070d18 60%, #050912 100%);
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+a,
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
 }
 
 .glass-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  box-shadow: 0 12px 28px rgba(2, 8, 22, 0.35);
+  box-shadow: 0 12px 28px rgba(183, 110, 121, 0.12);
 }
 
 .neon-border {
-  border: 1px solid #355182;
-  box-shadow: 0 0 0 1px rgba(42, 82, 150, 0.25);
+  border: 1px solid var(--border);
+  box-shadow: 0 0 0 1px rgba(183, 110, 121, 0.12);
 }
 
 .section-wrap {
@@ -48,6 +61,7 @@ body {
   border: 1px solid var(--border);
   background: var(--surface-elevated);
   border-radius: 0.9rem;
+  box-shadow: 0 6px 18px rgba(183, 110, 121, 0.08);
 }
 
 .fade-up {
@@ -60,6 +74,14 @@ body {
 
 .spin-slow {
   animation: spin 1.2s linear infinite;
+}
+
+.barber-loader-chip {
+  animation: barberBob 900ms ease-in-out infinite;
+}
+
+.barber-loader-scissor {
+  animation: barberSnip 780ms ease-in-out infinite;
 }
 
 @keyframes fadeUp {
@@ -83,6 +105,70 @@ body {
     transform: scale(1.06);
     opacity: 1;
   }
+}
+
+@keyframes barberBob {
+  0%,
+  100% {
+    transform: translateY(0px);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
+}
+
+@keyframes barberSnip {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(-14deg) scale(1.08);
+  }
+}
+
+/* Brand palette mappings for common utility classes used across pages. */
+.bg-blue-500 {
+  background-color: var(--brand-primary) !important;
+}
+
+.hover\:bg-blue-400:hover {
+  background-color: var(--brand-primary-hover) !important;
+}
+
+.text-blue-300,
+.text-blue-200 {
+  color: var(--brand-primary) !important;
+}
+
+.hover\:text-blue-300:hover,
+.hover\:text-blue-200:hover {
+  color: var(--brand-primary-hover) !important;
+}
+
+.border-blue-400,
+.hover\:border-blue-400:hover {
+  border-color: var(--brand-primary) !important;
+}
+
+.text-slate-100 {
+  color: var(--foreground) !important;
+}
+
+.text-slate-300,
+.text-slate-400,
+.text-zinc-300,
+.text-zinc-500 {
+  color: var(--paragraph) !important;
+}
+
+.border-slate-700,
+.border-slate-800,
+.border-zinc-200,
+.border-zinc-300 {
+  border-color: var(--border) !important;
 }
 
 /* Mobile / future native shell: respect safe areas (maps to React Native SafeAreaView). */

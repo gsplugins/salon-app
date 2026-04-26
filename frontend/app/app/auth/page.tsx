@@ -8,7 +8,7 @@ type Props = {
 const ALLOWED_TABS = new Set(["login", "register", "forgot", "reset"]);
 
 export const metadata = {
-  title: "Login or register — Prime Barbershop",
+  title: "Login or register — BarbarShop",
 };
 
 export const dynamic = "force-dynamic";

@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lumière Salon — Hair, color & care",
+  title: "BarbarShop — Hair, color & care",
   description:
-    "Book haircuts, color, and treatments at Lumière Salon. Warm service and skilled stylists in a calm, welcoming space.",
+    "Book haircuts, grooming, and treatments at BarbarShop. Warm service and skilled stylists in a calm, welcoming space.",
 };
 
 export default function RootLayout({
@@ -27,7 +27,6 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans antialiased">
