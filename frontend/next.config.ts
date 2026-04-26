@@ -23,29 +23,26 @@
 
 // export default nextConfig;
 
+
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Output standalone for Vercel deployment
   output: 'standalone',
   
-  // Ignore ESLint errors during build (temporary for deployment)
+  // Critical: Ensure headers() works on Vercel
+  serverExternalPackages: [],
+  
+  // Ignore build errors (temporary)
   eslint: {
     ignoreDuringBuilds: true,
   },
-  
-  // Ignore TypeScript errors during build (temporary for deployment)
   typescript: {
     ignoreBuildErrors: true,
   },
   
-  // Environment variables that should be available
+  // Ensure environment variables are exposed
   env: {
-    // Add any public env vars here if needed
-  },
-  
-  // If you use external images, configure domains here
-  images: {
-    domains: [], // Add your image domains if needed
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
 }
 
