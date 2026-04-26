@@ -1,3 +1,7 @@
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
+
 import { headers } from "next/headers";
 import Link from "next/link";
 import { Calendar, Search, Sparkles } from "lucide-react";
@@ -16,18 +20,23 @@ async function fetchBackendJson(): Promise<{
 }> {
   const pathsToTry: { url: string; via: string }[] = [];
 
-  try {
-    const h = await headers();
-    const host = h.get("x-forwarded-host") ?? h.get("host");
-    const proto = h.get("x-forwarded-proto") ?? "http";
-    if (host) {
-      pathsToTry.push({
-        url: `${proto}://${host}/api/test`,
-        via: "same-origin proxy (Next → API)",
-      });
+  // Only try headers during runtime, not build time
+  const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';
+  
+  if (!isBuildTime) {
+    try {
+      const h = await headers();
+      const host = h.get("x-forwarded-host") ?? h.get("host");
+      const proto = h.get("x-forwarded-proto") ?? "http";
+      if (host) {
+        pathsToTry.push({
+          url: `${proto}://${host}/api/test`,
+          via: "same-origin proxy (Next → API)",
+        });
+      }
+    } catch {
+      // headers() unavailable (e.g. static context) — rely on direct URL only
     }
-  } catch {
-    // headers() unavailable (e.g. static context) — rely on direct URL only
   }
 
   pathsToTry.push({
