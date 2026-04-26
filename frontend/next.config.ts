@@ -29,20 +29,12 @@
 const nextConfig = {
   output: 'standalone',
   
-  // Critical: Ensure headers() works on Vercel
-  serverExternalPackages: [],
-  
-  // Ignore build errors (temporary)
+  // Ignore build errors for deployment
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
-  },
-  
-  // Ensure environment variables are exposed
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
 }
 
