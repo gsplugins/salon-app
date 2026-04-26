@@ -93,8 +93,8 @@ function FormBody({ accessToken }: { accessToken: string }) {
       division: typeof st.division === "string" ? st.division : "",
       district: typeof st.district === "string" ? st.district : "",
       city: typeof st.city === "string" ? st.city : "",
-      latitude: p.latitude ?? "",
-      longitude: p.longitude ?? "",
+      latitude: typeof p.latitude === "number" ? p.latitude : undefined,
+      longitude: typeof p.longitude === "number" ? p.longitude : undefined,
       currency: typeof st.currency === "string" && st.currency ? st.currency : "BDT",
       min_lead_time_hours:
         typeof st.min_lead_time_hours === "number"

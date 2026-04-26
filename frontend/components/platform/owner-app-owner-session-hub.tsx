@@ -5,7 +5,7 @@ import { OwnerShopAdminShopCard } from "@/components/platform/owner-shop-admin-s
 import { OwnerShopNavLinksInner } from "@/components/platform/owner-shop-nav-links";
 
 const previewNavMe = {
-  id: 0,
+  id: "0",
   name: "Preview",
   mobile: "",
   role: "shop_owner",
