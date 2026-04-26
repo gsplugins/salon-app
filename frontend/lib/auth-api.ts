@@ -47,6 +47,11 @@ export async function authJson<T = unknown>(
       ? "http://127.0.0.1:4000/api"
       : "";
   const directBase = directBaseFromEnv || localDirectFallback;
+  const isAbsoluteUrl = /^https?:\/\//i.test(url);
+  const shouldPreferDirect =
+    Boolean(directBase) &&
+    !isAbsoluteUrl &&
+    (typeof window !== "undefined" ? !/^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) : true);
   const toDirectUrl = (sameOriginApiPath: string): string | null => {
     if (!directBase) return null;
     const p = sameOriginApiPath.startsWith("/api") ? sameOriginApiPath : `/api${sameOriginApiPath.startsWith("/") ? sameOriginApiPath : `/${sameOriginApiPath}`}`;
@@ -91,9 +96,31 @@ export async function authJson<T = unknown>(
       return { res, text, data, jsonOk };
     };
 
-    let { res, data, jsonOk } = await run(url);
     const direct = toDirectUrl(url);
-    if (!jsonOk && res.status >= 500 && direct) {
+    let { res, data, jsonOk } = await run(shouldPreferDirect && direct ? direct : url);
+
+    // If first call was direct and failed hard, try same-origin /api as fallback.
+    if (
+      shouldPreferDirect &&
+      direct &&
+      (res.status === 404 || res.status === 405 || res.status >= 500)
+    ) {
+      try {
+        const second = await run(url);
+        res = second.res;
+        data = second.data;
+        jsonOk = second.jsonOk;
+      } catch {
+        // keep first error body
+      }
+    }
+
+    // If first call was same-origin and proxy likely failed, retry direct API URL.
+    if (
+      !shouldPreferDirect &&
+      direct &&
+      ((!jsonOk && res.status >= 500) || res.status === 404 || res.status === 405 || res.status === 502 || res.status === 503 || res.status === 504)
+    ) {
       try {
         const second = await run(direct);
         res = second.res;
