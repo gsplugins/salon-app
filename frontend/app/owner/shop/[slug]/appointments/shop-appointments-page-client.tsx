@@ -25,6 +25,8 @@ function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+const STATUS_KEYS = ["confirmed", "completed", "cancelled", "pending", "no_show"] as const;
+
 function FormBody({ accessToken }: { accessToken: string }) {
   const [from, setFrom] = useState(() => {
     const d = new Date();
@@ -50,22 +52,19 @@ function FormBody({ accessToken }: { accessToken: string }) {
 
   const load = useCallback(async () => {
     setLoading(true);
+    const selectedStaffId = staffId ? Number.parseInt(staffId, 10) : undefined;
     const res = await fetchAdminBookings(accessToken, {
       from: `${from}T00:00:00`,
       to: `${to}T23:59:59`,
       status: status || undefined,
+      ...(selectedStaffId && !Number.isNaN(selectedStaffId) ? { staff_id: selectedStaffId } : {}),
     });
     setLoading(false);
     if (!res.ok) {
       toast.error(formatApiError(res.body));
       return;
     }
-    let list = res.data;
-    if (staffId) {
-      const id = Number.parseInt(staffId, 10);
-      if (!Number.isNaN(id)) list = list.filter((b) => b.staff.id === id);
-    }
-    setRows(list);
+    setRows(res.data);
   }, [accessToken, from, to, status, staffId]);
 
   useEffect(() => {
@@ -79,6 +78,31 @@ function FormBody({ accessToken }: { accessToken: string }) {
   }, [load]);
 
   const sorted = useMemo(() => [...rows].sort((a, b) => a.starts_at.localeCompare(b.starts_at)), [rows]);
+  const scheduleByStaff = useMemo(() => {
+    const grouped = new Map<
+      number,
+      { staffName: string; totals: Record<string, number>; nextAt: string | null; total: number }
+    >();
+    for (const b of rows) {
+      const current =
+        grouped.get(b.staff.id) ??
+        {
+          staffName: b.staff.name,
+          totals: { confirmed: 0, completed: 0, cancelled: 0, pending: 0, no_show: 0 },
+          nextAt: null,
+          total: 0
+        };
+      current.total += 1;
+      if (STATUS_KEYS.includes(b.status as (typeof STATUS_KEYS)[number])) current.totals[b.status] += 1;
+      if ((b.status === "confirmed" || b.status === "pending") && (!current.nextAt || b.starts_at < current.nextAt)) {
+        current.nextAt = b.starts_at;
+      }
+      grouped.set(b.staff.id, current);
+    }
+    return [...grouped.entries()]
+      .map(([staffIdKey, data]) => ({ staffId: staffIdKey, ...data }))
+      .sort((a, b) => a.staffName.localeCompare(b.staffName));
+  }, [rows]);
 
   useEffect(() => {
     async function run() {
@@ -172,6 +196,32 @@ function FormBody({ accessToken }: { accessToken: string }) {
         <Button type="button" variant="outline" onClick={() => void load()}>
           Refresh
         </Button>
+      </div>
+
+      <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
+        <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Staff schedule by status</h2>
+        {scheduleByStaff.length === 0 ? (
+          <p className="mt-2 text-sm text-zinc-500">No booking data in selected range.</p>
+        ) : (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {scheduleByStaff.map((row) => (
+              <div key={row.staffId} className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-700">
+                <p className="font-medium text-zinc-900 dark:text-white">{row.staffName}</p>
+                <p className="mt-1 text-xs text-zinc-500">
+                  Total {row.total}
+                  {row.nextAt ? ` · Next ${new Date(row.nextAt).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}` : ""}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-800">Pending {row.totals.pending}</span>
+                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-blue-800">Confirmed {row.totals.confirmed}</span>
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-800">Completed {row.totals.completed}</span>
+                  <span className="rounded-full bg-rose-100 px-2 py-0.5 text-rose-800">Cancelled {row.totals.cancelled}</span>
+                  <span className="rounded-full bg-zinc-200 px-2 py-0.5 text-zinc-700">No-show {row.totals.no_show}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {loading ? (

@@ -8,27 +8,45 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   fetchOwnerQueueManage,
+  fetchOwnerWaitlist,
+  fetchStaffCatalog,
   formatApiError,
   patchOwnerQueueStatus,
+  patchOwnerWaitlist,
+  type CatalogStaffRow,
   type OwnerQueueRow,
+  type OwnerWaitlistRow,
 } from "@/lib/salon-api";
 
 const STATUSES = ["waiting", "in_progress", "done", "cancelled"] as const;
 
 function Body({ token }: { token: string }) {
   const [rows, setRows] = useState<OwnerQueueRow[] | null>(null);
+  const [waitlistRows, setWaitlistRows] = useState<OwnerWaitlistRow[] | null>(null);
+  const [staffRows, setStaffRows] = useState<CatalogStaffRow[]>([]);
   const [busy, setBusy] = useState(true);
 
   const load = useCallback(async () => {
     setBusy(true);
-    const res = await fetchOwnerQueueManage(token);
+    const [queueRes, waitRes, staffRes] = await Promise.all([
+      fetchOwnerQueueManage(token),
+      fetchOwnerWaitlist(token, { status: "waiting" }),
+      fetchStaffCatalog(token)
+    ]);
     setBusy(false);
-    if (!res.ok) {
-      toast.error(formatApiError(res.body));
+    if (!queueRes.ok) {
+      toast.error(formatApiError(queueRes.body));
       setRows([]);
       return;
     }
-    setRows(res.data);
+    if (!waitRes.ok) {
+      toast.error(formatApiError(waitRes.body));
+      setWaitlistRows([]);
+    } else {
+      setWaitlistRows(waitRes.data);
+    }
+    if (staffRes.ok) setStaffRows(staffRes.data.filter((s) => s.is_active));
+    setRows(queueRes.data);
   }, [token]);
 
   useEffect(() => {
@@ -46,7 +64,20 @@ function Body({ token }: { token: string }) {
     void load();
   }
 
-  if (busy || rows === null) {
+  async function assignWaitlistToStaff(waitlistId: number, nextStaffId: number | null) {
+    const res = await patchOwnerWaitlist(token, waitlistId, {
+      staff_id: nextStaffId,
+      status: nextStaffId != null ? "notified" : "waiting"
+    });
+    if (!res.ok) {
+      toast.error(formatApiError(res.body));
+      return;
+    }
+    toast.success(nextStaffId != null ? "Customer assigned to staff." : "Staff assignment removed.");
+    void load();
+  }
+
+  if (busy || rows === null || waitlistRows === null) {
     return (
       <div className="space-y-3">
         <Skeleton className="h-8 w-48" />
@@ -57,6 +88,49 @@ function Body({ token }: { token: string }) {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-2xl border border-zinc-200 bg-zinc-50/60 p-4 dark:border-zinc-800 dark:bg-zinc-900/30">
+        <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Waiting list assignments</h2>
+        <p className="mt-1 text-xs text-zinc-500">Assign waiting customers to a selected staff member.</p>
+        {waitlistRows.length === 0 ? (
+          <p className="mt-3 text-sm text-zinc-500">No waiting customers right now.</p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {waitlistRows.map((w) => (
+              <li
+                key={w.id}
+                className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-950/40 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium text-zinc-900 dark:text-white">
+                    {w.customer_mobile ?? "Customer"} · {w.service?.name ?? "Service"}
+                  </p>
+                  <p className="text-xs text-zinc-500">
+                    Preferred: {w.preferred_date} · Status: {w.status}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <select
+                    className="rounded-lg border border-zinc-200 bg-white px-2 py-2 text-xs dark:border-zinc-700 dark:bg-zinc-950"
+                    value={w.staff_id != null ? String(w.staff_id) : ""}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      void assignWaitlistToStaff(w.id, v ? Number(v) : null);
+                    }}
+                  >
+                    <option value="">Unassigned</option>
+                    {staffRows.map((s) => (
+                      <option key={s.id} value={String(s.id)}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-zinc-900 dark:text-white">Walk-in queue</h1>

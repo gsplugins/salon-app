@@ -65,6 +65,16 @@ async function staffIdsWhoCanDoAllServices(shopId: number, serviceIds: number[])
   return out;
 }
 
+async function activeStaffIdsInShop(shopId: number): Promise<number[]> {
+  const rows = await supabaseAdmin
+    .from("salon_staff")
+    .select("id")
+    .eq("shop_id", shopId)
+    .eq("is_active", true)
+    .limit(500);
+  return (rows.data ?? []).map((r) => Number((r as { id: number }).id)).filter((id) => Number.isFinite(id));
+}
+
 function toDayKeyFromDateYmd(dateYmd: string): "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat" {
   const d = new Date(`${dateYmd}T00:00:00.000Z`);
   const keys = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
@@ -113,7 +123,7 @@ async function isStaffFreeAt(shopId: number, staffId: number, startsAt: Date, en
     .select("id")
     .eq("shop_id", shopId)
     .eq("salon_staff_id", staffId)
-    .eq("status", "confirmed")
+    .in("status", ["pending", "confirmed"])
     .lt("starts_at", endsAt.toISOString())
     .gt("ends_at", startsAt.toISOString())
     .limit(1)
@@ -218,7 +228,18 @@ type StaffRow = {
   address?: string | null;
   work_mobile?: string | null;
   weekly_schedule?: unknown;
+  portal_settings?: unknown;
 };
+
+function readPhotoGalleryUrlsFromPortalSettings(settings: unknown): string[] {
+  const ps = settings && typeof settings === "object" ? (settings as Record<string, unknown>) : {};
+  const raw = ps.photo_gallery_urls;
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((v) => (typeof v === "string" ? v.trim() : ""))
+    .filter((v) => /^https?:\/\//i.test(v))
+    .slice(0, 12);
+}
 
 function paginationMeta(page: number, perPage: number, total: number) {
   const lastPage = Math.max(1, Math.ceil(total / perPage));
@@ -492,6 +513,7 @@ export function mountPublicRoutes(router: Router): void {
       name: staff.name,
       bio: staff.bio,
       photo_url: staff.photo_url,
+      photo_gallery_urls: readPhotoGalleryUrlsFromPortalSettings(staff.portal_settings),
       specialties: staff.specialties,
       position_title: staff.position_title ?? null,
       staff_role: staff.staff_role ?? null,
@@ -578,8 +600,9 @@ export function mountPublicRoutes(router: Router): void {
     if (hasFilter) {
       if (!serviceIds?.length) return fail(res, 422, "Invalid service_ids.");
       const staffIds = await staffIdsWhoCanDoAllServices(shopRes.data.id, serviceIds);
-      if (staffIds.length === 0) return okData(res, []);
-      staffQuery = staffQuery.in("id", staffIds);
+      if (staffIds.length > 0) {
+        staffQuery = staffQuery.in("id", staffIds);
+      }
     }
 
     const rows = await staffQuery;
@@ -694,12 +717,15 @@ export function mountPublicRoutes(router: Router): void {
     );
 
     const capableStaff = await staffIdsWhoCanDoAllServices(shopId, serviceIds);
-    if (capableStaff.length === 0) return okData(res, []);
+    const fallbackActiveStaff = capableStaff.length === 0 ? await activeStaffIdsInShop(shopId) : [];
+    const assignableStaff = capableStaff.length > 0 ? capableStaff : fallbackActiveStaff;
+    if (assignableStaff.length === 0) return okData(res, []);
 
     const requestedStaffIdRaw = req.query.staff_id;
     const requestedStaffId = requestedStaffIdRaw != null ? Number(requestedStaffIdRaw) : null;
-    let targetStaffIds = capableStaff;
+    let targetStaffIds = assignableStaff;
     if (requestedStaffId != null && Number.isFinite(requestedStaffId)) {
+      // When a specific barber is requested, require capability match for selected services.
       if (!capableStaff.includes(requestedStaffId)) return okData(res, []);
       targetStaffIds = [requestedStaffId];
     }
@@ -748,30 +774,34 @@ export function mountPublicRoutes(router: Router): void {
       .select("salon_staff_id,starts_at,ends_at,status")
       .eq("shop_id", shopId)
       .in("salon_staff_id", targetStaffIds)
-      .eq("status", "confirmed")
+      .in("status", ["pending", "confirmed"])
       .lt("starts_at", dayEnd.toISOString())
       .gt("ends_at", dayStart.toISOString());
 
     const shopWideBlocks: TimeRange[] = [];
-    const staffBusy = new Map<number, TimeRange[]>();
+    const staffBlocked = new Map<number, TimeRange[]>();
+    const staffPending = new Map<number, TimeRange[]>();
+    const staffBooked = new Map<number, TimeRange[]>();
     for (const row of (blockedRes.data ?? []) as { salon_staff_id: number | null; starts_at: string; ends_at: string }[]) {
       const range = { start: new Date(row.starts_at), end: new Date(row.ends_at) };
       if (row.salon_staff_id == null) {
         shopWideBlocks.push(range);
       } else {
-        const arr = staffBusy.get(row.salon_staff_id) ?? [];
+        const arr = staffBlocked.get(row.salon_staff_id) ?? [];
         arr.push(range);
-        staffBusy.set(row.salon_staff_id, arr);
+        staffBlocked.set(row.salon_staff_id, arr);
       }
     }
-    for (const row of (bookingRes.data ?? []) as { salon_staff_id: number; starts_at: string; ends_at: string }[]) {
-      const arr = staffBusy.get(row.salon_staff_id) ?? [];
+    for (const row of (bookingRes.data ?? []) as { salon_staff_id: number; starts_at: string; ends_at: string; status: string }[]) {
+      const status = String(row.status ?? "").toLowerCase();
+      const bucket = status === "pending" ? staffPending : staffBooked;
+      const arr = bucket.get(row.salon_staff_id) ?? [];
       arr.push({ start: new Date(row.starts_at), end: new Date(row.ends_at) });
-      staffBusy.set(row.salon_staff_id, arr);
+      bucket.set(row.salon_staff_id, arr);
     }
 
     const stepMin = 15;
-    const out: string[] = [];
+    const out: { starts_at: string; status: "available" | "in_process" | "booked" }[] = [];
     for (
       let cursor = new Date(dayStart.getTime());
       cursor.getTime() + requiredDurationMin * 60_000 <= dayEnd.getTime();
@@ -781,8 +811,21 @@ export function mountPublicRoutes(router: Router): void {
       const slotEnd = new Date(cursor.getTime() + requiredDurationMin * 60_000);
       if (slotStart < leadCutoff) continue;
       if (hasAnyOverlap(slotStart, slotEnd, shopWideBlocks)) continue;
-      const isAvailable = targetStaffIds.some((sid) => !hasAnyOverlap(slotStart, slotEnd, staffBusy.get(sid) ?? []));
-      if (isAvailable) out.push(slotStart.toISOString());
+      const hasAvailableStaff = targetStaffIds.some((sid) => {
+        const blocked = hasAnyOverlap(slotStart, slotEnd, staffBlocked.get(sid) ?? []);
+        const pending = hasAnyOverlap(slotStart, slotEnd, staffPending.get(sid) ?? []);
+        const booked = hasAnyOverlap(slotStart, slotEnd, staffBooked.get(sid) ?? []);
+        return !blocked && !pending && !booked;
+      });
+      if (hasAvailableStaff) {
+        out.push({ starts_at: slotStart.toISOString(), status: "available" });
+        continue;
+      }
+      const hasPendingConflict = targetStaffIds.some((sid) => hasAnyOverlap(slotStart, slotEnd, staffPending.get(sid) ?? []));
+      out.push({
+        starts_at: slotStart.toISOString(),
+        status: hasPendingConflict ? "in_process" : "booked"
+      });
     }
     return okData(res, out);
   });
@@ -896,9 +939,9 @@ export function mountPublicRoutes(router: Router): void {
     }
 
     const capableStaffIds = await staffIdsWhoCanDoAllServices(shopId, serviceIds);
-    if (capableStaffIds.length === 0) {
-      return fail(res, 422, "No staff member is assigned to all selected services. Please contact the salon.");
-    }
+    const fallbackActiveStaffIds = capableStaffIds.length === 0 ? await activeStaffIdsInShop(shopId) : [];
+    const assignableStaffIds = capableStaffIds.length > 0 ? capableStaffIds : fallbackActiveStaffIds;
+    if (assignableStaffIds.length === 0) return fail(res, 422, "No active staff available for this shop.");
 
     let staff = null as { id: number; name: string } | null;
     if (parsed.data.salon_staff_id != null) {
@@ -920,7 +963,7 @@ export function mountPublicRoutes(router: Router): void {
         .select("id,name")
         .eq("shop_id", shopId)
         .eq("is_active", true)
-        .in("id", capableStaffIds)
+        .in("id", assignableStaffIds)
         .order("sort_order")
         .limit(200);
       const candidates = (candidatesRes.data ?? []) as { id: number; name: string }[];

@@ -130,6 +130,7 @@ export type StaffProfilePayload = {
   name: string;
   bio: string | null;
   photo_url: string | null;
+  photo_gallery_urls?: string[];
   work_mobile: string | null;
   email: string | null;
   specialties: string[];

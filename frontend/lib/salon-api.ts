@@ -20,6 +20,8 @@ export type SalonServiceRow = {
 };
 
 export type SalonStaffOption = { id: number | null; name: string };
+export type AvailabilitySlotStatus = "available" | "in_process" | "booked";
+export type AvailabilitySlot = { starts_at: string; status: AvailabilitySlotStatus };
 
 export type BookingLineItem = {
   service_id: number;
@@ -172,15 +174,20 @@ export async function fetchAvailability(
   serviceIds: number[],
   dateYmd: string,
   staffId: number | null
-): Promise<{ ok: true; data: string[] } | { ok: false; body: ApiErrorBody }> {
+): Promise<{ ok: true; data: AvailabilitySlot[] } | { ok: false; body: ApiErrorBody }> {
   const q = new URLSearchParams({
     service_ids: serviceIds.join(","),
     date: dateYmd,
   });
   if (staffId !== null) q.set("staff_id", String(staffId));
-  const res = await authJson<{ data: string[] }>(`${shopBase(shopSlug)}/availability?${q.toString()}`);
+  const res = await authJson<{ data: Array<string | AvailabilitySlot> }>(`${shopBase(shopSlug)}/availability?${q.toString()}`);
   if (!res.ok) return { ok: false, body: res.body };
-  return { ok: true, data: res.data.data };
+  const normalized: AvailabilitySlot[] = (res.data.data ?? []).map((row) => {
+    if (typeof row === "string") return { starts_at: row, status: "available" as const };
+    const status = row.status === "booked" || row.status === "in_process" ? row.status : "available";
+    return { starts_at: row.starts_at, status };
+  });
+  return { ok: true, data: normalized };
 }
 
 export async function createPublicBooking(
@@ -234,12 +241,13 @@ export async function patchCustomerBooking(
 
 export async function fetchAdminBookings(
   accessToken: string,
-  opts?: { from?: string; to?: string; status?: string }
+  opts?: { from?: string; to?: string; status?: string; staff_id?: number }
 ): Promise<{ ok: true; data: BookingRow[] } | { ok: false; body: ApiErrorBody }> {
   const q = new URLSearchParams();
   if (opts?.from) q.set("from", opts.from);
   if (opts?.to) q.set("to", opts.to);
   if (opts?.status) q.set("status", opts.status);
+  if (typeof opts?.staff_id === "number" && Number.isFinite(opts.staff_id)) q.set("staff_id", String(opts.staff_id));
   const qs = q.toString();
   const res = await authJson<{ data: BookingRow[] }>(`/my/shop/bookings${qs ? `?${qs}` : ""}`, {
     accessToken,
@@ -1212,6 +1220,7 @@ export type PublicBarberProfilePayload = {
   name: string;
   bio: string | null;
   photo_url: string | null;
+  photo_gallery_urls?: string[];
   specialties: unknown;
   position_title?: string | null;
   staff_role?: string | null;
@@ -1691,10 +1700,54 @@ export type OwnerQueueRow = {
   customer: { id: number; name: string } | null;
 };
 
+export type OwnerWaitlistRow = {
+  id: number;
+  shop_id: number;
+  service_id: number;
+  staff_id: number | null;
+  customer_id: string | null;
+  customer_mobile: string | null;
+  preferred_date: string;
+  status: string;
+  notified_at: string | null;
+  created_at: string;
+  service: { id: number; name: string } | null;
+  staff: { id: number; name: string } | null;
+};
+
 export async function fetchOwnerQueueManage(
   accessToken: string
 ): Promise<{ ok: true; data: OwnerQueueRow[] } | { ok: false; body: ApiErrorBody }> {
   const res = await authJson<{ data: OwnerQueueRow[] }>("/my/shop/queue/manage", { accessToken });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
+export async function fetchOwnerWaitlist(
+  accessToken: string,
+  opts?: { preferred_date?: string; status?: string }
+): Promise<{ ok: true; data: OwnerWaitlistRow[] } | { ok: false; body: ApiErrorBody }> {
+  const q = new URLSearchParams();
+  if (opts?.preferred_date) q.set("preferred_date", opts.preferred_date);
+  if (opts?.status) q.set("status", opts.status);
+  const qs = q.toString();
+  const res = await authJson<{ data: OwnerWaitlistRow[] }>(`/my/shop/waitlist${qs ? `?${qs}` : ""}`, {
+    accessToken
+  });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
+export async function patchOwnerWaitlist(
+  accessToken: string,
+  id: number,
+  body: { staff_id?: number | null; status?: string }
+): Promise<{ ok: true; data: OwnerWaitlistRow } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson<{ data: OwnerWaitlistRow }>(`/my/shop/waitlist/${id}`, {
+    method: "PATCH",
+    accessToken,
+    body: JSON.stringify(body)
+  });
   if (!res.ok) return { ok: false, body: res.body };
   return { ok: true, data: res.data.data };
 }

@@ -10,11 +10,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const devState = path.join(root, ".next", "dev");
 
 if (!fs.existsSync(devState)) {
-  // eslint-disable-next-line no-console
   console.log(`[frontend] Nothing to remove: ${devState}`);
   process.exit(0);
 }
 
 fs.rmSync(devState, { recursive: true, force: true });
-// eslint-disable-next-line no-console
 console.log(`[frontend] Removed ${devState}. Run npm run dev again.`);

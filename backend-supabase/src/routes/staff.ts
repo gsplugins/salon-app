@@ -5,6 +5,27 @@ import { fail, okData } from "../lib/http.js";
 import { bookingToRow } from "../presenters/booking.js";
 import { notifyCustomerBookingEvent, notifyCustomerBookingStatusChange } from "../lib/customer-notifications.js";
 
+function normalizePhotoGalleryUrls(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((v) => (typeof v === "string" ? v.trim() : ""))
+    .filter((v) => /^https?:\/\//i.test(v))
+    .slice(0, 12);
+}
+
+function readPhotoGalleryUrlsFromPortalSettings(settings: unknown): string[] {
+  const ps = settings && typeof settings === "object" ? (settings as Record<string, unknown>) : {};
+  return normalizePhotoGalleryUrls(ps.photo_gallery_urls);
+}
+
+function mergePortalSettingsWithPhotoGallery(existing: unknown, gallery: unknown): Record<string, unknown> {
+  const base = existing && typeof existing === "object" ? (existing as Record<string, unknown>) : {};
+  return {
+    ...base,
+    photo_gallery_urls: normalizePhotoGalleryUrls(gallery)
+  };
+}
+
 async function staffFromContext(req: Request): Promise<{ id: number; shop_id: number; name: string } | null> {
   const s = req.salon;
   if (!s) return null;
@@ -695,6 +716,7 @@ export function mountStaffRoutes(router: Router): void {
       work_mobile: s.work_mobile ?? null,
       email: s.email ?? null,
       specialties: Array.isArray(s.specialties) ? s.specialties : [],
+      photo_gallery_urls: readPhotoGalleryUrlsFromPortalSettings(s.portal_settings),
       shop: shop.data ?? null,
       commission_percent: s.commission_percent ?? null,
       availability_status: s.availability_status ?? "available",
@@ -710,10 +732,19 @@ export function mountStaffRoutes(router: Router): void {
       return fail(res, 403, "Staff profile is view-only for manager/owner accounts.");
     }
     const body = req.body as Record<string, unknown>;
-    const allowed = ["name", "bio", "photo_url", "work_mobile", "email", "specialties", "portal_settings"];
+    const allowed = ["name", "bio", "photo_url", "work_mobile", "email", "specialties"];
     const upd: Record<string, unknown> = {};
     for (const k of allowed) {
       if (k in body) upd[k] = body[k];
+    }
+    if ("photo_gallery_urls" in body || "portal_settings" in body) {
+      const rowNow = await supabaseAdmin.from("salon_staff").select("portal_settings").eq("id", staff.id).single();
+      const existingPortalSettings = (rowNow.data as { portal_settings?: unknown } | null)?.portal_settings;
+      const incomingGallery =
+        "photo_gallery_urls" in body
+          ? body.photo_gallery_urls
+          : ((body.portal_settings as Record<string, unknown> | undefined)?.photo_gallery_urls ?? undefined);
+      upd.portal_settings = mergePortalSettingsWithPhotoGallery(existingPortalSettings, incomingGallery);
     }
     await supabaseAdmin.from("salon_staff").update(upd).eq("id", staff.id);
     const row = await supabaseAdmin.from("salon_staff").select("*").eq("id", staff.id).single();
@@ -728,6 +759,7 @@ export function mountStaffRoutes(router: Router): void {
       work_mobile: s.work_mobile ?? null,
       email: s.email ?? null,
       specialties: Array.isArray(s.specialties) ? s.specialties : [],
+      photo_gallery_urls: readPhotoGalleryUrlsFromPortalSettings(s.portal_settings),
       shop: shop.data ?? null,
       commission_percent: s.commission_percent ?? null,
       availability_status: s.availability_status ?? "available",

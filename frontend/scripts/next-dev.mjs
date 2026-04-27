@@ -23,20 +23,15 @@ if (process.argv.includes("--clear-lock") || process.env.NEXT_CLEAR_DEV_LOCK ===
   try {
     if (fs.existsSync(devState)) {
       fs.rmSync(devState, { recursive: true, force: true });
-      // eslint-disable-next-line no-console
       console.log(`[frontend] Removed ${devState} (stop any running Next dev before doing this on a live server).`);
     }
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.warn("[frontend] Could not clear .next/dev:", e);
   }
 }
 
-// eslint-disable-next-line no-console
 console.log(`[frontend] Starting Next.js on http://127.0.0.1:${port} (bind 0.0.0.0:${port})`);
-// eslint-disable-next-line no-console
 console.log(`[frontend] Browser /api/* → Next rewrite → ${backendBase}/api/* (set BACKEND_URL in frontend/.env.local if API uses another port)`);
-// eslint-disable-next-line no-console
 console.log(
   `[frontend] If you see "Another next dev server is already running", stop the old one first:\n` +
     `  Windows: taskkill /PID <pid> /F   (use the PID from Next's message)\n` +
@@ -55,7 +50,6 @@ const child = spawn(
 );
 
 child.on("error", (err) => {
-  // eslint-disable-next-line no-console
   console.error("[frontend] Failed to spawn Next.js:", err);
   process.exit(1);
 });

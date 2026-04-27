@@ -1,15 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fcfaf8;
-  --foreground: #1b1b1b;
-  --surface: #f1ebf8;
-  --surface-elevated: #f7f2fc;
-  --border: #e5ddf0;
-  --brand-primary: #7b4b94;
-  --brand-primary-hover: #64397d;
-  --brand-glow: #c8a9e0;
-  --paragraph: #6b6572;
+  --background: #1a1035;
+  --foreground: #a78bfa;
+  --surface: #120b28;
+  --surface-elevated: #241548;
+  --border: #3b2a6f;
+  --brand-primary: #6c63ff;
+  --brand-primary-hover: #8a7fff;
+  --brand-glow: #e9c46a;
+  --paragraph: #a78bfa;
+  --trend-rose: #f472b6;
+  --midnight: #120b28;
+  --gold-accent: #e9c46a;
 }
 
 @theme inline {
@@ -133,22 +136,22 @@ textarea:disabled {
 /* Brand palette mappings for common utility classes used across pages. */
 .bg-blue-500 {
   background-color: var(--brand-primary) !important;
-  color: #fcfaf8 !important;
+  color: #f5f3ff !important;
 }
 
 .hover\:bg-blue-400:hover {
   background-color: var(--brand-primary-hover) !important;
-  color: #fcfaf8 !important;
+  color: #ffffff !important;
 }
 
 .text-blue-300,
 .text-blue-200 {
-  color: var(--brand-primary) !important;
+  color: var(--paragraph) !important;
 }
 
 .hover\:text-blue-300:hover,
 .hover\:text-blue-200:hover {
-  color: var(--brand-primary-hover) !important;
+  color: var(--brand-primary) !important;
 }
 
 .border-blue-400,
@@ -176,6 +179,102 @@ textarea:disabled {
 .border-zinc-200,
 .border-zinc-300 {
   border-color: var(--border) !important;
+}
+
+/* Remove black-heavy UI tones globally and keep everything in brand palette. */
+.bg-black,
+.bg-zinc-900,
+.bg-zinc-950,
+.bg-slate-900,
+.bg-slate-950 {
+  background-color: var(--midnight) !important;
+}
+
+.bg-black\/50,
+.bg-black\/40,
+.bg-zinc-900\/95,
+.bg-zinc-950\/90,
+.bg-zinc-950\/95,
+.dark\:bg-zinc-950\/90:is(.dark *),
+.dark\:bg-zinc-950\/95:is(.dark *),
+.dark\:bg-zinc-900\/40:is(.dark *) {
+  background-color: color-mix(in srgb, var(--brand-primary) 24%, var(--background)) !important;
+}
+
+.bg-zinc-100,
+.bg-zinc-50,
+.dark\:bg-zinc-800:is(.dark *),
+.dark\:bg-zinc-950:is(.dark *) {
+  background-color: var(--surface-elevated) !important;
+}
+
+.bg-rose-50,
+.bg-rose-100,
+.dark\:bg-rose-950:is(.dark *) {
+  background-color: color-mix(in srgb, var(--trend-rose) 22%, var(--midnight)) !important;
+}
+
+.text-rose-700,
+.text-rose-800,
+.text-rose-900,
+.dark\:text-rose-100:is(.dark *),
+.dark\:text-rose-200:is(.dark *) {
+  color: var(--trend-rose) !important;
+}
+
+.text-amber-500,
+.text-amber-600,
+.text-amber-700,
+.text-amber-900,
+.dark\:text-amber-300:is(.dark *),
+.dark\:text-amber-400:is(.dark *) {
+  color: var(--gold-accent) !important;
+}
+
+.text-black,
+.text-zinc-900,
+.text-zinc-800,
+.dark\:text-white:is(.dark *),
+.dark\:text-zinc-100:is(.dark *),
+.dark\:text-zinc-50:is(.dark *) {
+  color: var(--foreground) !important;
+}
+
+.text-zinc-600,
+.text-zinc-500,
+.text-zinc-400,
+.dark\:text-zinc-400:is(.dark *),
+.dark\:text-zinc-300:is(.dark *) {
+  color: var(--paragraph) !important;
+}
+
+.border-black,
+.border-zinc-700,
+.border-zinc-800,
+.dark\:border-zinc-700:is(.dark *),
+.dark\:border-zinc-800:is(.dark *),
+.dark\:border-zinc-900:is(.dark *) {
+  border-color: var(--border) !important;
+}
+
+.hover\:bg-zinc-800:hover,
+.hover\:bg-slate-800:hover,
+.hover\:bg-zinc-100:hover,
+.hover\:bg-zinc-50:hover,
+.dark\:hover\:bg-zinc-800:is(.dark *):hover {
+  background-color: color-mix(in srgb, var(--brand-primary) 24%, var(--midnight)) !important;
+  color: #f5f3ff !important;
+}
+
+.hover\:bg-slate-900:hover,
+.hover\:bg-slate-950:hover,
+.hover\:bg-zinc-900:hover,
+.hover\:bg-zinc-950:hover,
+.dark\:hover\:bg-slate-900:is(.dark *):hover,
+.dark\:hover\:bg-zinc-900:is(.dark *):hover,
+.dark\:hover\:bg-zinc-950:is(.dark *):hover {
+  background-color: color-mix(in srgb, var(--brand-primary) 28%, var(--midnight)) !important;
+  color: #f5f3ff !important;
 }
 
 /* Mobile / future native shell: respect safe areas (maps to React Native SafeAreaView). */

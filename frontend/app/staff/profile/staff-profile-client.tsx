@@ -34,6 +34,7 @@ export function StaffProfileClient() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
   const retriedMissingProfile = useRef(false);
 
   const load = useCallback(async () => {
@@ -74,6 +75,7 @@ export function StaffProfileClient() {
 
   useEffect(() => {
     if (!profile) return;
+    setGalleryUrls(Array.isArray(profile.photo_gallery_urls) ? profile.photo_gallery_urls : []);
     pf.reset({
       name: profile.name,
       work_mobile: profile.work_mobile ?? "",
@@ -100,6 +102,7 @@ export function StaffProfileClient() {
       email: values.email || null,
       bio: values.bio || null,
       photo_url: values.photo_url || null,
+      photo_gallery_urls: galleryUrls,
       specialties,
     });
     if (!res.ok) {
@@ -117,6 +120,40 @@ export function StaffProfileClient() {
   }
 
   if (!token) return null;
+
+  async function handleGalleryUpload(files: FileList | null) {
+    if (!token || !files || files.length === 0) return;
+    const picked = Array.from(files).slice(0, 12);
+    for (const file of picked) {
+      if (!file.type.startsWith("image/")) {
+        toast.error(`"${file.name}" is not an image file.`);
+        continue;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`"${file.name}" is too large. Max 10MB.`);
+        continue;
+      }
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+        reader.onerror = () => reject(new Error("Could not read file."));
+        reader.readAsDataURL(file);
+      }).catch(() => "");
+      if (!dataUrl) continue;
+      setUploadingPhoto(true);
+      const up = await uploadAuthProfilePhoto(token, dataUrl);
+      setUploadingPhoto(false);
+      if (!up.ok) {
+        toast.error(formatApiError(up.body));
+        continue;
+      }
+      setGalleryUrls((prev) => {
+        const next = [...prev, up.data.url];
+        return [...new Set(next)].slice(0, 12);
+      });
+    }
+    toast.success("Gallery image(s) uploaded. Save profile to publish.");
+  }
 
   if (busy) {
     return (
@@ -242,6 +279,46 @@ export function StaffProfileClient() {
             />
           ) : null}
           <p className="mt-1 text-xs text-zinc-500">Used in your profile icon and barber profile.</p>
+        </div>
+        <div>
+          <Label htmlFor="p-gallery-upload">Image gallery</Label>
+          {!readOnly ? (
+            <Input
+              id="p-gallery-upload"
+              type="file"
+              accept="image/*"
+              multiple
+              className="mt-1"
+              onChange={(e) => {
+                void handleGalleryUpload(e.target.files);
+                e.currentTarget.value = "";
+              }}
+            />
+          ) : null}
+          <p className="mt-1 text-xs text-zinc-500">
+            Placeholder: upload JPG/PNG/WEBP/GIF, up to 10MB each. Max 12 images. These appear on your profile and public page.
+          </p>
+          {galleryUrls.length > 0 ? (
+            <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+              {galleryUrls.map((url, idx) => (
+                <div key={`${url}-${idx}`} className="relative overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={url} alt={`Gallery image ${idx + 1}`} className="h-24 w-full object-cover" />
+                  {!readOnly ? (
+                    <button
+                      type="button"
+                      className="absolute right-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white"
+                      onClick={() => setGalleryUrls((prev) => prev.filter((u) => u !== url))}
+                    >
+                      Remove
+                    </button>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-zinc-500">No gallery images yet.</p>
+          )}
         </div>
         <div>
           <Label htmlFor="p-bio">Bio / specialties description</Label>

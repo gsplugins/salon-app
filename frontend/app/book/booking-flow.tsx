@@ -16,6 +16,7 @@ import {
   fetchShopMeta,
   formatApiError,
   joinWaitlist,
+  type AvailabilitySlot,
   type SalonServiceRow,
   type SalonStaffOption,
 } from "@/lib/salon-api";
@@ -39,6 +40,12 @@ function formatSlotLabel(iso: string): string {
     hour: "numeric",
     minute: "2-digit",
   }).format(parseIsoLocal(iso));
+}
+
+function slotStatusLabel(status: AvailabilitySlot["status"]): string {
+  if (status === "in_process") return "In process";
+  if (status === "booked") return "Booked";
+  return "Available";
 }
 
 function formatMoneyFromCents(cents: number | null | undefined): string {
@@ -86,7 +93,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
 
   const [services, setServices] = useState<SalonServiceRow[]>([]);
   const [staff, setStaff] = useState<SalonStaffOption[]>([]);
-  const [slots, setSlots] = useState<string[]>([]);
+  const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
 
   const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
   const [staffId, setStaffId] = useState<number | null>(null);
@@ -103,6 +110,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
   const [waitlistBusy, setWaitlistBusy] = useState(false);
   const pendingStaffParam = useRef<number | null>(null);
   const didPrefillFromQuery = useRef(false);
+  const stepRef = useRef<Step>(1);
 
   const orderedServiceIds = useMemo(() => {
     const set = new Set(selectedServiceIds);
@@ -186,6 +194,10 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
   }, [orderedServiceIds, bookingTotals.advanceAmount]);
 
   useEffect(() => {
+    stepRef.current = step;
+  }, [step]);
+
+  useEffect(() => {
     if (!accessToken) {
        
       setSignedInCustomer(false);
@@ -263,7 +275,8 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
       return;
     }
     setSlots(res.data);
-    setStartsAt(null);
+    // Prevent stale availability refreshes from clearing chosen time on step 5.
+    if (stepRef.current === 4) setStartsAt(null);
   }, [orderedServiceIds, dateYmd, staffId, shopSlug]);
 
   useEffect(() => {
@@ -347,6 +360,17 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
   }
 
   const selectedStaffLabel = staff.find((s) => s.id === staffId)?.name ?? "Any available";
+  const inProcessCount = useMemo(() => slots.filter((s) => s.status === "in_process").length, [slots]);
+  const bookedCount = useMemo(() => slots.filter((s) => s.status === "booked").length, [slots]);
+  const availableCount = useMemo(() => slots.filter((s) => s.status === "available").length, [slots]);
+
+  useEffect(() => {
+    if (step !== 4 || orderedServiceIds.length === 0) return;
+    const timer = window.setInterval(() => {
+      void loadSlots();
+    }, 10000);
+    return () => window.clearInterval(timer);
+  }, [step, orderedServiceIds.length, loadSlots]);
 
   return (
     <div className="mx-auto max-w-lg">
@@ -586,7 +610,10 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
               </p>
             ) : slots.length === 0 ? (
               <div className="space-y-3">
-                <p className="text-sm text-zinc-500">No openings that day. Try another date or stylist.</p>
+                <p className="text-sm text-zinc-500">
+                  No available openings right now.
+                  {" "}Try another date or stylist.
+                </p>
                 <button
                   type="button"
                   disabled={!accessToken || waitlistBusy || shopId == null || orderedServiceIds.length === 0}
@@ -600,21 +627,42 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                 ) : null}
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {slots.map((iso) => (
-                  <button
-                    key={iso}
-                    type="button"
-                    onClick={() => setStartsAt(iso)}
-                    className={`rounded-xl border px-3 py-2 text-sm font-medium ${
-                      startsAt === iso
-                        ? "border-blue-400 bg-blue-500 text-white"
-                        : "border-slate-700 hover:bg-slate-900"
-                    }`}
-                  >
-                    {formatSlotLabel(iso)}
-                  </button>
-                ))}
+              <div className="space-y-3">
+                {availableCount === 0 ? (
+                  <p className="text-sm text-zinc-500">
+                    No open times right now.
+                    {inProcessCount > 0
+                      ? ` ${inProcessCount} slot(s) are in booking process and may free up soon (auto-refresh every 10 seconds).`
+                      : ""}
+                    {bookedCount > 0 ? ` ${bookedCount} slot(s) are already booked.` : ""}
+                  </p>
+                ) : null}
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {slots.map((slot) => {
+                  const isAvailable = slot.status === "available";
+                  const isSelected = startsAt === slot.starts_at;
+                  return (
+                    <button
+                      key={`${slot.starts_at}-${slot.status}`}
+                      type="button"
+                      onClick={() => (isAvailable ? setStartsAt(slot.starts_at) : undefined)}
+                      disabled={!isAvailable}
+                      className={`rounded-xl border px-3 py-2 text-sm font-medium ${
+                        isSelected
+                          ? "border-blue-400 bg-blue-500 text-white"
+                          : isAvailable
+                            ? "border-slate-700 hover:bg-slate-900"
+                            : "cursor-not-allowed border-zinc-300 bg-zinc-100 text-zinc-500"
+                      }`}
+                    >
+                      <span className="block">{formatSlotLabel(slot.starts_at)}</span>
+                      <span className="mt-0.5 block text-[10px] uppercase tracking-wide">
+                        {slotStatusLabel(slot.status)}
+                      </span>
+                    </button>
+                  );
+                  })}
+                </div>
               </div>
             )}
             <div className="flex gap-2">

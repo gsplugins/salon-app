@@ -68,9 +68,12 @@ mobile : 01711111111
 pas : Admin@12345
 
 shop 2:
-01740568444
+01762933111
+
+01762933888
 
 Customer :
+01762933444
 
 DB PASS-Salon APP :salonapp@@@904367
 

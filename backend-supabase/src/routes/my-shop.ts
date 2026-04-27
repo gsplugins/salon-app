@@ -1133,6 +1133,7 @@ export function mountMyShopRoutes(router: Router): void {
     const from = typeof req.query.from === "string" ? req.query.from : null;
     const to = typeof req.query.to === "string" ? req.query.to : null;
     const status = typeof req.query.status === "string" ? req.query.status : null;
+    const staffId = typeof req.query.staff_id === "string" ? Number(req.query.staff_id) : null;
     let q = supabaseAdmin
       .from("salon_bookings")
       .select("id")
@@ -1142,6 +1143,7 @@ export function mountMyShopRoutes(router: Router): void {
     if (from) q = q.gte("starts_at", from);
     if (to) q = q.lte("starts_at", to);
     if (status) q = q.eq("status", status);
+    if (staffId != null && Number.isFinite(staffId)) q = q.eq("salon_staff_id", staffId);
     if (staffScopeId != null) q = q.eq("salon_staff_id", staffScopeId);
     const ids = await q;
     const list: Record<string, unknown>[] = [];
@@ -1198,6 +1200,83 @@ export function mountMyShopRoutes(router: Router): void {
       })
     );
     return okData(res, out);
+  });
+
+  r.patch("/my/shop/waitlist/:waitlistId", async (req: Request, res: Response) => {
+    const { shop, user } = req.salon!;
+    if (user.role === "barber") return fail(res, 403, "Only owner or manager can update waitlist.");
+    const waitlistId = Number(req.params.waitlistId);
+    if (!Number.isFinite(waitlistId)) return fail(res, 422, "Invalid waitlist id.");
+    const parsed = z
+      .object({
+        staff_id: z.number().int().positive().nullable().optional(),
+        status: z.string().optional()
+      })
+      .safeParse(req.body);
+    if (!parsed.success) return fail(res, 422, "Validation failed.");
+
+    const current = await supabaseAdmin
+      .from("waitlist")
+      .select("id,shop_id,service_id,staff_id,customer_id,customer_mobile,preferred_date,status,notified_at,created_at")
+      .eq("id", waitlistId)
+      .eq("shop_id", shop.id)
+      .maybeSingle();
+    if (!current.data) return fail(res, 404, "Waitlist entry not found.");
+
+    const update: Record<string, unknown> = {};
+    if (parsed.data.staff_id !== undefined) {
+      if (parsed.data.staff_id === null) {
+        update.staff_id = null;
+      } else {
+        const st = await supabaseAdmin
+          .from("salon_staff")
+          .select("id")
+          .eq("id", parsed.data.staff_id)
+          .eq("shop_id", shop.id)
+          .eq("is_active", true)
+          .maybeSingle();
+        if (!st.data) return fail(res, 422, "Invalid staff for this shop.");
+        update.staff_id = parsed.data.staff_id;
+      }
+    }
+    if (typeof parsed.data.status === "string" && parsed.data.status.trim() !== "") {
+      update.status = parsed.data.status.trim();
+      if (parsed.data.status.trim() === "notified") update.notified_at = new Date().toISOString();
+    }
+    if (Object.keys(update).length === 0) return fail(res, 422, "Nothing to update.");
+
+    const upd = await supabaseAdmin
+      .from("waitlist")
+      .update(update)
+      .eq("id", waitlistId)
+      .eq("shop_id", shop.id)
+      .select("id,shop_id,service_id,staff_id,customer_id,customer_mobile,preferred_date,status,notified_at,created_at")
+      .single();
+    if (upd.error || !upd.data) return fail(res, 500, "Could not update waitlist.");
+
+    const row = upd.data as {
+      id: number;
+      shop_id: number;
+      service_id: number;
+      staff_id: number | null;
+      customer_id: string | null;
+      customer_mobile: string | null;
+      preferred_date: string;
+      status: string;
+      notified_at: string | null;
+      created_at: string;
+    };
+    const [serviceRes, staffRes] = await Promise.all([
+      supabaseAdmin.from("salon_services").select("id,name").eq("id", row.service_id).maybeSingle(),
+      row.staff_id != null
+        ? supabaseAdmin.from("salon_staff").select("id,name").eq("id", row.staff_id).maybeSingle()
+        : Promise.resolve({ data: null as { id: number; name: string } | null })
+    ]);
+    return okData(res, {
+      ...row,
+      service: serviceRes.data ?? null,
+      staff: row.staff_id != null ? (staffRes.data ?? null) : null
+    });
   });
 
   r.post("/my/shop/bookings", async (req: Request, res: Response) => {

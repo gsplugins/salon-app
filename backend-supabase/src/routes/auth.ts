@@ -10,6 +10,7 @@ import type { DbUser } from "../db-types.js";
 import { resolveManagementShop, shopMemberRole } from "../lib/shop-resolution.js";
 import { formatPostgrestError, hintMissingPublicTables, hintSupabaseUnreachable } from "../lib/db-errors.js";
 import { okData } from "../lib/http.js";
+import { seedDefaultServicesForShop } from "../lib/default-services.js";
 
 function bearer(req: Request): string | null {
   const auth = req.headers.authorization;
@@ -303,6 +304,7 @@ export function mountAuthRoutes(router: Router): void {
         });
       }
       const shopId = (shopIns.data as { id: number }).id;
+      await seedDefaultServicesForShop(shopId);
 
       const subIns = await supabaseAdmin.from("subscriptions").insert({
         shop_id: shopId,

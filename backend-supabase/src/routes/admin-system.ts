@@ -5,6 +5,7 @@ import { supabaseAdmin } from "../lib/supabase.js";
 import { fail, okData } from "../lib/http.js";
 import { verifyAccessToken, signAccessToken, issueRefreshToken, hashToken } from "../lib/jwt.js";
 import { config } from "../config.js";
+import { seedDefaultServicesForShop } from "../lib/default-services.js";
 
 async function adminUser(req: Request): Promise<{ id: string; role: string; name: string; mobile: string } | null> {
   const auth = req.headers.authorization;
@@ -406,6 +407,8 @@ export function mountAdminSystemRoutes(router: Router): void {
   router.post("/system/shops", async (req, res) => {
     const ins = await supabaseAdmin.from("shops").insert(req.body as Record<string, unknown>).select("*").single();
     if (ins.error || !ins.data) return fail(res, 422, "Could not create shop.");
+    const shopId = Number((ins.data as { id?: unknown }).id ?? NaN);
+    if (Number.isFinite(shopId)) await seedDefaultServicesForShop(shopId);
     return okData(res, ins.data, 201);
   });
 

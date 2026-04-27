@@ -45,6 +45,12 @@ function ymd(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+function statusTone(status: string): string {
+  if (status === "completed") return "text-emerald-700 dark:text-emerald-300";
+  if (status === "cancelled" || status === "no_show") return "text-rose-700 dark:text-rose-300";
+  return "text-amber-700 dark:text-amber-300";
+}
+
 function SwipeRow(props: {
   children: React.ReactNode;
   onSwipeRight?: () => void;
@@ -110,8 +116,16 @@ export function StaffAppointmentsClient() {
   }, [rows, filter]);
 
   const detail = detailId != null ? rows?.find((b) => b.id === detailId) ?? null : null;
+  const upcomingCount = useMemo(() => rows?.filter((b) => isUpcomingBookingStatus(b.status)).length ?? 0, [rows]);
+  const completedCount = useMemo(() => rows?.filter((b) => b.status === "completed").length ?? 0, [rows]);
+  const noShowCount = useMemo(() => rows?.filter((b) => b.status === "no_show").length ?? 0, [rows]);
+  const soonCount = useMemo(
+    () => rows?.filter((b) => isUpcomingBookingStatus(b.status) && isAppointmentSoon(b.starts_at)).length ?? 0,
+    [rows]
+  );
 
   useEffect(() => {
+    let cancelled = false;
     async function run() {
       if (!token || !detail) {
         setRiskProfile(null);
@@ -119,15 +133,24 @@ export function StaffAppointmentsClient() {
       }
       setRiskBusy(true);
       const res = await fetchStaffCustomerRiskProfile(token, detail.customer_mobile);
-      setRiskBusy(false);
-      if (!res.ok) {
-        setRiskProfile(null);
-        return;
+      if (!cancelled) {
+        setRiskBusy(false);
+        if (!res.ok) {
+          setRiskProfile(null);
+          return;
+        }
+        setRiskProfile(res.data);
       }
-      setRiskProfile(res.data);
     }
     void run();
+    return () => {
+      cancelled = true;
+    };
   }, [token, detail]);
+
+  useEffect(() => {
+    if (detailId === null) setRescheduleMsg("");
+  }, [detailId]);
 
   async function markStatus(bookingId: number, status: "completed" | "no_show") {
     if (!token) return;
@@ -174,12 +197,30 @@ export function StaffAppointmentsClient() {
 
   return (
     <div className="space-y-4">
-      <div>
+      <div className="section-wrap p-5">
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">Appointments</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           Calendar and list for your assigned bookings. Swipe a card right to complete, left for no-show. Use the floating
           button for quick status updates on mobile.
         </p>
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="card-clean p-3">
+            <p className="text-[11px] uppercase tracking-wide text-zinc-500">Upcoming</p>
+            <p className="mt-1 text-lg font-semibold text-zinc-900 dark:text-white">{upcomingCount}</p>
+          </div>
+          <div className="card-clean p-3">
+            <p className="text-[11px] uppercase tracking-wide text-zinc-500">Starting soon</p>
+            <p className="mt-1 text-lg font-semibold text-rose-700 dark:text-rose-300">{soonCount}</p>
+          </div>
+          <div className="card-clean p-3">
+            <p className="text-[11px] uppercase tracking-wide text-zinc-500">Completed</p>
+            <p className="mt-1 text-lg font-semibold text-emerald-700 dark:text-emerald-300">{completedCount}</p>
+          </div>
+          <div className="card-clean p-3">
+            <p className="text-[11px] uppercase tracking-wide text-zinc-500">No-show</p>
+            <p className="mt-1 text-lg font-semibold text-amber-700 dark:text-amber-300">{noShowCount}</p>
+          </div>
+        </div>
       </div>
 
       <Tabs defaultValue="calendar" className="w-full">
@@ -195,7 +236,8 @@ export function StaffAppointmentsClient() {
           <StaffAppointmentsCalendar rows={filtered} onSelectBooking={(id) => setDetailId(id)} />
         </TabsContent>
         <TabsContent value="list" className="mt-4 space-y-3">
-          <div className="flex flex-wrap gap-2">
+          <div className="sticky top-0 z-10 -mx-1 rounded-xl bg-[#fcfaf8]/95 px-1 py-1 backdrop-blur dark:bg-zinc-950/90">
+            <div className="flex flex-wrap gap-2">
             {(
               [
                 ["upcoming", "Upcoming"],
@@ -215,6 +257,7 @@ export function StaffAppointmentsClient() {
                 {label}
               </Button>
             ))}
+            </div>
           </div>
           <ul className="space-y-2">
             {filtered.length === 0 ? (
@@ -254,7 +297,7 @@ export function StaffAppointmentsClient() {
                           {b.service?.name ?? "Service"} · {formatStaffDateTime(b.starts_at)}
                         </span>
                         <span className="text-xs text-zinc-500">
-                          {bookingStatusLabel(b.status)}
+                          <span className={statusTone(b.status)}>{bookingStatusLabel(b.status)}</span>
                           {b.review ? ` · Rating ${b.review.rating}/5` : ""}
                         </span>
                       </button>
@@ -292,7 +335,7 @@ export function StaffAppointmentsClient() {
                   <p className="font-medium text-zinc-900 dark:text-white">{detail.service?.name ?? "—"}</p>
                   <p className="mt-1 text-zinc-600 dark:text-zinc-400">
                     {detail.service?.duration_minutes ?? "—"} min
-                    {detail.service?.price_cents != null ? ` · $${(detail.service.price_cents / 100).toFixed(2)}` : ""}
+                    {detail.service?.price_cents != null ? ` · ${(detail.service.price_cents / 100).toLocaleString()} BDT` : ""}
                   </p>
                   <p className="mt-1 text-zinc-600 dark:text-zinc-400">
                     Rating: {detail.review ? `${detail.review.rating}/5` : "No rating yet"}
@@ -376,14 +419,16 @@ export function StaffAppointmentsClient() {
       </Dialog>
 
       {/* Mobile FAB */}
-      <button
-        type="button"
-        className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-900 text-white shadow-lg lg:hidden dark:bg-rose-100 dark:text-zinc-900"
-        aria-label="Quick appointment actions"
-        onClick={() => setFabOpen(true)}
-      >
-        <MoreHorizontal className="h-6 w-6" />
-      </button>
+      {upcomingCount > 0 ? (
+        <button
+          type="button"
+          className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-900 text-white shadow-lg lg:hidden dark:bg-rose-100 dark:text-zinc-900"
+          aria-label="Quick appointment actions"
+          onClick={() => setFabOpen(true)}
+        >
+          <MoreHorizontal className="h-6 w-6" />
+        </button>
+      ) : null}
 
       <Dialog open={fabOpen} onOpenChange={setFabOpen}>
         <DialogContent className="sm:max-w-sm">
