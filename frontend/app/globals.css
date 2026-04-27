@@ -1,18 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --background: #1e262f;
-  --foreground: #ffffff;
-  --surface: #1e262f;
-  --surface-elevated: #1f3a4a;
-  --border: #3b4a59;
-  --brand-primary: #c6a43f;
-  --brand-primary-hover: #d4b14b;
-  --brand-glow: #c6a43f;
-  --paragraph: #b0b8c1;
-  --trend-rose: #c6a43f;
-  --midnight: #1e262f;
-  --gold-accent: #c6a43f;
+  --background: #0d0d0d; /* Void */
+  --foreground: #e8e8e8; /* Ivory */
+  --surface: #1a1a1a; /* Surface */
+  --surface-elevated: #111111; /* Charcoal */
+  --border: #222222; /* Border */
+  --brand-primary: #c8a96e; /* Gold */
+  --brand-primary-hover: #d4b882;
+  --brand-glow: #c8a96e;
+  --paragraph: #888888; /* Smoke */
+  --caption: #555555; /* Ash */
+  --trend-rose: #c13030; /* Barber Red */
+  --midnight: #0d0d0d;
+  --gold-accent: #c8a96e;
 }
 
 @theme inline {
@@ -136,12 +137,12 @@ textarea:disabled {
 /* Brand palette mappings for common utility classes used across pages. */
 .bg-blue-500 {
   background-color: var(--brand-primary) !important;
-  color: #1e262f !important;
+  color: var(--midnight) !important;
 }
 
 .hover\:bg-blue-400:hover {
   background-color: var(--brand-primary-hover) !important;
-  color: #1e262f !important;
+  color: var(--midnight) !important;
 }
 
 .text-blue-300,
@@ -168,10 +169,15 @@ textarea:disabled {
 }
 
 .text-slate-300,
-.text-slate-400,
-.text-zinc-300,
-.text-zinc-500 {
+.text-zinc-300 {
   color: var(--paragraph) !important;
+}
+
+.text-slate-400,
+.text-zinc-400,
+.text-zinc-500,
+.text-zinc-600 {
+  color: var(--caption) !important;
 }
 
 .border-slate-700,
@@ -241,8 +247,6 @@ textarea:disabled {
 }
 
 .text-zinc-600,
-.text-zinc-500,
-.text-zinc-400,
 .dark\:text-zinc-400:is(.dark *),
 .dark\:text-zinc-300:is(.dark *) {
   color: var(--paragraph) !important;

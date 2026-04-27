@@ -308,10 +308,10 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
   }, [accessToken, me, primaryPath, router]);
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full">
       {busy ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-          <div className="rounded-2xl border border-zinc-200 bg-white px-5 py-4 text-sm font-medium text-zinc-900 shadow-xl dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100">
+          <div className="rounded-2xl border border-[#3b4a59] bg-[#1f3a4a] px-5 py-4 text-sm font-medium text-white shadow-xl">
             <span className="inline-flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
               Processing...
@@ -320,160 +320,168 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
         </div>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="card-clean p-4 text-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">Customer</p>
-          <p className="mt-1 text-slate-300">Book, track appointments, and loyalty points with mobile login.</p>
-        </div>
-        <div className="card-clean p-4 text-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">Shop team</p>
-          <p className="mt-1 text-slate-300">Manager and staff access with role-aware dashboards.</p>
-        </div>
-        <div className="card-clean p-4 text-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">Secure</p>
-          <p className="mt-1 text-slate-300">JWT session, refresh tokens, SMS OTP reset flow.</p>
-        </div>
-      </div>
-
-      {accessToken && me ? (
-        <section className="section-wrap p-5">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-300">Signed in</p>
-              <h2 className="mt-1 text-lg font-semibold text-zinc-900 dark:text-white">
-                {me.name} · {roleLabel}
-              </h2>
-              <p className="text-xs text-slate-400">{me.mobile}</p>
+      <div className="overflow-hidden rounded-[28px] border border-[#2b333c] bg-[#1e262f]">
+        <div className="grid min-h-[720px] lg:grid-cols-[0.95fr_1.25fr]">
+          <aside className="relative border-r border-[#2b333c] bg-[#171e25] px-10 py-12">
+            <div className="mx-auto flex h-full w-full max-w-sm flex-col items-center justify-center text-center">
+              <div className="mb-8 flex items-end gap-2">
+                <span className="h-16 w-2 rounded-full bg-[#c6a43f]" />
+                <span className="h-16 w-2 rounded-full bg-[#ffffff]" />
+                <span className="h-16 w-2 rounded-full bg-[#b0b8c1]" />
+                <span className="h-16 w-2 rounded-full bg-[#c6a43f]" />
+                <span className="h-16 w-2 rounded-full bg-[#ffffff]" />
+              </div>
+              <h2 className="text-5xl font-semibold tracking-[0.08em] text-[#c6a43f]">THE</h2>
+              <h3 className="mt-2 text-5xl font-semibold tracking-[0.08em] text-[#c6a43f]">
+                BLADE & CO.
+              </h3>
+              <p className="mt-4 text-sm uppercase tracking-[0.35em] text-[#b0b8c1]">Est. 1987</p>
+              <div className="my-10 h-px w-14 bg-[#3b4a59]" />
+              <p className="max-w-[240px] text-lg italic leading-relaxed text-[#b0b8c1]">
+                &quot;A cut above the rest - precision, style, and tradition.&quot;
+              </p>
+              <div className="my-10 h-px w-14 bg-[#3b4a59]" />
+              <p className="text-sm uppercase tracking-[0.3em] text-[#b0b8c1]">Book · Style · Relax</p>
             </div>
-            {primaryPath ? (
-              <Link
-                href={primaryPath}
-                className="inline-flex min-h-10 items-center gap-2 rounded-full bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-400"
-              >
-                Open dashboard
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            ) : null}
-          </div>
-          <ul className="mt-4 grid gap-2 sm:grid-cols-3">
-            {featureChips.map((chip) => (
-              <li key={chip} className="card-clean px-3 py-2 text-sm text-slate-200">
-                {chip}
-              </li>
-            ))}
-          </ul>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => void handleRefresh()}
-              disabled={busy || !refreshToken}
-              className="min-h-10 rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium disabled:opacity-60 dark:border-zinc-600"
-            >
-              Refresh token
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleLogout()}
-              disabled={busy}
-              className="min-h-10 rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium disabled:opacity-60 dark:border-zinc-600"
-            >
-              Sign out
-            </button>
-          </div>
-          {canAccessBarberStaffRoutes(me) ? (
-            <p className="mt-3 text-xs text-slate-400">
-              Open the{" "}
-              <Link href="/staff/dashboard" className="font-semibold text-blue-300 underline">
-                staff portal
-              </Link>{" "}
-              for schedule, earnings, and profile.
-            </p>
-          ) : null}
-          {canAccessCustomerPortal(me) ? (
-            <p className="mt-3 text-xs text-slate-400">
-              Open the{" "}
-              <Link href="/customer/dashboard" className="font-semibold text-blue-300 underline">
-                customer portal
-              </Link>{" "}
-              for bookings and loyalty.
-            </p>
-          ) : null}
-        </section>
-      ) : null}
+          </aside>
 
-      {notice ? (
-        <div
-          className={`rounded-xl border px-3 py-2 text-sm ${
-            notice.type === "ok"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100"
-              : "border-red-200 bg-red-50 text-red-950 dark:border-red-900 dark:bg-red-950/40 dark:text-red-100"
-          }`}
-        >
-          {notice.text}
-        </div>
-      ) : null}
+          <section className="flex items-center bg-[#0f151b] px-6 py-10 sm:px-10">
+            <div className="mx-auto w-full max-w-xl rounded-2xl border border-[#2b333c] bg-[#111922] p-6 sm:p-8">
+              {accessToken && me ? (
+                <section className="mb-6 rounded-2xl border border-[#3b4a59] bg-[#1f3a4a] p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#c6a43f]">Signed in</p>
+                      <h2 className="mt-1 text-lg font-semibold text-white">
+                        {me.name} · {roleLabel}
+                      </h2>
+                      <p className="text-xs text-[#b0b8c1]">{me.mobile}</p>
+                    </div>
+                    {primaryPath ? (
+                      <Link
+                        href={primaryPath}
+                        className="inline-flex min-h-10 items-center gap-2 rounded-full bg-[#c6a43f] px-4 py-2 text-sm font-semibold text-[#1e262f] hover:bg-[#d4b14b]"
+                      >
+                        Open dashboard
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    ) : null}
+                  </div>
+                  <ul className="mt-4 grid gap-2 sm:grid-cols-3">
+                    {featureChips.map((chip) => (
+                      <li key={chip} className="rounded-xl border border-[#3b4a59] bg-[#1e262f] px-3 py-2 text-sm text-[#b0b8c1]">
+                        {chip}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void handleRefresh()}
+                      disabled={busy || !refreshToken}
+                      className="min-h-10 rounded-full border border-[#3b4a59] px-4 py-2 text-sm font-medium text-[#b0b8c1] disabled:opacity-60"
+                    >
+                      Refresh token
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleLogout()}
+                      disabled={busy}
+                      className="min-h-10 rounded-full border border-[#3b4a59] px-4 py-2 text-sm font-medium text-[#b0b8c1] disabled:opacity-60"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                  {canAccessBarberStaffRoutes(me) ? (
+                    <p className="mt-3 text-xs text-[#b0b8c1]">
+                      Open the{" "}
+                      <Link href="/staff/dashboard" className="font-semibold text-[#c6a43f] underline">
+                        staff portal
+                      </Link>{" "}
+                      for schedule, earnings, and profile.
+                    </p>
+                  ) : null}
+                  {canAccessCustomerPortal(me) ? (
+                    <p className="mt-3 text-xs text-[#b0b8c1]">
+                      Open the{" "}
+                      <Link href="/customer/dashboard" className="font-semibold text-[#c6a43f] underline">
+                        customer portal
+                      </Link>{" "}
+                      for bookings and loyalty.
+                    </p>
+                  ) : null}
+                </section>
+              ) : null}
 
-      <div className="section-wrap p-4 sm:p-6">
-        <div className="mb-6 rounded-2xl border border-slate-800 bg-[#f7f2fc] p-1.5">
-          <div className="grid grid-cols-2 gap-1">
-          <button
-            type="button"
-            onClick={() => {
-              setMode("login");
-              setLoginView("login");
-              setNotice(null);
-            }}
-            className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
-              mode === "login"
-                ? "bg-blue-500 text-white shadow-sm"
-                : "text-slate-400 hover:bg-white/80"
-            }`}
-          >
-            <LogIn className="h-4 w-4" aria-hidden />
-            Login
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setMode("register");
-              setNotice(null);
-            }}
-            className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
-              mode === "register"
-                ? "bg-blue-500 text-white shadow-sm"
-                : "text-slate-400 hover:bg-white/80"
-            }`}
-          >
-            <UserPlus className="h-4 w-4" aria-hidden />
-            Registration
-          </button>
-          </div>
-        </div>
+              {notice ? (
+                <div
+                  className={`mb-5 rounded-xl border px-3 py-2 text-sm ${
+                    notice.type === "ok"
+                      ? "border-[#3b4a59] bg-[#1f3a4a] text-white"
+                      : "border-[#7f1d1d] bg-[#3b1212] text-white"
+                  }`}
+                >
+                  {notice.text}
+                </div>
+              ) : null}
 
-        {mode === "login" && loginView === "login" ? (
-          <SectionCard
-            title="Sign in"
-            subtitle="Use your mobile and password. Role-based features unlock automatically after login."
-          >
-            <form onSubmit={handleLogin} className="space-y-4">
-              <label className="block text-xs font-medium text-slate-400">
+              <div className="mb-8 flex items-center gap-0 border-b border-[#2b333c] pb-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("login");
+                    setLoginView("login");
+                    setNotice(null);
+                  }}
+                  className={`inline-flex min-h-10 items-center justify-center gap-2 border border-[#2b333c] px-6 py-2 text-sm font-semibold tracking-[0.2em] transition ${
+                    mode === "login"
+                      ? "text-[#c6a43f]"
+                      : "text-[#b0b8c1] hover:text-white"
+                  }`}
+                >
+                  <LogIn className="h-4 w-4" aria-hidden />
+                  SIGN IN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("register");
+                    setNotice(null);
+                  }}
+                  className={`inline-flex min-h-10 items-center justify-center gap-2 border border-l-0 border-[#2b333c] px-6 py-2 text-sm font-semibold tracking-[0.2em] transition ${
+                    mode === "register"
+                      ? "text-[#c6a43f]"
+                      : "text-[#b0b8c1] hover:text-white"
+                  }`}
+                >
+                  <UserPlus className="h-4 w-4" aria-hidden />
+                  REGISTER
+                </button>
+              </div>
+
+              {mode === "login" && loginView === "login" ? (
+                <div>
+                  <h2 className="text-4xl font-semibold text-white">Welcome back</h2>
+                  <p className="mt-2 text-xl text-[#b0b8c1]">Sign in to manage your appointments</p>
+                  <form onSubmit={handleLogin} className="mt-8 space-y-6">
+                    <label className="block text-sm font-medium uppercase tracking-[0.18em] text-[#b0b8c1]">
                 Mobile number
                 <input
-                  className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-slate-100 shadow-sm"
+                  className="mt-2 w-full rounded-xl border border-[#3b4a59] bg-white px-5 py-3 text-2xl text-[#1e262f] shadow-sm placeholder:text-[#6b7280]"
                   value={loginMobile}
                   onChange={(e) => setLoginMobile(e.target.value)}
                   autoComplete="tel"
                   inputMode="tel"
-                  placeholder="e.g. 01711 000000"
+                  placeholder="01711 000000"
                   required
                 />
               </label>
-              <label className="block text-xs font-medium text-slate-400">
+                    <label className="block text-sm font-medium uppercase tracking-[0.18em] text-[#b0b8c1]">
                 Password
-                <div className="relative mt-1">
+                <div className="relative mt-2">
                   <input
                     type={showLoginPassword ? "text" : "password"}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-900 py-2.5 pl-3 pr-11 text-sm text-slate-100 shadow-sm"
+                    className="w-full rounded-xl border border-[#3b4a59] bg-white py-3 pl-5 pr-12 text-2xl text-[#1e262f] shadow-sm"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     autoComplete="current-password"
@@ -482,7 +490,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                   <button
                     type="button"
                     disabled={busy}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-[#475569] hover:bg-[#e5e7eb]"
                     onClick={() => setShowLoginPassword((v) => !v)}
                     aria-label={showLoginPassword ? "Hide password" : "Show password"}
                   >
@@ -493,20 +501,33 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               <button
                 type="submit"
                 disabled={busy}
-                className="inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-full bg-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-400 disabled:opacity-60"
+                className="inline-flex w-full min-h-12 items-center justify-center gap-2 rounded-xl border border-[#3b4a59] bg-transparent px-4 py-3 text-base font-semibold uppercase tracking-[0.2em] text-[#c6a43f] hover:bg-[#1f3a4a] disabled:opacity-60"
               >
                 {busy ? "Signing in..." : (
                   <>
                     <ArrowRight className="h-4 w-4" aria-hidden />
-                    Sign in
+                    SIGN IN
                   </>
                 )}
               </button>
-              <p className="text-center text-xs text-slate-400">
+                    <div className="flex items-center justify-end">
+                      <button
+                        type="button"
+                        className="text-lg text-[#b0b8c1] hover:text-[#c6a43f]"
+                        disabled={busy}
+                        onClick={() => {
+                          setLoginView("forgot");
+                          setNotice(null);
+                        }}
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+                    <p className="pt-2 text-center text-lg text-[#b0b8c1]">
                 New here?{" "}
                 <button
                   type="button"
-                  className="font-medium text-blue-300 underline"
+                  className="font-medium text-[#c6a43f] underline"
                   disabled={busy}
                   onClick={() => {
                     setMode("register");
@@ -514,79 +535,55 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                     setNotice(null);
                   }}
                 >
-                  Create an account
+                  Register now
                 </button>
               </p>
-              <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
-                <button
-                  type="button"
-                  className="font-medium text-blue-300 underline"
-                  disabled={busy}
-                  onClick={() => {
-                    setLoginView("forgot");
-                    setNotice(null);
-                  }}
-                >
-                  Forgot password?
-                </button>
-                <button
-                  type="button"
-                  className="font-medium text-blue-300 underline"
-                  onClick={() => {
-                    setLoginView("reset");
-                    setNotice(null);
-                  }}
-                >
-                  Have OTP? Reset now
-                </button>
-              </div>
-            </form>
-          </SectionCard>
-        ) : null}
+                  </form>
+                </div>
+              ) : null}
 
-        {mode === "register" ? (
-          <SectionCard
-            title="Create account"
-            subtitle="Customers can self-register. Shop owners can register business accounts with booking URL."
-          >
-            <form onSubmit={registerMode === "shop" ? handleRegisterShop : handleRegisterCustomer} className="space-y-5">
+              {mode === "register" ? (
+                <div>
+                  <h2 className="text-4xl font-semibold text-white">Create account</h2>
+                  <p className="mt-2 text-xl text-[#b0b8c1]">Register as customer or shop owner</p>
+                  <form onSubmit={registerMode === "shop" ? handleRegisterShop : handleRegisterCustomer} className="mt-7 space-y-5">
               <div className="grid gap-3 sm:grid-cols-2">
                 <button
                   type="button"
                   disabled={busy}
                   onClick={() => setRegisterMode("customer")}
-                  className={`rounded-2xl border px-4 py-4 text-left transition ${
+                        className={`rounded-2xl border px-4 py-4 text-left transition ${
                     registerMode === "customer"
-                      ? "border-blue-400 bg-slate-900 ring-1 ring-blue-500/30"
-                      : "border-slate-700 bg-slate-900 hover:border-blue-400"
+                            ? "border-[#c6a43f] bg-[#1f3a4a]"
+                            : "border-[#3b4a59] bg-[#1e262f] hover:border-[#c6a43f]"
                   }`}
                 >
-                  <Sparkles className="h-6 w-6 text-blue-300" aria-hidden />
-                  <p className="mt-2 font-semibold text-zinc-900 dark:text-white">Customer</p>
-                  <p className="mt-1 text-xs text-slate-400">Book visits and track loyalty.</p>
+                        <Sparkles className="h-6 w-6 text-[#c6a43f]" aria-hidden />
+                        <p className="mt-2 font-semibold text-white">Customer</p>
+                        <p className="mt-1 text-xs text-[#b0b8c1]">Book visits and track loyalty.</p>
                 </button>
                 <button
                   type="button"
                   disabled={busy}
                   onClick={() => setRegisterMode("shop")}
-                  className={`rounded-2xl border px-4 py-4 text-left transition ${
+                        className={`rounded-2xl border px-4 py-4 text-left transition ${
                     registerMode === "shop"
-                      ? "border-blue-400 bg-slate-900 ring-1 ring-blue-500/30"
-                      : "border-slate-700 bg-slate-900 hover:border-blue-400"
+                            ? "border-[#c6a43f] bg-[#1f3a4a]"
+                            : "border-[#3b4a59] bg-[#1e262f] hover:border-[#c6a43f]"
                   }`}
                 >
-                  <Store className="h-6 w-6 text-blue-300" aria-hidden />
-                  <p className="mt-2 font-semibold text-zinc-900 dark:text-white">Shop owner</p>
-                  <p className="mt-1 text-xs text-slate-400">Create business and booking link.</p>
+                        <Store className="h-6 w-6 text-[#c6a43f]" aria-hidden />
+                        <p className="mt-2 font-semibold text-white">Shop owner</p>
+                        <p className="mt-1 text-xs text-[#b0b8c1]">Create business and booking link.</p>
                 </button>
               </div>
 
               {registerMode === "shop" ? (
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="text-xs font-medium text-zinc-500 sm:col-span-2">
+                        <label className="text-xs font-medium text-[#b0b8c1] sm:col-span-2">
                     Business name
                     <input
-                      className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                            className="mt-1 w-full rounded-lg border border-[#3b4a59] bg-[#0f151b] px-3 py-2 text-sm text-white"
                       value={shopName}
                       onChange={(e) => setShopName(e.target.value)}
                       required
@@ -594,10 +591,10 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                       placeholder="BarbarShop Studio"
                     />
                   </label>
-                  <label className="text-xs font-medium text-zinc-500 sm:col-span-2">
+                        <label className="text-xs font-medium text-[#b0b8c1] sm:col-span-2">
                     Public shop slug
                     <input
-                      className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                            className="mt-1 w-full rounded-lg border border-[#3b4a59] bg-[#0f151b] px-3 py-2 font-mono text-sm text-white"
                       value={shopSlug}
                       onChange={(e) => {
                         setShopSlugTouched(true);
@@ -608,15 +605,15 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                       title="Lowercase letters, numbers and hyphen only"
                       placeholder="lumiere-studio"
                     />
-                    <p className="mt-1 text-[11px] text-zinc-500">
+                          <p className="mt-1 text-[11px] text-[#b0b8c1]">
                       Booking URL preview: <span className="font-mono">/s/{shopSlug || "your-slug"}/book</span>
                     </p>
                   </label>
-                  <label className="text-xs font-medium text-zinc-500 sm:col-span-2">
+                        <label className="text-xs font-medium text-[#b0b8c1] sm:col-span-2">
                     Shop description (optional)
                     <textarea
                       rows={2}
-                      className="mt-1 w-full resize-none rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                            className="mt-1 w-full resize-none rounded-lg border border-[#3b4a59] bg-[#0f151b] px-3 py-2 text-sm text-white"
                       value={shopDescription}
                       onChange={(e) => setShopDescription(e.target.value)}
                       placeholder="What makes your salon special?"
@@ -626,20 +623,20 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               ) : null}
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <label className="text-xs font-medium text-zinc-500">
+                      <label className="text-xs font-medium text-[#b0b8c1]">
                   Your name {registerMode === "customer" ? "(optional)" : ""}
                   <input
-                    className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                          className="mt-1 w-full rounded-lg border border-[#3b4a59] bg-[#0f151b] px-3 py-2 text-sm text-white"
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
                     required={registerMode === "shop"}
                     autoComplete="name"
                   />
                 </label>
-                <label className="text-xs font-medium text-zinc-500">
+                      <label className="text-xs font-medium text-[#b0b8c1]">
                   Mobile
                   <input
-                    className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                          className="mt-1 w-full rounded-lg border border-[#3b4a59] bg-[#0f151b] px-3 py-2 text-sm text-white"
                     value={regMobile}
                     onChange={(e) => setRegMobile(e.target.value)}
                     required
@@ -647,12 +644,12 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                     inputMode="tel"
                   />
                 </label>
-                <label className="text-xs font-medium text-zinc-500">
+                      <label className="text-xs font-medium text-[#b0b8c1]">
                   Password (min 8 chars)
                   <div className="relative mt-1">
                     <input
                       type={showRegPassword ? "text" : "password"}
-                      className="w-full rounded-xl border border-zinc-200 py-2.5 pl-3 pr-11 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                            className="w-full rounded-xl border border-[#3b4a59] bg-[#0f151b] py-2.5 pl-3 pr-11 text-sm text-white"
                       value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
                       required
@@ -662,7 +659,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                     <button
                       type="button"
                       disabled={busy}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-[#b0b8c1] hover:bg-[#1f3a4a]"
                       onClick={() => setShowRegPassword((v) => !v)}
                       aria-label={showRegPassword ? "Hide password" : "Show password"}
                     >
@@ -670,12 +667,12 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                     </button>
                   </div>
                 </label>
-                <label className="text-xs font-medium text-zinc-500">
+                      <label className="text-xs font-medium text-[#b0b8c1]">
                   Confirm password
                   <div className="relative mt-1">
                     <input
                       type={showRegPassword2 ? "text" : "password"}
-                      className="w-full rounded-xl border border-zinc-200 py-2.5 pl-3 pr-11 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                            className="w-full rounded-xl border border-[#3b4a59] bg-[#0f151b] py-2.5 pl-3 pr-11 text-sm text-white"
                       value={regPassword2}
                       onChange={(e) => setRegPassword2(e.target.value)}
                       required
@@ -684,7 +681,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                     <button
                       type="button"
                       disabled={busy}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-[#b0b8c1] hover:bg-[#1f3a4a]"
                       onClick={() => setShowRegPassword2((v) => !v)}
                       aria-label={showRegPassword2 ? "Hide password" : "Show password"}
                     >
@@ -697,18 +694,29 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full min-h-11 rounded-full bg-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-400 disabled:opacity-60"
+                      className="w-full min-h-12 rounded-xl border border-[#3b4a59] bg-transparent px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#c6a43f] hover:bg-[#1f3a4a] disabled:opacity-60"
               >
                 {busy ? "Please wait..." : registerMode === "shop" ? "Create shop account" : "Create customer account"}
               </button>
-            </form>
-          </SectionCard>
-        ) : null}
+                    <button
+                      type="button"
+                      className="w-full text-center text-sm text-[#b0b8c1]"
+                      onClick={() => {
+                        setMode("login");
+                        setLoginView("login");
+                        setNotice(null);
+                      }}
+                    >
+                      Already have an account? <span className="text-[#c6a43f]">Sign in now</span>
+                    </button>
+                  </form>
+                </div>
+              ) : null}
 
-        {mode === "login" && loginView === "forgot" ? (
-          <SectionCard title="Forgot password" subtitle="Request OTP by SMS for your registered mobile number.">
-            <form onSubmit={handleForgot} className="space-y-4">
-              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              {mode === "login" && loginView === "forgot" ? (
+                <SectionCard title="Forgot password" subtitle="Request OTP by SMS for your registered mobile number.">
+                  <form onSubmit={handleForgot} className="space-y-4">
+                    <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 Mobile
                 <input
                   className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -732,14 +740,14 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               >
                 Back to login
               </button>
-            </form>
-          </SectionCard>
-        ) : null}
+                  </form>
+                </SectionCard>
+              ) : null}
 
-        {mode === "login" && loginView === "reset" ? (
-          <SectionCard title="Reset password with OTP" subtitle="Enter mobile, 6-digit OTP, and your new password.">
-            <form onSubmit={handleReset} className="space-y-4">
-              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              {mode === "login" && loginView === "reset" ? (
+                <SectionCard title="Reset password with OTP" subtitle="Enter mobile, 6-digit OTP, and your new password.">
+                  <form onSubmit={handleReset} className="space-y-4">
+                    <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 Mobile
                 <input
                   className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -795,17 +803,19 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               >
                 Back to login
               </button>
-            </form>
-          </SectionCard>
-        ) : null}
+                  </form>
+                </SectionCard>
+              ) : null}
+            </div>
+          </section>
+        </div>
       </div>
 
-      <p className="text-center text-xs text-slate-400">
-        <Link href="/" className="font-medium text-blue-300 hover:underline">
+      <p className="mt-4 text-center text-xs text-[#b0b8c1]">
+        <Link href="/" className="font-medium text-[#c6a43f] hover:underline">
           Back to marketing site
         </Link>
       </p>
-
     </div>
   );
 }

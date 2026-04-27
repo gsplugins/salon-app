@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AuthPortal } from "../auth-portal";
+import { PublicHeader } from "@/components/public-header";
 
 type Props = {
   searchParams: Promise<{ tab?: string }>;
@@ -19,10 +20,11 @@ export default async function AuthPage({ searchParams }: Props) {
   const initialTab = tab && ALLOWED_TABS.has(tab) ? (tab as "login" | "register" | "forgot" | "reset") : "login";
 
   return (
-    <div className="min-h-[100dvh] text-slate-100">
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="min-h-[100dvh] bg-[#0d0d0d] text-white">
+      <PublicHeader />
+      <main className="mx-auto w-full max-w-[1280px] px-4 py-6 sm:px-6 sm:py-8">
         <div className="mb-4">
-          <Link href="/app" className="text-sm font-medium text-blue-300 hover:underline">
+          <Link href="/app" className="text-sm font-medium text-[#c6a43f] hover:underline">
             Back to portal hub
           </Link>
         </div>
