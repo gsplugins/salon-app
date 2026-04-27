@@ -21,6 +21,10 @@
 /backend-supabase/dist/
 /backend-supabase/.env
 /backend-supabase/.env.*
+/backend-supabase/*vercel*.env
+/backend-supabase/*.local.env
+/frontend/*vercel*.env
+/frontend/*.local.env
 
 # General
 .DS_Store
