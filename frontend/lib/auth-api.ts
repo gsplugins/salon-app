@@ -14,6 +14,22 @@ export type ApiErrorBody = {
   errors?: Record<string, string[]>;
 };
 
+function normalizeApiBase(raw: string): string {
+  const trimmed = raw.trim().replace(/\/$/, "");
+  if (!trimmed) return "";
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.pathname === "" || parsed.pathname === "/") {
+      parsed.pathname = "/api";
+    } else if (!parsed.pathname.endsWith("/api")) {
+      parsed.pathname = `${parsed.pathname.replace(/\/$/, "")}/api`;
+    }
+    return `${parsed.origin}${parsed.pathname}`.replace(/\/$/, "");
+  } catch {
+    return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
+  }
+}
+
 export async function authJson<T = unknown>(
   path: string,
   init?: RequestInit & { accessToken?: string }
@@ -40,7 +56,7 @@ export async function authJson<T = unknown>(
 
   const directBaseFromEnv =
     typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL
-      ? String(process.env.NEXT_PUBLIC_API_URL).trim().replace(/\/$/, "")
+      ? normalizeApiBase(String(process.env.NEXT_PUBLIC_API_URL))
       : "";
   const localDirectFallback =
     typeof window !== "undefined" && /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname)

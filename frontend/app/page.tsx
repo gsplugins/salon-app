@@ -8,9 +8,25 @@ import { Calendar, Search, Sparkles } from "lucide-react";
 import { FeaturedShopsSection } from "@/components/marketing/featured-shops-section";
 import { PublicHeader } from "@/components/public-header";
 
-const directApiBase =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
-  "http://127.0.0.1:4000/api";
+function normalizeApiBase(raw: string): string {
+  const trimmed = raw.trim().replace(/\/$/, "");
+  if (!trimmed) return "http://127.0.0.1:4000/api";
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.pathname === "" || parsed.pathname === "/") {
+      parsed.pathname = "/api";
+    } else if (!parsed.pathname.endsWith("/api")) {
+      parsed.pathname = `${parsed.pathname.replace(/\/$/, "")}/api`;
+    }
+    return `${parsed.origin}${parsed.pathname}`.replace(/\/$/, "");
+  } catch {
+    return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
+  }
+}
+
+const directApiBase = normalizeApiBase(
+  process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:4000/api"
+);
 
 async function fetchBackendJson(): Promise<{
   ok: boolean;
