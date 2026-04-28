@@ -161,11 +161,11 @@ textarea:disabled {
 }
 
 .text-slate-100 {
-  color: var(--foreground) !important;
+  color: #f4f4f5 !important;
 }
 
 .text-white {
-  color: var(--foreground) !important;
+  color: #ffffff !important;
 }
 
 .text-slate-300,
@@ -177,7 +177,7 @@ textarea:disabled {
 .text-zinc-400,
 .text-zinc-500,
 .text-zinc-600 {
-  color: var(--caption) !important;
+  color: #52525b !important;
 }
 
 .border-slate-700,
@@ -239,7 +239,10 @@ textarea:disabled {
 
 .text-black,
 .text-zinc-900,
-.text-zinc-800,
+.text-zinc-800 {
+  color: #18181b !important;
+}
+
 .dark\:text-white:is(.dark *),
 .dark\:text-zinc-100:is(.dark *),
 .dark\:text-zinc-50:is(.dark *) {
@@ -249,7 +252,7 @@ textarea:disabled {
 .text-zinc-600,
 .dark\:text-zinc-400:is(.dark *),
 .dark\:text-zinc-300:is(.dark *) {
-  color: var(--paragraph) !important;
+  color: #71717a !important;
 }
 
 .border-black,

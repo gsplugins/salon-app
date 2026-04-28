@@ -51,9 +51,9 @@ export function PortalPanelShell(props: {
   const drawerItems = [...props.primaryNav, ...secondary];
 
   return (
-    <div className="min-h-[100dvh] bg-[#faf8f6] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+    <div className="min-h-[100dvh] bg-[#f8f7f4] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
       <div className="mx-auto flex w-full max-w-6xl lg:max-w-none">
-        <aside className="sticky top-0 hidden h-[100dvh] w-56 shrink-0 flex-col border-r border-zinc-200/80 bg-white/90 px-3 py-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90 lg:flex">
+        <aside className="sticky top-0 hidden h-[100dvh] w-56 shrink-0 flex-col border-r border-zinc-300 bg-white px-3 py-4 dark:border-zinc-700 dark:bg-zinc-950/95 lg:flex">
           <div className="mb-4 px-2">
             <Link
               href={props.brandHref}
@@ -71,7 +71,7 @@ export function PortalPanelShell(props: {
             ))}
             {secondary.length > 0 ? (
               <>
-                <div className="my-2 border-t border-zinc-100 pt-2 dark:border-zinc-800" />
+                <div className="my-2 border-t border-zinc-200 pt-2 dark:border-zinc-700" />
                 {secondary.map((item) => (
                   <PortalNavLink key={item.href} {...item} pathname={pathname} />
                 ))}
@@ -81,7 +81,7 @@ export function PortalPanelShell(props: {
           {props.footerLink ? (
             <Link
               href={props.footerLink.href}
-              className="mt-3 rounded-xl px-3 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+              className="mt-3 rounded-xl px-3 py-2 text-xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
             >
               {props.footerLink.label}
             </Link>
@@ -89,7 +89,7 @@ export function PortalPanelShell(props: {
           {props.footerLink2 ? (
             <Link
               href={props.footerLink2.href}
-              className="mt-1 rounded-xl px-3 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+              className="mt-1 rounded-xl px-3 py-2 text-xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
             >
               {props.footerLink2.label}
             </Link>
@@ -97,7 +97,7 @@ export function PortalPanelShell(props: {
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col pb-24 lg:pb-6">
-          <header className="sticky top-0 z-30 border-b border-zinc-200/80 bg-[#faf8f6]/95 px-4 py-3 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90">
+          <header className="sticky top-0 z-30 border-b border-zinc-300 bg-[#f8f7f4] px-4 py-3 dark:border-zinc-700 dark:bg-zinc-950/95">
             <div className="flex items-center gap-3">
               <Button
                 type="button"
@@ -119,7 +119,7 @@ export function PortalPanelShell(props: {
                   </>
                 ) : (
                   <>
-                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800">
+                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border border-zinc-300 bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800">
                       {props.header.avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element -- portal avatars may be external URLs
                         <img src={props.header.avatarUrl} alt="" className="h-full w-full object-cover" />
@@ -181,7 +181,7 @@ export function PortalPanelShell(props: {
         </div>
       ) : null}
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-200/90 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95 lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-300 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-zinc-700 dark:bg-zinc-950/95 lg:hidden">
         <ul className="mx-auto flex max-w-lg items-stretch justify-between gap-0 px-1 pt-1">
           {props.primaryNav.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -220,7 +220,7 @@ function PortalNavLink(props: PortalNavItem & { pathname: string; onClick?: () =
         "flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
         active
           ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
-          : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          : "text-zinc-800 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
       )}
     >
       <Icon className="h-4 w-4 shrink-0 opacity-90" />

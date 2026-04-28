@@ -85,7 +85,7 @@ function Body({ token }: { token: string }) {
         <CardContent>
           <ul className="space-y-2 text-sm">
             {top.map((s) => (
-              <li key={s.id} className="flex justify-between gap-4 border-b border-zinc-100 py-2 last:border-0 dark:border-zinc-800">
+              <li key={s.id} className="flex justify-between gap-4 border-b border-zinc-200 py-2 last:border-0 dark:border-zinc-700">
                 <span className="font-medium">{s.name}</span>
                 <span className="text-zinc-500">{(Number(s.revenue_paisa) / 100).toFixed(2)} BDT</span>
               </li>

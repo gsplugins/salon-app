@@ -1,5 +1,5 @@
 /**
- * Browser calls use same-origin `/api/*` so Next.js rewrites proxy to the Node API (`BACKEND_URL`).
+ * Browser calls use same-origin `/api/*` handled by Next App Router API routes.
  */
 
 import { getSalonActAsShopSlug, SALON_ACT_AS_SHOP_SLUG_HEADER } from "@/lib/salon-act-as-shop";
@@ -13,22 +13,6 @@ export type ApiErrorBody = {
   hint?: string;
   errors?: Record<string, string[]>;
 };
-
-function normalizeApiBase(raw: string): string {
-  const trimmed = raw.trim().replace(/\/$/, "");
-  if (!trimmed) return "";
-  try {
-    const parsed = new URL(trimmed);
-    if (parsed.pathname === "" || parsed.pathname === "/") {
-      parsed.pathname = "/api";
-    } else if (!parsed.pathname.endsWith("/api")) {
-      parsed.pathname = `${parsed.pathname.replace(/\/$/, "")}/api`;
-    }
-    return `${parsed.origin}${parsed.pathname}`.replace(/\/$/, "");
-  } catch {
-    return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
-  }
-}
 
 export async function authJson<T = unknown>(
   path: string,
@@ -54,48 +38,17 @@ export async function authJson<T = unknown>(
   const { accessToken, ...rest } = (init ?? {}) as RequestInit & { accessToken?: string };
   void accessToken;
 
-  const directBaseFromEnv =
-    typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL
-      ? normalizeApiBase(String(process.env.NEXT_PUBLIC_API_URL))
-      : "";
-  const localDirectFallback =
-    typeof window !== "undefined" && /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname)
-      ? "http://127.0.0.1:4000/api"
-      : "";
-  const directBase = directBaseFromEnv || localDirectFallback;
-  const isAbsoluteUrl = /^https?:\/\//i.test(url);
-  const shouldPreferDirect =
-    Boolean(directBase) &&
-    !isAbsoluteUrl &&
-    (typeof window !== "undefined" ? !/^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname) : true);
-  const toDirectUrl = (sameOriginApiPath: string): string | null => {
-    if (!directBase) return null;
-    const p = sameOriginApiPath.startsWith("/api") ? sameOriginApiPath : `/api${sameOriginApiPath.startsWith("/") ? sameOriginApiPath : `/${sameOriginApiPath}`}`;
-    const restPath = p.replace(/^\/api/, "") || "/";
-    const suffix = restPath.startsWith("/") ? restPath : `/${restPath}`;
-    return `${directBase}${suffix}`;
-  };
-
   const parseBody = (res: Response, text: string): { data: unknown; jsonOk: boolean } => {
     if (!text) return { data: {}, jsonOk: true };
     try {
       return { data: JSON.parse(text) as T | ApiErrorBody, jsonOk: true };
     } catch {
       const preview = text.replace(/\s+/g, " ").trim().slice(0, 500) || "(empty body)";
-      const proxyLikely =
-        res.status >= 500 &&
-        (preview.includes("Internal Server Error") ||
-          preview.includes("<!DOCTYPE") ||
-          preview.includes("<html") ||
-          preview.length < 80);
-      const fallbackHint = directBase
-        ? ` With NEXT_PUBLIC_API_URL set, the client will try that URL if the proxy response is not JSON.`
-        : " Add NEXT_PUBLIC_API_URL in frontend/.env.local (e.g. http://127.0.0.1:4000/api) so the app can call the API directly when the Next.js /api proxy returns HTML.";
       return {
         data: {
           message:
             res.status >= 400
-              ? `Server returned non-JSON (${res.status}). The Next.js → API proxy may be failing (BACKEND_URL in next.config).${proxyLikely ? fallbackHint : ""}`
+              ? `Server returned non-JSON (${res.status}). The Next.js API route failed before returning JSON.`
               : preview.slice(0, 200),
           detail: preview,
         } as ApiErrorBody,
@@ -105,47 +58,9 @@ export async function authJson<T = unknown>(
   };
 
   try {
-    const run = async (target: string) => {
-      const res = await fetch(target, { ...rest, headers });
-      const text = await res.text();
-      const { data, jsonOk } = parseBody(res, text);
-      return { res, text, data, jsonOk };
-    };
-
-    const direct = toDirectUrl(url);
-    let { res, data, jsonOk } = await run(shouldPreferDirect && direct ? direct : url);
-
-    // If first call was direct and failed hard, try same-origin /api as fallback.
-    if (
-      shouldPreferDirect &&
-      direct &&
-      (res.status === 404 || res.status === 405 || res.status >= 500)
-    ) {
-      try {
-        const second = await run(url);
-        res = second.res;
-        data = second.data;
-        jsonOk = second.jsonOk;
-      } catch {
-        // keep first error body
-      }
-    }
-
-    // If first call was same-origin and proxy likely failed, retry direct API URL.
-    if (
-      !shouldPreferDirect &&
-      direct &&
-      ((!jsonOk && res.status >= 500) || res.status === 404 || res.status === 405 || res.status === 502 || res.status === 503 || res.status === 504)
-    ) {
-      try {
-        const second = await run(direct);
-        res = second.res;
-        data = second.data;
-        jsonOk = second.jsonOk;
-      } catch {
-        // keep first error body
-      }
-    }
+    const res = await fetch(url, { ...rest, headers });
+    const text = await res.text();
+    const { data, jsonOk } = parseBody(res, text);
 
     if (!res.ok) {
       return { ok: false, status: res.status, body: data as ApiErrorBody };
@@ -162,7 +77,7 @@ export async function authJson<T = unknown>(
     const msg = e instanceof Error ? e.message : "Network error";
     const hint =
       msg === "Failed to fetch" || msg.includes("NetworkError")
-        ? "Cannot reach API. Run backend-supabase on port 4000 and set BACKEND_URL=http://127.0.0.1:4000 in frontend/.env.local (restart Next.js after)."
+        ? "Cannot reach API route. Make sure Next.js server is running and env vars are configured."
         : msg;
     return { ok: false, status: 0, body: { message: hint } };
   }

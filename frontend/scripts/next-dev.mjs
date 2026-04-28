@@ -12,12 +12,6 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const port = Math.max(1024, Math.min(65535, Number(process.env.PORT) || 3000));
-const backendBase = (
-  process.env.BACKEND_URL_LOCAL ??
-  process.env.BACKEND_URL ??
-  "http://127.0.0.1:4000"
-).replace(/\/$/, "");
-
 if (process.argv.includes("--clear-lock") || process.env.NEXT_CLEAR_DEV_LOCK === "1") {
   const devState = path.join(root, ".next", "dev");
   try {
@@ -31,7 +25,7 @@ if (process.argv.includes("--clear-lock") || process.env.NEXT_CLEAR_DEV_LOCK ===
 }
 
 console.log(`[frontend] Starting Next.js on http://127.0.0.1:${port} (bind 0.0.0.0:${port})`);
-console.log(`[frontend] Browser /api/* → Next rewrite → ${backendBase}/api/* (set BACKEND_URL in frontend/.env.local if API uses another port)`);
+console.log("[frontend] Browser /api/* is handled by App Router route handlers.");
 console.log(
   `[frontend] If you see "Another next dev server is already running", stop the old one first:\n` +
     `  Windows: taskkill /PID <pid> /F   (use the PID from Next's message)\n` +

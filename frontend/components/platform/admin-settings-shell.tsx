@@ -64,7 +64,7 @@ export function AdminSettingsShell({ children }: { children: React.ReactNode }) 
         <div className="hidden items-center gap-2 sm:flex">
           <Link
             href="/admin/notifications"
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
             aria-label="Admin notifications"
           >
             <Bell className="h-5 w-5" />
@@ -76,10 +76,10 @@ export function AdminSettingsShell({ children }: { children: React.ReactNode }) 
       footerLink2={{ href: "/", label: "Marketing home" }}
     >
       <div className="mb-4 flex justify-end sm:hidden">
-        <div className="flex items-center gap-2 rounded-2xl border border-zinc-200/80 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
+        <div className="flex items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-3 py-2 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/70">
           <Link
             href="/admin/notifications"
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
             aria-label="Admin notifications"
           >
             <Bell className="h-5 w-5" />

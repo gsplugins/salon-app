@@ -94,13 +94,13 @@ export function CustomerProfileClient() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">Profile</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Account details (read-only here). Use the account portal to change password or switch roles.</p>
+        <h1 className="text-2xl font-semibold text-zinc-950 dark:text-white">Profile</h1>
+        <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">Account details (read-only here). Use the account portal to change password or switch roles.</p>
       </div>
 
-      <Card className="border-zinc-200/80 dark:border-zinc-800">
+      <Card className="border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/60">
         <CardHeader>
-          <CardTitle className="text-base">Account</CardTitle>
+          <CardTitle className="text-base text-zinc-950 dark:text-zinc-100">Account</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           {photoUrl ? (
@@ -108,32 +108,32 @@ export function CustomerProfileClient() {
             <img src={photoUrl} alt="Profile" className="h-14 w-14 rounded-full object-cover" />
           ) : null}
           <p>
-            <span className="text-zinc-500">Name</span>
+            <span className="font-medium text-zinc-700 dark:text-zinc-300">Name</span>
             <br />
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 font-medium text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white"
+              className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 font-medium text-zinc-950 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white"
             />
           </p>
           <p>
-            <span className="text-zinc-500">Mobile</span>
+            <span className="font-medium text-zinc-700 dark:text-zinc-300">Mobile</span>
             <br />
-            <span className="font-medium text-zinc-900 dark:text-white">{me.mobile}</span>
+            <span className="font-semibold text-zinc-950 dark:text-white">{me.mobile}</span>
           </p>
           <p>
-            <span className="text-zinc-500">Role</span>
+            <span className="font-medium text-zinc-700 dark:text-zinc-300">Role</span>
             <br />
-            <span className="font-medium capitalize text-zinc-900 dark:text-white">{me.role}</span>
+            <span className="font-semibold capitalize text-zinc-950 dark:text-white">{me.role}</span>
           </p>
           <p>
-            <span className="text-zinc-500">Profile photo URL</span>
+            <span className="font-medium text-zinc-700 dark:text-zinc-300">Profile photo URL</span>
             <br />
             <input
               value={photoUrl ?? ""}
               onChange={(e) => setPhotoUrl(e.target.value)}
               placeholder="https://..."
-              className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 font-medium text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white"
+              className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 font-medium text-zinc-950 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white"
             />
           </p>
           <input type="file" accept="image/*" disabled={uploading || saving} onChange={(e) => void onPickPhoto(e.target.files?.[0] ?? null)} />
