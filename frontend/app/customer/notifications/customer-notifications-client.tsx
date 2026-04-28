@@ -87,7 +87,7 @@ export function CustomerNotificationsClient() {
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-zinc-200 p-8 text-center dark:border-zinc-700">
+        <div className="rounded-2xl border border-dashed border-zinc-300/80 bg-white p-8 text-center dark:border-zinc-700 dark:bg-zinc-900/50">
           <Bell className="mx-auto h-6 w-6 text-zinc-400" />
           <p className="mt-2 text-sm text-zinc-500">No notifications yet.</p>
         </div>
@@ -99,21 +99,25 @@ export function CustomerNotificationsClient() {
             return (
               <li
                 key={n.id}
-                className={`rounded-2xl border p-4 ${n.is_read ? "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/40" : "border-rose-300 bg-rose-50 dark:border-rose-900 dark:bg-rose-950/20"}`}
+                className={`rounded-2xl border p-4 ${
+                  n.is_read
+                    ? "border-zinc-300/90 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-zinc-100"
+                    : "border-rose-300 bg-rose-50 text-zinc-900 dark:border-rose-800 dark:bg-rose-950/45 dark:text-zinc-100"
+                }`}
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <p className="font-medium text-zinc-900 dark:text-white">{n.title ?? "Notification"}</p>
-                    {n.body ? <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">{n.body}</p> : null}
+                    {n.body ? <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-200">{n.body}</p> : null}
                     {n.created_at ? (
-                      <p className="mt-1 text-xs text-zinc-500">{new Date(n.created_at).toLocaleString()}</p>
+                      <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">{new Date(n.created_at).toLocaleString()}</p>
                     ) : null}
                   </div>
                   {!n.is_read ? (
                     <button
                       type="button"
                       onClick={() => void markRead(n.id)}
-                      className="rounded-lg border border-zinc-200 px-2 py-1 text-xs font-medium dark:border-zinc-700"
+                      className="rounded-lg border border-zinc-300/90 bg-white px-2 py-1 text-xs font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
                     >
                       Mark read
                     </button>

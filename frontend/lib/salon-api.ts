@@ -182,11 +182,19 @@ export async function fetchAvailability(
   if (staffId !== null) q.set("staff_id", String(staffId));
   const res = await authJson<{ data: Array<string | AvailabilitySlot> }>(`${shopBase(shopSlug)}/availability?${q.toString()}`);
   if (!res.ok) return { ok: false, body: res.body };
-  const normalized: AvailabilitySlot[] = (res.data.data ?? []).map((row) => {
-    if (typeof row === "string") return { starts_at: row, status: "available" as const };
-    const status = row.status === "booked" || row.status === "in_process" ? row.status : "available";
-    return { starts_at: row.starts_at, status };
-  });
+  const normalized: AvailabilitySlot[] = (res.data.data ?? [])
+    .map((row) => {
+      if (typeof row === "string") return { starts_at: row, status: "available" as const };
+      const status = row.status === "booked" || row.status === "in_process" ? row.status : "available";
+      const startsAtRaw =
+        (row as { starts_at?: unknown; startsAt?: unknown; start_at?: unknown }).starts_at ??
+        (row as { starts_at?: unknown; startsAt?: unknown; start_at?: unknown }).startsAt ??
+        (row as { starts_at?: unknown; startsAt?: unknown; start_at?: unknown }).start_at;
+      const startsAt = typeof startsAtRaw === "string" ? startsAtRaw : "";
+      if (!startsAt) return null;
+      return { starts_at: startsAt, status };
+    })
+    .filter((row): row is AvailabilitySlot => Boolean(row && row.starts_at));
   return { ok: true, data: normalized };
 }
 
@@ -1126,13 +1134,27 @@ export type PublicShopDetailPayload = {
     name: string;
     slug: string;
     description: string | null;
+    category?: string | null;
+    categories?: string[];
     phone: string | null;
+    whatsapp_phone?: string | null;
     email: string | null;
     address: string | null;
+    area?: string | null;
+    google_maps_url?: string | null;
     latitude: string | null;
     longitude: string | null;
     photos: string[];
     logo_url?: string | null;
+    cover_photo_url?: string | null;
+    website?: string | null;
+    social_profiles?: { platform: string; url: string }[];
+    facebook_url?: string | null;
+    instagram_url?: string | null;
+    established_year?: number | null;
+    weekly_holidays?: string[];
+    delivery_available?: boolean;
+    payment_methods?: string[];
     division?: string | null;
     district?: string | null;
     city?: string | null;

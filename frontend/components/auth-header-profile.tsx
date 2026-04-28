@@ -136,7 +136,7 @@ export function AuthHeaderProfile(props: {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-2 rounded-full border border-zinc-200 bg-white pl-1 pr-2 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800 ${
+        className={`group flex items-center gap-2 rounded-full border border-zinc-200 bg-white pl-1 pr-2 shadow-sm transition hover:bg-zinc-900 hover:text-white dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800 ${
           compact ? "py-0.5 pl-0.5" : "py-1"
         }`}
         aria-expanded={open}
@@ -155,11 +155,11 @@ export function AuthHeaderProfile(props: {
           )}
         </span>
         {!compact ? (
-          <span className="hidden max-w-[140px] truncate text-left text-sm font-medium text-zinc-800 dark:text-zinc-100 sm:block">
+          <span className="hidden max-w-[140px] truncate text-left text-sm font-medium text-zinc-800 transition group-hover:text-white dark:text-zinc-100 sm:block">
             {me.name}
           </span>
         ) : null}
-        <ChevronDown className={`h-4 w-4 shrink-0 text-zinc-500 ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`h-4 w-4 shrink-0 text-zinc-500 transition group-hover:text-white ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open ? (
@@ -177,7 +177,7 @@ export function AuthHeaderProfile(props: {
           <Link
             href={dash}
             role="menuitem"
-            className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-900 hover:text-white dark:text-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-white"
             onClick={() => setOpen(false)}
           >
             <User className="h-4 w-4 shrink-0 opacity-70" />
@@ -187,7 +187,7 @@ export function AuthHeaderProfile(props: {
             <Link
               href="/app"
               role="menuitem"
-              className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-900 hover:text-white dark:text-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-white"
               onClick={() => setOpen(false)}
             >
               Calendar &amp; bookings
@@ -197,7 +197,7 @@ export function AuthHeaderProfile(props: {
             <Link
               href="/admin/dashboard"
               role="menuitem"
-              className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-900 hover:text-white dark:text-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-white"
               onClick={() => setOpen(false)}
             >
               Platform admin
@@ -207,7 +207,7 @@ export function AuthHeaderProfile(props: {
             <Link
               href="/shops"
               role="menuitem"
-              className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-900 hover:text-white dark:text-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-white"
               onClick={() => setOpen(false)}
             >
               Browse shops
@@ -216,7 +216,7 @@ export function AuthHeaderProfile(props: {
           <Link
             href="/app"
             role="menuitem"
-            className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-900 hover:text-white dark:text-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-white"
             onClick={() => setOpen(false)}
           >
             Account settings

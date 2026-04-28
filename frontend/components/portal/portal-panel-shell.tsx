@@ -53,7 +53,7 @@ export function PortalPanelShell(props: {
   return (
     <div className="min-h-[100dvh] bg-[#f8f7f4] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
       <div className="mx-auto flex w-full max-w-6xl lg:max-w-none">
-        <aside className="sticky top-0 hidden h-[100dvh] w-56 shrink-0 flex-col border-r border-zinc-300 bg-white px-3 py-4 dark:border-zinc-700 dark:bg-zinc-950/95 lg:flex">
+        <aside className="sticky top-0 hidden h-[100dvh] w-56 shrink-0 flex-col border-r border-zinc-300/90 bg-white px-3 py-4 dark:border-zinc-700 dark:bg-zinc-950/95 lg:flex">
           <div className="mb-4 px-2">
             <Link
               href={props.brandHref}
@@ -71,7 +71,7 @@ export function PortalPanelShell(props: {
             ))}
             {secondary.length > 0 ? (
               <>
-                <div className="my-2 border-t border-zinc-200 pt-2 dark:border-zinc-700" />
+                <div className="my-2 border-t border-zinc-300/80 pt-2 dark:border-zinc-700" />
                 {secondary.map((item) => (
                   <PortalNavLink key={item.href} {...item} pathname={pathname} />
                 ))}
@@ -97,7 +97,7 @@ export function PortalPanelShell(props: {
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col pb-24 lg:pb-6">
-          <header className="sticky top-0 z-30 border-b border-zinc-300 bg-[#f8f7f4] px-4 py-3 dark:border-zinc-700 dark:bg-zinc-950/95">
+          <header className="sticky top-0 z-30 border-b border-zinc-300/90 bg-[#f8f7f4] px-4 py-3 dark:border-zinc-700 dark:bg-zinc-950/95">
             <div className="flex items-center gap-3">
               <Button
                 type="button"
@@ -119,7 +119,7 @@ export function PortalPanelShell(props: {
                   </>
                 ) : (
                   <>
-                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border border-zinc-300 bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800">
+                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border border-zinc-300/90 bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800">
                       {props.header.avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element -- portal avatars may be external URLs
                         <img src={props.header.avatarUrl} alt="" className="h-full w-full object-cover" />
@@ -181,7 +181,7 @@ export function PortalPanelShell(props: {
         </div>
       ) : null}
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-300 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-zinc-700 dark:bg-zinc-950/95 lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-300/90 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-zinc-700 dark:bg-zinc-950/95 lg:hidden">
         <ul className="mx-auto flex max-w-lg items-stretch justify-between gap-0 px-1 pt-1">
           {props.primaryNav.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);

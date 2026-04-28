@@ -241,6 +241,13 @@ function readPhotoGalleryUrlsFromPortalSettings(settings: unknown): string[] {
     .slice(0, 12);
 }
 
+function isPublicGalleryImageRef(v: string): boolean {
+  if (/^https?:\/\//i.test(v)) return true;
+  // Allow data URLs uploaded from owner UI, but cap size to keep payload responsive.
+  if (v.startsWith("data:image/")) return v.length <= 450_000;
+  return false;
+}
+
 function paginationMeta(page: number, perPage: number, total: number) {
   const lastPage = Math.max(1, Math.ceil(total / perPage));
   return {
@@ -389,19 +396,66 @@ export function mountPublicRoutes(router: Router): void {
       if (row.customer_mobile) uniqueCustomers.add(row.customer_mobile);
     }
 
+    const settingsObj = (shop.settings ?? {}) as Record<string, unknown>;
+    const categories = Array.isArray(settingsObj.categories)
+      ? (settingsObj.categories as unknown[]).map((v) => String(v).trim()).filter(Boolean)
+      : typeof settingsObj.category === "string" && settingsObj.category.trim()
+        ? [settingsObj.category.trim()]
+        : [];
+    const socialProfiles = Array.isArray(settingsObj.social_profiles)
+      ? (settingsObj.social_profiles as unknown[])
+          .map((row) => {
+            if (!row || typeof row !== "object") return null;
+            const r = row as Record<string, unknown>;
+            const platform = typeof r.platform === "string" ? r.platform.trim() : "";
+            const url = typeof r.url === "string" ? r.url.trim() : "";
+            if (!platform || !/^https?:\/\//i.test(url)) return null;
+            return { platform, url };
+          })
+          .filter(Boolean) as { platform: string; url: string }[]
+      : [];
+    const galleryFromSettings = Array.isArray(settingsObj.photo_gallery_urls)
+      ? (settingsObj.photo_gallery_urls as unknown[])
+          .map((v) => String(v).trim())
+          .filter((v) => isPublicGalleryImageRef(v))
+      : [];
+    const mergedPhotos = [...new Set([...(shop.photos ?? []), ...galleryFromSettings])].slice(0, 16);
+
     return okData(res, {
       shop: {
         id: shop.id,
         name: shop.name,
         slug: shop.slug,
         description: shop.description,
+        category: categories[0] ?? null,
+        categories,
         phone: shop.phone,
+        whatsapp_phone: typeof (shop.settings ?? {}).whatsapp_phone === "string" ? String((shop.settings ?? {}).whatsapp_phone) : null,
         email: shop.email,
         address: shop.address,
+        area: typeof (shop.settings ?? {}).area === "string" ? String((shop.settings ?? {}).area) : null,
+        google_maps_url: typeof (shop.settings ?? {}).google_maps_url === "string" ? String((shop.settings ?? {}).google_maps_url) : null,
         latitude: shop.latitude,
         longitude: shop.longitude,
-        photos: shop.photos ?? [],
+        photos: mergedPhotos,
         logo_url: typeof (shop.settings ?? {}).logo_url === "string" ? String((shop.settings ?? {}).logo_url) : null,
+        cover_photo_url: typeof (shop.settings ?? {}).cover_photo_url === "string" ? String((shop.settings ?? {}).cover_photo_url) : null,
+        website: typeof (shop.settings ?? {}).website === "string" ? String((shop.settings ?? {}).website) : null,
+        social_profiles: socialProfiles,
+        facebook_url:
+          socialProfiles.find((r) => r.platform.toLowerCase() === "facebook")?.url ??
+          (typeof (shop.settings ?? {}).facebook_url === "string" ? String((shop.settings ?? {}).facebook_url) : null),
+        instagram_url:
+          socialProfiles.find((r) => r.platform.toLowerCase() === "instagram")?.url ??
+          (typeof (shop.settings ?? {}).instagram_url === "string" ? String((shop.settings ?? {}).instagram_url) : null),
+        established_year: typeof (shop.settings ?? {}).established_year === "number" ? Number((shop.settings ?? {}).established_year) : null,
+        weekly_holidays: Array.isArray((shop.settings ?? {}).weekly_holidays)
+          ? ((shop.settings ?? {}).weekly_holidays as unknown[]).map((v) => String(v))
+          : [],
+        delivery_available: (shop.settings ?? {}).delivery_available === true,
+        payment_methods: Array.isArray((shop.settings ?? {}).payment_methods)
+          ? ((shop.settings ?? {}).payment_methods as unknown[]).map((v) => String(v))
+          : [],
         division: typeof (shop.settings ?? {}).division === "string" ? String((shop.settings ?? {}).division) : null,
         district: typeof (shop.settings ?? {}).district === "string" ? String((shop.settings ?? {}).district) : null,
         city: typeof (shop.settings ?? {}).city === "string" ? String((shop.settings ?? {}).city) : null,

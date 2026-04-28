@@ -35,11 +35,13 @@ function parseIsoLocal(iso: string): Date {
 }
 
 function formatSlotLabel(iso: string): string {
+  const d = parseIsoLocal(iso);
+  if (Number.isNaN(d.getTime())) return "Time unavailable";
   return new Intl.DateTimeFormat(undefined, {
     weekday: "short",
     hour: "numeric",
     minute: "2-digit",
-  }).format(parseIsoLocal(iso));
+  }).format(d);
 }
 
 function slotStatusLabel(status: AvailabilitySlot["status"]): string {

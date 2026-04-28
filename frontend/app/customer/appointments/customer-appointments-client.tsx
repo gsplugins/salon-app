@@ -187,7 +187,7 @@ export function CustomerAppointmentsClient() {
             {upcoming.map((b) => {
               const rebookHref = buildRebookHref(b);
               return (
-                <li key={b.id} className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+                <li key={b.id} className="rounded-2xl border border-zinc-300/90 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/50">
                   <p className="font-medium text-zinc-900 dark:text-white">{bookingServicesLabel(b)}</p>
                   <p className="text-sm text-zinc-500">{formatCustomerWhen(b.starts_at)}</p>
                   <p className="text-sm text-zinc-600 dark:text-zinc-400">
@@ -199,7 +199,7 @@ export function CustomerAppointmentsClient() {
                       {rebookHref ? (
                         <Link
                           href={rebookHref}
-                          className="inline-flex min-h-11 items-center rounded-full border border-zinc-300 px-3 py-2 text-xs font-semibold text-zinc-800 dark:border-zinc-600 dark:text-zinc-200"
+                          className="inline-flex min-h-11 items-center rounded-full border border-zinc-300/90 px-3 py-2 text-xs font-semibold text-zinc-800 dark:border-zinc-600 dark:text-zinc-200"
                         >
                           Rebook same services
                         </Link>
@@ -242,7 +242,7 @@ export function CustomerAppointmentsClient() {
             {past.slice(0, 40).map((b) => (
               <li
                 key={b.id}
-                className="rounded-2xl border border-zinc-200 bg-white p-4 opacity-90 dark:border-zinc-800 dark:bg-zinc-900/50"
+                className="rounded-2xl border border-zinc-300/90 bg-white p-4 opacity-90 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/50"
               >
                 <p className="font-medium text-zinc-900 dark:text-white">{bookingServicesLabel(b)}</p>
                 <p className="text-sm text-zinc-500">{formatCustomerWhen(b.starts_at)}</p>
@@ -257,7 +257,7 @@ export function CustomerAppointmentsClient() {
                   </p>
                 ) : null}
                 {b.status === "completed" ? (
-                  <div className="mt-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-900">
+                  <div className="mt-3 rounded-xl border border-zinc-300/80 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-900">
                     {!b.payment ? (
                       <div className="mb-3">
                         <button
@@ -321,7 +321,7 @@ export function CustomerAppointmentsClient() {
                             }))
                           }
                           placeholder="Write about service quality, behavior, and experience…"
-                          className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                          className="w-full rounded-lg border border-zinc-300/80 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
                         />
                         <button
                           type="button"

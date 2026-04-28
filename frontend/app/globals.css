@@ -284,6 +284,71 @@ textarea:disabled {
   color: var(--foreground) !important;
 }
 
+/* Admin panel readability: force white text on dark blocks. */
+.admin-theme-scope .bg-zinc-900,
+.admin-theme-scope .bg-zinc-950,
+.admin-theme-scope .bg-zinc-900\/40,
+.admin-theme-scope .bg-zinc-900\/50,
+.admin-theme-scope .bg-zinc-900\/60,
+.admin-theme-scope .bg-zinc-900\/70,
+.admin-theme-scope .bg-zinc-900\/80,
+.admin-theme-scope .dark\:bg-zinc-900:is(.dark *),
+.admin-theme-scope .dark\:bg-zinc-900\/40:is(.dark *),
+.admin-theme-scope .dark\:bg-zinc-900\/50:is(.dark *),
+.admin-theme-scope .dark\:bg-zinc-900\/60:is(.dark *),
+.admin-theme-scope .dark\:bg-zinc-900\/70:is(.dark *),
+.admin-theme-scope .dark\:bg-zinc-900\/80:is(.dark *),
+.admin-theme-scope .dark\:bg-zinc-950:is(.dark *) {
+  color: #ffffff !important;
+}
+
+.admin-theme-scope .text-zinc-300,
+.admin-theme-scope .text-zinc-400,
+.admin-theme-scope .text-zinc-500,
+.admin-theme-scope .text-zinc-600,
+.admin-theme-scope .dark\:text-zinc-300:is(.dark *),
+.admin-theme-scope .dark\:text-zinc-400:is(.dark *),
+.admin-theme-scope .dark\:text-zinc-500:is(.dark *),
+.admin-theme-scope .dark\:text-zinc-600:is(.dark *) {
+  color: #f4f4f5 !important;
+}
+
+/* Admin panel unified border palette (gray + brand-compatible). */
+.admin-theme-scope .border,
+.admin-theme-scope .border-t,
+.admin-theme-scope .border-r,
+.admin-theme-scope .border-b,
+.admin-theme-scope .border-l,
+.admin-theme-scope .border-zinc-100,
+.admin-theme-scope .border-zinc-200,
+.admin-theme-scope .border-zinc-200\/80,
+.admin-theme-scope .border-zinc-200\/90,
+.admin-theme-scope .border-zinc-300,
+.admin-theme-scope .border-zinc-300\/80,
+.admin-theme-scope .border-zinc-300\/90,
+.admin-theme-scope .border-zinc-400,
+.admin-theme-scope .border-slate-700,
+.admin-theme-scope .border-slate-800,
+.admin-theme-scope .border-black,
+.admin-theme-scope .dark\:border-zinc-600:is(.dark *),
+.admin-theme-scope .dark\:border-zinc-700:is(.dark *),
+.admin-theme-scope .dark\:border-zinc-800:is(.dark *),
+.admin-theme-scope .dark\:border-zinc-900:is(.dark *) {
+  border-color: color-mix(in srgb, var(--gold-accent) 12%, #6b7280) !important;
+}
+
+.admin-theme-scope .border-dashed,
+.admin-theme-scope .border-dotted {
+  border-color: color-mix(in srgb, var(--gold-accent) 16%, #6b7280) !important;
+}
+
+.admin-theme-scope .hover\:border-zinc-300:hover,
+.admin-theme-scope .hover\:border-zinc-400:hover,
+.admin-theme-scope .dark\:hover\:border-zinc-600:is(.dark *):hover,
+.admin-theme-scope .dark\:hover\:border-zinc-700:is(.dark *):hover {
+  border-color: color-mix(in srgb, var(--gold-accent) 26%, #6b7280) !important;
+}
+
 /* Mobile / future native shell: respect safe areas (maps to React Native SafeAreaView). */
 @supports (padding: max(0px)) {
   .pb-safe {

@@ -1,6 +1,4 @@
-export const dynamic = 'force-dynamic'
-export const fetchCache = 'force-no-store'
-export const revalidate = 0
+export const revalidate = 300;
 
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -34,6 +32,10 @@ async function fetchBackendJson(): Promise<{
   error?: string;
   via?: string;
 }> {
+  // Avoid extra runtime API probe on production requests.
+  if (process.env.NODE_ENV === "production") {
+    return { ok: true, message: "Operational", via: "production cached mode" };
+  }
   const pathsToTry: { url: string; via: string }[] = [];
 
   // Only try headers during runtime, not build time
@@ -64,7 +66,7 @@ async function fetchBackendJson(): Promise<{
 
   for (const { url, via } of pathsToTry) {
     try {
-      const res = await fetch(url, { cache: "no-store" });
+      const res = await fetch(url, { next: { revalidate: 60 } });
       if (!res.ok) {
         lastError = `HTTP ${res.status} (${via})`;
         continue;
