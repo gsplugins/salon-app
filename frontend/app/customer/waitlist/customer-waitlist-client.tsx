@@ -52,12 +52,12 @@ export function CustomerWaitlistClient() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">My waitlist</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Track requests you joined when no slots were available.</p>
+        <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">My waitlist</h1>
+        <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">Track requests you joined when no slots were available.</p>
       </div>
 
       {rows == null ? (
-        <p className="text-sm text-zinc-500">Loading waitlist…</p>
+        <p className="text-sm text-zinc-800">Loading waitlist…</p>
       ) : rows.length === 0 ? (
         <EmptyState icon={Clock3} title="No waitlist entries" description="Join waitlist from booking page when a day has no available slots." />
       ) : (
@@ -66,9 +66,9 @@ export function CustomerWaitlistClient() {
             <li key={r.id} className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="font-medium text-zinc-900 dark:text-white">Requested date: {r.preferred_date}</p>
-                  <p className="text-xs text-zinc-500">Service #{r.service_id}{r.staff_id != null ? ` · Staff #${r.staff_id}` : " · Any staff"}</p>
-                  <p className="mt-1 text-xs capitalize text-zinc-500">Status: {statusLabel(r.status)}</p>
+                  <p className="font-medium text-zinc-800 dark:text-white">Requested date: {r.preferred_date}</p>
+                  <p className="text-xs text-zinc-800">Service #{r.service_id}{r.staff_id != null ? ` · Staff #${r.staff_id}` : " · Any staff"}</p>
+                  <p className="mt-1 text-xs capitalize text-zinc-800">Status: {statusLabel(r.status)}</p>
                 </div>
                 {(r.status === "waiting" || r.status === "notified") && (
                   <Button variant="outline" disabled={busyId === r.id} onClick={() => void remove(r.id)}>

@@ -28,7 +28,7 @@ export function OwnerAccountWorkspace(props: { me: AuthMePayload }) {
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-800 dark:text-rose-200">
           Account
         </p>
-        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-xs text-zinc-800 dark:text-zinc-400">
           Your identity, roles, and platform access. Bookings, catalog, and reports use the admin menu — not here.
         </p>
 
@@ -48,8 +48,8 @@ export function OwnerAccountWorkspace(props: { me: AuthMePayload }) {
                 onClick={() => setAccountSub(t.id)}
                 className={`shrink-0 rounded-xl px-3 py-2 text-sm font-medium transition ${
                   active
-                    ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-white"
-                    : "text-zinc-600 hover:bg-white/70 dark:text-zinc-400 dark:hover:bg-zinc-800/80"
+                    ? "bg-white text-zinc-800 shadow-sm dark:bg-zinc-800 dark:text-white"
+                    : "text-zinc-800 hover:bg-white/70 dark:text-zinc-400 dark:hover:bg-zinc-800/80"
                 }`}
               >
                 {t.label}

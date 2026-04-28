@@ -69,8 +69,8 @@ export function StaffDashboardClient() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">Hello, {data.staff.name}</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Here is your shift at a glance.</p>
+        <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">Hello, {data.staff.name}</h1>
+        <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">Here is your shift at a glance.</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -82,8 +82,8 @@ export function StaffDashboardClient() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-zinc-900 dark:text-white">{data.today_appointment_count}</p>
-            <p className="mt-1 text-xs text-zinc-500">Appointments scheduled for today</p>
+            <p className="text-3xl font-bold text-zinc-800 dark:text-white">{data.today_appointment_count}</p>
+            <p className="mt-1 text-xs text-zinc-800">Appointments scheduled for today</p>
           </CardContent>
         </Card>
         <Card className="border-zinc-200/80 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
@@ -94,10 +94,10 @@ export function StaffDashboardClient() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-zinc-900 dark:text-white">
+            <p className="text-3xl font-bold text-zinc-800 dark:text-white">
               {formatMoneyCents(data.today_commission_cents_estimate)}
             </p>
-            <p className="mt-1 text-xs text-zinc-500">Based on completed services and your rate</p>
+            <p className="mt-1 text-xs text-zinc-800">Based on completed services and your rate</p>
           </CardContent>
         </Card>
       </div>
@@ -110,8 +110,8 @@ export function StaffDashboardClient() {
           {next ? (
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="font-medium text-zinc-900 dark:text-white">{next.customer_name}</p>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="font-medium text-zinc-800 dark:text-white">{next.customer_name}</p>
+                <p className="text-sm text-zinc-800 dark:text-zinc-400">
                   {next.service?.name ?? "Service"} · {formatStaffDateTime(next.starts_at)}
                 </p>
               </div>
@@ -120,7 +120,7 @@ export function StaffDashboardClient() {
               </Button>
             </div>
           ) : (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">No upcoming appointment on file.</p>
+            <p className="text-sm text-zinc-800 dark:text-zinc-400">No upcoming appointment on file.</p>
           )}
         </CardContent>
       </Card>

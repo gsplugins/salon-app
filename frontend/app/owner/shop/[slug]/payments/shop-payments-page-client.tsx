@@ -142,7 +142,7 @@ function Body({ accessToken }: { accessToken: string }) {
               <TBody>
                 {rows.length === 0 ? (
                   <TR>
-                    <TD colSpan={6} className="text-center text-sm text-zinc-500">
+                    <TD colSpan={6} className="text-center text-sm text-zinc-800">
                       No payments yet.
                     </TD>
                   </TR>
@@ -155,7 +155,7 @@ function Body({ accessToken }: { accessToken: string }) {
                       <TD className="text-sm capitalize">{p.method}</TD>
                       <TD className="text-sm font-medium">{money(p.amount_cents, p.currency)}</TD>
                       <TD className="text-sm">{p.status}</TD>
-                      <TD className="text-xs text-zinc-600 dark:text-zinc-400">
+                      <TD className="text-xs text-zinc-800 dark:text-zinc-400">
                         {p.booking ? `${p.booking.customer_name}` : "—"}
                       </TD>
                       <TD className="text-right">
@@ -172,7 +172,7 @@ function Body({ accessToken }: { accessToken: string }) {
             </Table>
           </div>
           {meta && meta.last_page > 1 ? (
-            <div className="flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-400">
+            <div className="flex items-center justify-between text-sm text-zinc-800 dark:text-zinc-400">
               <span>
                 Page {meta.current_page} of {meta.last_page} ({meta.total} total)
               </span>
@@ -237,7 +237,7 @@ function Body({ accessToken }: { accessToken: string }) {
           <DialogHeader>
             <DialogTitle>Refund payment?</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">This marks the row as refunded in the ledger.</p>
+          <p className="text-sm text-zinc-800 dark:text-zinc-400">This marks the row as refunded in the ledger.</p>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setRefundId(null)}>
               Cancel

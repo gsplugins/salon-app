@@ -84,7 +84,7 @@ function ScheduleHoursTable(props: { title: string; caption?: string; hours: Day
     <Card className="border-zinc-200/80 dark:border-zinc-800">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold">{props.title}</CardTitle>
-        {props.caption ? <p className="text-sm font-normal text-zinc-500 dark:text-zinc-400">{props.caption}</p> : null}
+        {props.caption ? <p className="text-sm font-normal text-zinc-800 dark:text-zinc-400">{props.caption}</p> : null}
       </CardHeader>
       <CardContent className="pt-0">
         <div className="overflow-x-auto">
@@ -93,7 +93,7 @@ function ScheduleHoursTable(props: { title: string; caption?: string; hours: Day
               {SHOP_BUSINESS_DAYS.map(({ key, label }) => (
                 <tr key={key}>
                   <th className="w-[36%] py-2 pr-3 font-medium text-zinc-700 dark:text-zinc-300">{label}</th>
-                  <td className="py-2 text-zinc-900 dark:text-zinc-100">{formatDayLine(props.hours[key])}</td>
+                  <td className="py-2 text-zinc-800 dark:text-zinc-100">{formatDayLine(props.hours[key])}</td>
                 </tr>
               ))}
             </tbody>
@@ -194,8 +194,8 @@ export function StaffScheduleClient() {
     return (
       <div className="space-y-4">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">Schedule</h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Could not load your schedule.</p>
+          <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">Schedule</h1>
+          <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">Could not load your schedule.</p>
         </div>
         <Card className="border-red-200/80 dark:border-red-900/50">
           <CardContent className="p-4 text-sm text-red-800 dark:text-red-200">{loadError}</CardContent>
@@ -221,8 +221,8 @@ export function StaffScheduleClient() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">Schedule</h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">Schedule</h1>
+          <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">
             Shop hours, your weekly template, time off, and personal blocks. Edit live availability in Availability.
           </p>
         </div>
@@ -255,11 +255,11 @@ export function StaffScheduleClient() {
       <Card className="border-zinc-200/80 dark:border-zinc-800">
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Shop holidays</CardTitle>
-          <p className="text-sm font-normal text-zinc-500 dark:text-zinc-400">Days the business may be closed or limited.</p>
+          <p className="text-sm font-normal text-zinc-800 dark:text-zinc-400">Days the business may be closed or limited.</p>
         </CardHeader>
         <CardContent>
           {holidays.length === 0 ? (
-            <p className="text-sm text-zinc-500">No holidays configured.</p>
+            <p className="text-sm text-zinc-800">No holidays configured.</p>
           ) : (
             <ul className="space-y-2 text-sm">
               {holidays.map((h) => (
@@ -267,8 +267,8 @@ export function StaffScheduleClient() {
                   key={h.date}
                   className="flex flex-wrap items-baseline justify-between gap-2 rounded-xl border border-zinc-100 px-3 py-2 dark:border-zinc-800"
                 >
-                  <span className="font-medium text-zinc-900 dark:text-white">{formatStaffDate(h.date)}</span>
-                  {h.note ? <span className="text-zinc-600 dark:text-zinc-400">{h.note}</span> : null}
+                  <span className="font-medium text-zinc-800 dark:text-white">{formatStaffDate(h.date)}</span>
+                  {h.note ? <span className="text-zinc-800 dark:text-zinc-400">{h.note}</span> : null}
                 </li>
               ))}
             </ul>
@@ -283,20 +283,20 @@ export function StaffScheduleClient() {
         <CardContent className="space-y-4">
           <ul className="space-y-2 text-sm">
             {data.leave_requests.length === 0 ? (
-              <li className="text-zinc-500">No requests yet.</li>
+              <li className="text-zinc-800">No requests yet.</li>
             ) : (
               data.leave_requests.map((r) => (
                 <li key={r.id} className="rounded-xl border border-zinc-100 px-3 py-2 dark:border-zinc-800">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium text-zinc-900 dark:text-white">{formatStaffDate(r.date)}</span>
+                    <span className="font-medium text-zinc-800 dark:text-white">{formatStaffDate(r.date)}</span>
                     <span
                       className={`rounded-full border px-2 py-0.5 text-xs font-semibold uppercase ${leaveStatusClass(r.status)}`}
                     >
                       {r.status}
                     </span>
                   </div>
-                  <p className="mt-1 text-zinc-600 dark:text-zinc-400">{r.reason}</p>
-                  {r.manager_note ? <p className="mt-1 text-xs text-zinc-500">Manager: {r.manager_note}</p> : null}
+                  <p className="mt-1 text-zinc-800 dark:text-zinc-400">{r.reason}</p>
+                  {r.manager_note ? <p className="mt-1 text-xs text-zinc-800">Manager: {r.manager_note}</p> : null}
                 </li>
               ))
             )}
@@ -329,16 +329,16 @@ export function StaffScheduleClient() {
         <Card className="border-zinc-200/80 dark:border-zinc-800">
           <CardHeader>
             <CardTitle className="text-base">Upcoming personal blocks</CardTitle>
-            <p className="text-sm font-normal text-zinc-500">Times you are marked unavailable (from Availability).</p>
+            <p className="text-sm font-normal text-zinc-800">Times you are marked unavailable (from Availability).</p>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2 text-sm">
               {upcomingBlocks.map((b) => (
                 <li key={b.id} className="rounded-lg border border-zinc-100 px-3 py-2 dark:border-zinc-800">
-                  <div className="font-medium text-zinc-900 dark:text-white">
+                  <div className="font-medium text-zinc-800 dark:text-white">
                     {formatStaffDateTime(b.starts_at)} – {formatStaffTime(b.ends_at)}
                   </div>
-                  <div className="mt-0.5 text-xs text-zinc-500">
+                  <div className="mt-0.5 text-xs text-zinc-800">
                     {b.kind}
                     {b.note ? ` · ${b.note}` : null}
                   </div>
@@ -355,7 +355,7 @@ export function StaffScheduleClient() {
             <CardTitle className="text-base">Past blocks</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+            <ul className="space-y-2 text-sm text-zinc-800 dark:text-zinc-400">
               {pastBlocks.slice(0, 20).map((b) => (
                 <li key={b.id} className="rounded-lg border border-zinc-100 px-3 py-2 dark:border-zinc-800">
                   {formatStaffDateTime(b.starts_at)} – {formatStaffTime(b.ends_at)}
@@ -363,7 +363,7 @@ export function StaffScheduleClient() {
                 </li>
               ))}
               {pastBlocks.length > 20 ? (
-                <li className="text-xs text-zinc-500">And {pastBlocks.length - 20} more…</li>
+                <li className="text-xs text-zinc-800">And {pastBlocks.length - 20} more…</li>
               ) : null}
             </ul>
           </CardContent>

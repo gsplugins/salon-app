@@ -106,7 +106,7 @@ export function OwnerShopSlugGate(props: { slug: string; children: React.ReactNo
           <p className="mt-1 opacity-90">Shop manager routes need a shop owner, manager, or super admin session.</p>
           <Link
             href="/app"
-            className="mt-4 inline-flex rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+            className="mt-4 inline-flex rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
           >
             Sign in at /app
           </Link>
@@ -120,14 +120,14 @@ export function OwnerShopSlugGate(props: { slug: string; children: React.ReactNo
     return (
       <div className="p-4 md:p-6">
         <div className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900/50">
-          <p className="font-medium text-zinc-900 dark:text-white">Different active shop</p>
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="font-medium text-zinc-800 dark:text-white">Different active shop</p>
+          <p className="mt-2 text-sm text-zinc-800 dark:text-zinc-400">
             This URL is for <span className="font-mono">{slug}</span>, but your session is for{" "}
             <span className="font-mono">{state.expectedSlug}</span>.
           </p>
           <Link
             href={href}
-            className="mt-4 inline-flex rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+            className="mt-4 inline-flex rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
           >
             Open {state.me.shop?.name ?? state.expectedSlug}
           </Link>
@@ -140,14 +140,14 @@ export function OwnerShopSlugGate(props: { slug: string; children: React.ReactNo
     return (
       <div className="p-4 md:p-6">
         <div className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900/50">
-          <p className="font-medium text-zinc-900 dark:text-white">Salon not found</p>
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="font-medium text-zinc-800 dark:text-white">Salon not found</p>
+          <p className="mt-2 text-sm text-zinc-800 dark:text-zinc-400">
             No shop uses the slug <span className="font-mono">{slug}</span>. Check the spelling or pick a salon from the
             admin directory.
           </p>
           <Link
             href="/admin/shops"
-            className="mt-4 inline-flex rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+            className="mt-4 inline-flex rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
           >
             Back to admin shops
           </Link>

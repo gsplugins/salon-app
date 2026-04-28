@@ -93,7 +93,7 @@ export function CustomerPanelLayout(props: { accessToken: string; children: Reac
           </span>
           <Link
             href="/customer/notifications"
-            className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+            className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[color:var(--border)] bg-white text-zinc-700 shadow-sm dark:bg-zinc-900 dark:text-zinc-200"
             aria-label="Customer notifications"
           >
             <Bell className="h-5 w-5" />
@@ -105,7 +105,7 @@ export function CustomerPanelLayout(props: { accessToken: string; children: Reac
           </Link>
           <Link
             href="/shops"
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[color:var(--border)] bg-white text-zinc-700 shadow-sm dark:bg-zinc-900 dark:text-zinc-200"
             aria-label="Browse shops"
           >
             <Store className="h-5 w-5" />
@@ -116,10 +116,10 @@ export function CustomerPanelLayout(props: { accessToken: string; children: Reac
       footerLink2={{ href: "/", label: "Marketing home" }}
     >
       <div className="mb-4 flex justify-end sm:hidden">
-        <div className="flex items-center gap-2 rounded-2xl border border-zinc-200/80 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
+        <div className="flex items-center gap-2 rounded-2xl border border-[color:var(--border)] bg-white px-3 py-2 dark:bg-zinc-900/50">
           <Link
             href="/customer/notifications"
-            className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+            className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[color:var(--border)] bg-white text-zinc-700 shadow-sm dark:bg-zinc-900 dark:text-zinc-200"
             aria-label="Customer notifications"
           >
             <Bell className="h-5 w-5" />

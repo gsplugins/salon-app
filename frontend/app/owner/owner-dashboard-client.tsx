@@ -78,8 +78,8 @@ export function OwnerDashboardOverview({ token, shopSlug }: { token: string; sho
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900 dark:text-white">Overview</h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <h1 className="text-xl font-semibold text-zinc-800 dark:text-white">Overview</h1>
+          <p className="text-sm text-zinc-800 dark:text-zinc-400">
             Live stats for your primary shop. Analytics cover the last 30 days.
           </p>
         </div>
@@ -107,47 +107,47 @@ export function OwnerDashboardOverview({ token, shopSlug }: { token: string; sho
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-          <div className="flex items-center gap-2 text-zinc-500">
+          <div className="flex items-center gap-2 text-zinc-800">
             <Calendar className="h-4 w-4" />
             <span className="text-xs font-medium uppercase tracking-wide">Today</span>
           </div>
-          <p className="mt-3 text-3xl font-semibold text-zinc-900 dark:text-white">
+          <p className="mt-3 text-3xl font-semibold text-zinc-800 dark:text-white">
             {stats.bookings_today}
           </p>
-          <p className="text-sm text-zinc-500">Bookings today</p>
+          <p className="text-sm text-zinc-800">Bookings today</p>
         </div>
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">This week</p>
-          <p className="mt-3 text-3xl font-semibold text-zinc-900 dark:text-white">
+          <p className="text-xs font-medium uppercase tracking-wide text-zinc-800">This week</p>
+          <p className="mt-3 text-3xl font-semibold text-zinc-800 dark:text-white">
             {stats.bookings_this_week}
           </p>
-          <p className="text-sm text-zinc-500">Bookings · {stats.completed_this_week} completed</p>
+          <p className="text-sm text-zinc-800">Bookings · {stats.completed_this_week} completed</p>
         </div>
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Est. revenue (week)</p>
-          <p className="mt-3 text-3xl font-semibold text-zinc-900 dark:text-white">
+          <p className="text-xs font-medium uppercase tracking-wide text-zinc-800">Est. revenue (week)</p>
+          <p className="mt-3 text-3xl font-semibold text-zinc-800 dark:text-white">
             {formatMoneyCents(stats.estimated_revenue_cents_this_week)}
           </p>
-          <p className="text-sm text-zinc-500">{stats.pending_upcoming} upcoming</p>
+          <p className="text-sm text-zinc-800">{stats.pending_upcoming} upcoming</p>
         </div>
       </div>
 
       {analytics ? (
         <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-          <div className="flex items-center gap-2 text-zinc-900 dark:text-white">
+          <div className="flex items-center gap-2 text-zinc-800 dark:text-white">
             <BarChart3 className="h-5 w-5" />
             <h2 className="text-lg font-semibold">Last 30 days</h2>
           </div>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-zinc-800">
             {analytics.from.slice(0, 10)} → {analytics.to.slice(0, 10)}
           </p>
           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
             <div>
-              <dt className="text-sm text-zinc-500">Total bookings</dt>
+              <dt className="text-sm text-zinc-800">Total bookings</dt>
               <dd className="text-2xl font-semibold">{analytics.total_bookings}</dd>
             </div>
             <div>
-              <dt className="text-sm text-zinc-500">Revenue (completed)</dt>
+              <dt className="text-sm text-zinc-800">Revenue (completed)</dt>
               <dd className="text-2xl font-semibold">
                 {formatMoneyCents(analytics.revenue_cents_completed)}
               </dd>

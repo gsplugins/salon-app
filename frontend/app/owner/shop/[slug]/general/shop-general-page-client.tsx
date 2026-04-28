@@ -380,8 +380,8 @@ function FormBody({ accessToken }: { accessToken: string }) {
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-          <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Branding &amp; contact</h2>
-          <p className="mt-1 text-xs text-zinc-500">Upload images directly. No image URL paste required.</p>
+          <h2 className="text-base font-semibold text-zinc-800 dark:text-white">Branding &amp; contact</h2>
+          <p className="mt-1 text-xs text-zinc-800">Upload images directly. No image URL paste required.</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Label htmlFor="name">Shop name</Label>
@@ -406,7 +406,7 @@ function FormBody({ accessToken }: { accessToken: string }) {
                 disabled={!canEditBasics}
                 onChange={(e) => handleLogoUpload(e.target.files?.[0] ?? null)}
               />
-              <p className="mt-1 text-[11px] text-zinc-500">Upload a small image (recommended square).</p>
+              <p className="mt-1 text-[11px] text-zinc-800">Upload a small image (recommended square).</p>
             </div>
             <div>
               <Label htmlFor="cover_upload">Cover photo</Label>
@@ -420,7 +420,7 @@ function FormBody({ accessToken }: { accessToken: string }) {
                 disabled={!canEditBasics}
                 onChange={(e) => handleCoverUpload(e.target.files?.[0] ?? null)}
               />
-              <p className="mt-1 text-[11px] text-zinc-500">Upload banner/cover image for public profile.</p>
+              <p className="mt-1 text-[11px] text-zinc-800">Upload banner/cover image for public profile.</p>
             </div>
             <div className="sm:col-span-2">
               <Label htmlFor="gallery_upload">Gallery images</Label>
@@ -433,7 +433,7 @@ function FormBody({ accessToken }: { accessToken: string }) {
                 disabled={!canEditBasics}
                 onChange={(e) => handleGalleryUpload(e.target.files)}
               />
-              <p className="mt-1 text-[11px] text-zinc-500">Upload multiple images. Max 24 images in gallery.</p>
+              <p className="mt-1 text-[11px] text-zinc-800">Upload multiple images. Max 24 images in gallery.</p>
             </div>
             <div>
               <Label>Categories</Label>
@@ -566,7 +566,7 @@ function FormBody({ accessToken }: { accessToken: string }) {
               if (!galleryImages.length) return null;
               return (
                 <div className="sm:col-span-2">
-                  <p className="mb-2 text-xs text-zinc-500">Gallery preview</p>
+                  <p className="mb-2 text-xs text-zinc-800">Gallery preview</p>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                     {galleryImages.slice(0, 24).map((u, i) => (
                       <div key={`${u}-${i}`} className="relative">
@@ -590,7 +590,7 @@ function FormBody({ accessToken }: { accessToken: string }) {
         </section>
 
         <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-          <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Business hours</h2>
+          <h2 className="text-base font-semibold text-zinc-800 dark:text-white">Business hours</h2>
           <ul className="mt-4 space-y-3">
             {SHOP_BUSINESS_DAYS.map(({ key, label }) => {
               const d = hours[key];
@@ -601,7 +601,7 @@ function FormBody({ accessToken }: { accessToken: string }) {
                   className="flex flex-wrap items-center gap-3 rounded-lg border border-zinc-200 px-3 py-2 dark:border-zinc-700"
                 >
                   <span className="w-28 text-sm font-medium text-zinc-800 dark:text-zinc-100">{label}</span>
-                  <label className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
+                  <label className="flex items-center gap-2 text-xs text-zinc-800 dark:text-zinc-400">
                     <input
                       type="checkbox"
                       checked={d.closed}
@@ -638,8 +638,8 @@ function FormBody({ accessToken }: { accessToken: string }) {
         <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Holidays &amp; special closings</h2>
-              <p className="mt-1 text-xs text-zinc-500">Whole-day closures (YYYY-MM-DD).</p>
+              <h2 className="text-base font-semibold text-zinc-800 dark:text-white">Holidays &amp; special closings</h2>
+              <p className="mt-1 text-xs text-zinc-800">Whole-day closures (YYYY-MM-DD).</p>
             </div>
             <Button
               type="button"
@@ -689,8 +689,8 @@ function FormBody({ accessToken }: { accessToken: string }) {
         </section>
 
         <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-          <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Booking defaults</h2>
-          <p className="mt-1 text-xs text-zinc-500">
+          <h2 className="text-base font-semibold text-zinc-800 dark:text-white">Booking defaults</h2>
+          <p className="mt-1 text-xs text-zinc-800">
             Advance % applies to the sum of priced services on the public booking page (customer must confirm before
             submitting).
           </p>

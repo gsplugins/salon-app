@@ -45,8 +45,8 @@ export function CustomerLoyaltyClient() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">Loyalty</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Points balance and recent activity.</p>
+        <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">Loyalty</h1>
+        <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">Points balance and recent activity.</p>
       </div>
 
       <Card className="border-zinc-200/80 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
@@ -57,24 +57,24 @@ export function CustomerLoyaltyClient() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-3xl font-bold text-zinc-900 dark:text-white">{loyalty.points}</p>
-          <p className="mt-1 text-xs text-zinc-500">Points</p>
+          <p className="text-3xl font-bold text-zinc-800 dark:text-white">{loyalty.points}</p>
+          <p className="mt-1 text-xs text-zinc-800">Points</p>
         </CardContent>
       </Card>
 
       <div>
         <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">Transactions</h2>
         {loyalty.transactions.length === 0 ? (
-          <p className="mt-3 text-sm text-zinc-500">No transactions yet.</p>
+          <p className="mt-3 text-sm text-zinc-800">No transactions yet.</p>
         ) : (
           <ul className="mt-3 space-y-2 rounded-2xl border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900/50">
             {loyalty.transactions.map((t) => (
               <li key={t.id} className="flex justify-between gap-4 border-b border-zinc-100 py-2 text-sm last:border-0 dark:border-zinc-800">
                 <div>
                   <p className="text-zinc-800 dark:text-zinc-200">{t.description ?? t.type}</p>
-                  {t.created_at ? <p className="text-xs text-zinc-500">{formatCustomerWhen(t.created_at)}</p> : null}
+                  {t.created_at ? <p className="text-xs text-zinc-800">{formatCustomerWhen(t.created_at)}</p> : null}
                 </div>
-                <span className="shrink-0 font-semibold text-zinc-900 dark:text-white">
+                <span className="shrink-0 font-semibold text-zinc-800 dark:text-white">
                   {t.points > 0 ? "+" : ""}
                   {t.points}
                 </span>

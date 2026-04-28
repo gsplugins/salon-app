@@ -33,7 +33,7 @@ export function OwnerShopNavLinksInner(props: {
       <nav className={`${navTop} space-y-5`} aria-label="Shop owner navigation">
         {groups.map((group) => (
           <div key={group.id}>
-            <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+            <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-800">
               {group.title}
             </p>
             <ul className="space-y-0.5">
@@ -48,8 +48,8 @@ export function OwnerShopNavLinksInner(props: {
                       title={item.hint}
                       className={`flex min-h-10 items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm font-medium transition touch-manipulation active:scale-[0.99] ${
                         active
-                          ? "bg-zinc-900 text-white shadow-md dark:bg-rose-100 dark:text-zinc-900"
-                          : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
+                          ? "bg-zinc-900 text-white shadow-md dark:bg-rose-100 dark:text-zinc-800"
+                          : "text-zinc-800 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
                       }`}
                     >
                       <Icon className="h-4 w-4 shrink-0 opacity-85" aria-hidden />
@@ -64,7 +64,7 @@ export function OwnerShopNavLinksInner(props: {
       </nav>
 
       <p
-        className={`rounded-lg bg-zinc-100/80 px-2.5 py-2 text-[11px] leading-snug text-zinc-600 dark:bg-zinc-800/60 dark:text-zinc-400 ${variant === "embedded" ? "mt-3" : "mt-4"}`}
+        className={`rounded-lg bg-zinc-100/80 px-2.5 py-2 text-[11px] leading-snug text-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-400 ${variant === "embedded" ? "mt-3" : "mt-4"}`}
       >
         <span className="font-medium text-zinc-700 dark:text-zinc-300">Account</span> is for your profile;{" "}
         <span className="font-medium text-zinc-700 dark:text-zinc-300">Shop preferences</span> covers hours, alerts, and
@@ -74,7 +74,7 @@ export function OwnerShopNavLinksInner(props: {
       <div
         className={`border-t border-zinc-200 pt-4 dark:border-zinc-700 ${variant === "embedded" ? "mt-4" : "mt-5"}`}
       >
-        <p className="px-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+        <p className="px-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-800">
           More
         </p>
         <ul className="mt-2 space-y-0.5">
@@ -90,7 +90,7 @@ export function OwnerShopNavLinksInner(props: {
           <li>
             <Link
               href="/"
-              className="flex min-h-9 items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              className="flex min-h-9 items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
             >
               Marketing home
             </Link>

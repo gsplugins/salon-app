@@ -331,8 +331,8 @@ function Body({ token }: { token: string }) {
   return (
     <div className="space-y-8 [&_a]:cursor-pointer [&_button]:cursor-pointer [&_label]:cursor-pointer [&_select]:cursor-pointer [&_input[type='checkbox']]:cursor-pointer [&_input[type='radio']]:cursor-pointer">
       <div>
-        <h1 className="text-xl font-semibold text-zinc-900 dark:text-white">Services &amp; pricing</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <h1 className="text-xl font-semibold text-zinc-800 dark:text-white">Services &amp; pricing</h1>
+        <p className="text-sm text-zinc-800 dark:text-zinc-400">
           Add what clients see online, turnaround time, who the service fits, safety (patch test), deposits, and notes
           your team uses behind the desk.
         </p>
@@ -343,14 +343,14 @@ function Body({ token }: { token: string }) {
         className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-5 dark:border-zinc-800 dark:bg-zinc-900/40"
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">
+          <h2 className="text-sm font-semibold text-zinc-800 dark:text-white">
             {editingId != null ? `Edit service #${editingId}` : "Add service"}
           </h2>
           {editingId != null ? (
             <button
               type="button"
               onClick={cancelEdit}
-              className="text-sm font-medium text-zinc-600 underline dark:text-zinc-400"
+              className="text-sm font-medium text-zinc-800 underline dark:text-zinc-400"
               disabled={submitBusy}
             >
               Cancel edit
@@ -359,7 +359,7 @@ function Body({ token }: { token: string }) {
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+          <label className="text-xs font-medium text-zinc-800 dark:text-zinc-400">
             Name *
             <input
               value={name}
@@ -368,7 +368,7 @@ function Body({ token }: { token: string }) {
               className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
             />
           </label>
-          <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+          <label className="text-xs font-medium text-zinc-800 dark:text-zinc-400">
             Category
             <input
               value={category}
@@ -377,7 +377,7 @@ function Body({ token }: { token: string }) {
               className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
             />
           </label>
-          <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400 sm:col-span-2">
+          <label className="text-xs font-medium text-zinc-800 dark:text-zinc-400 sm:col-span-2">
             Client-facing description
             <textarea
               value={description}
@@ -387,7 +387,7 @@ function Body({ token }: { token: string }) {
               className="mt-1 w-full resize-y rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
             />
           </label>
-          <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+          <label className="text-xs font-medium text-zinc-800 dark:text-zinc-400">
             Duration (minutes) *
             <input
               type="number"
@@ -398,7 +398,7 @@ function Body({ token }: { token: string }) {
               className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
             />
           </label>
-          <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+          <label className="text-xs font-medium text-zinc-800 dark:text-zinc-400">
             Cleanup / buffer after (minutes)
             <input
               type="number"
@@ -409,7 +409,7 @@ function Body({ token }: { token: string }) {
               className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
             />
           </label>
-          <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+          <label className="text-xs font-medium text-zinc-800 dark:text-zinc-400">
             Price (leave empty if quote-only)
             <input
               value={price}
@@ -418,7 +418,7 @@ function Body({ token }: { token: string }) {
               className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
             />
           </label>
-          <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+          <label className="text-xs font-medium text-zinc-800 dark:text-zinc-400">
             Who it&apos;s for
             <select
               value={audience ?? "all"}
@@ -432,7 +432,7 @@ function Body({ token }: { token: string }) {
               ))}
             </select>
           </label>
-          <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400 sm:col-span-2">
+          <label className="text-xs font-medium text-zinc-800 dark:text-zinc-400 sm:col-span-2">
             Staff notes (not shown to clients online)
             <textarea
               value={staffNotes}
@@ -442,7 +442,7 @@ function Body({ token }: { token: string }) {
               className="mt-1 w-full resize-y rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
             />
           </label>
-          <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400 sm:col-span-2">
+          <label className="text-xs font-medium text-zinc-800 dark:text-zinc-400 sm:col-span-2">
             Aftercare (shown with booking / on detail pages)
             <textarea
               value={aftercare}
@@ -452,7 +452,7 @@ function Body({ token }: { token: string }) {
               className="mt-1 w-full resize-y rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
             />
           </label>
-          <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+          <label className="text-xs font-medium text-zinc-800 dark:text-zinc-400">
             Min. advance booking (hours)
             <input
               type="number"
@@ -463,7 +463,7 @@ function Body({ token }: { token: string }) {
               className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
             />
           </label>
-          <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+          <label className="text-xs font-medium text-zinc-800 dark:text-zinc-400">
             Deposit (optional, same currency as price)
             <input
               value={deposit}
@@ -476,8 +476,8 @@ function Body({ token }: { token: string }) {
 
         {editingId != null ? (
           <div className="mt-6 border-t border-zinc-200 pt-4 dark:border-zinc-700">
-            <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">Products per appointment</h3>
-            <p className="mt-1 text-xs text-zinc-500">
+            <h3 className="text-sm font-semibold text-zinc-800 dark:text-white">Products per appointment</h3>
+            <p className="mt-1 text-xs text-zinc-800">
               Link inventory items to this service (how much stock one visit uses). Optional fixed material cost per
               visit is visible only to staff in the staff app — not on the public booking page.
             </p>
@@ -492,7 +492,7 @@ function Body({ token }: { token: string }) {
                     key={`${line.inventory_item_id}-${idx}`}
                     className="flex flex-col gap-2 rounded-lg border border-zinc-200 bg-white p-3 sm:flex-row sm:flex-wrap sm:items-end dark:border-zinc-700 dark:bg-zinc-950/50"
                   >
-                    <label className="min-w-[160px] flex-1 text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                    <label className="min-w-[160px] flex-1 text-xs font-medium text-zinc-800 dark:text-zinc-400">
                       Product
                       <select
                         value={line.inventory_item_id}
@@ -511,7 +511,7 @@ function Body({ token }: { token: string }) {
                         ))}
                       </select>
                     </label>
-                    <label className="w-28 text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                    <label className="w-28 text-xs font-medium text-zinc-800 dark:text-zinc-400">
                       Qty / visit
                       <input
                         value={line.quantity_per_service}
@@ -524,7 +524,7 @@ function Body({ token }: { token: string }) {
                         inputMode="decimal"
                       />
                     </label>
-                    <label className="min-w-[120px] flex-1 text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                    <label className="min-w-[120px] flex-1 text-xs font-medium text-zinc-800 dark:text-zinc-400">
                       Material cost / visit (optional)
                       <input
                         value={line.material_cost}
@@ -538,7 +538,7 @@ function Body({ token }: { token: string }) {
                         inputMode="decimal"
                       />
                     </label>
-                    <label className="min-w-[140px] flex-[2] text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                    <label className="min-w-[140px] flex-[2] text-xs font-medium text-zinc-800 dark:text-zinc-400">
                       Staff note (internal)
                       <input
                         value={line.staff_note}
@@ -596,7 +596,7 @@ function Body({ token }: { token: string }) {
 
         <button
           type="submit"
-          className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-900"
+          className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-rose-100 dark:text-zinc-800"
           disabled={submitBusy}
         >
           {submitBusy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
@@ -615,17 +615,17 @@ function Body({ token }: { token: string }) {
             >
               <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-zinc-900 dark:text-white">{r.name}</p>
-                  <p className="text-sm text-zinc-500">
+                  <p className="font-medium text-zinc-800 dark:text-white">{r.name}</p>
+                  <p className="text-sm text-zinc-800">
                     {r.duration_minutes} min + {r.buffer_after_minutes ?? 0} min buffer · {formatMoney(r.price_cents)}
                     {r.category ? ` · ${r.category}` : ""} · {audienceLabel(r.audience)}
                     {!r.is_active ? " · inactive" : ""}
                     {r.online_bookable === false ? " · not online" : ""}
                   </p>
                   {r.description ? (
-                    <p className="mt-2 line-clamp-2 text-xs text-zinc-600 dark:text-zinc-400">{r.description}</p>
+                    <p className="mt-2 line-clamp-2 text-xs text-zinc-800 dark:text-zinc-400">{r.description}</p>
                   ) : null}
-                  <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+                  <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-medium uppercase tracking-wide text-zinc-800">
                     {r.requires_patch_test ? (
                       <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-900 dark:bg-amber-950 dark:text-amber-100">
                         Patch test

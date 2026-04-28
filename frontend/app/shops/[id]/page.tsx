@@ -49,31 +49,34 @@ export default async function ShopDetailPage(props: Props) {
   const socialProfiles = Array.isArray(shop.social_profiles) ? shop.social_profiles : [];
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
       <PublicHeader />
       <main className="mx-auto max-w-6xl px-4 pb-14 pt-8 sm:px-6">
         <section className="section-wrap overflow-hidden">
-          <div className="border-b border-zinc-800 bg-[linear-gradient(135deg,#1a1a1a_0%,#2c2c2c_100%)] p-8 sm:p-10">
-            <p className="text-xs uppercase tracking-[0.24em] text-zinc-400">Public profile</p>
+          <div className="border-b border-[color:var(--border)] bg-[radial-gradient(circle_at_70%_0%,rgba(179,92,111,0.14)_0%,rgba(255,246,248,0)_55%),linear-gradient(135deg,#fff6f8_0%,#fff1f4_100%)] p-8 sm:p-10">
+            <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--caption)]">Public profile</p>
             <h1 className="mt-4 text-3xl font-semibold sm:text-4xl">
-              Where style meets <span className="text-[#C8973A]">precision</span>
+              Where beauty meets <span className="text-[color:var(--brand-primary)]">elegance</span>
             </h1>
-            <p className="mt-3 max-w-2xl text-sm text-zinc-300">
+            <p className="mt-3 max-w-2xl text-sm text-[color:var(--paragraph)]">
               {shop.description ?? "Modern cuts, beard grooming, and polished style by a trained barber team."}
             </p>
             {categories.length ? (
               <div className="mt-2 flex flex-wrap gap-2">
                 {categories.map((c) => (
-                  <span key={c} className="rounded-full border border-[#C8973A]/40 px-2.5 py-1 text-[11px] uppercase tracking-wide text-[#C8973A]">
+                  <span
+                    key={c}
+                    className="rounded-full border border-[color:color-mix(in srgb, var(--brand-primary) 40%, transparent)] bg-[color:color-mix(in srgb, var(--brand-primary) 8%, transparent)] px-2.5 py-1 text-[11px] uppercase tracking-wide text-[color:var(--brand-primary)]"
+                  >
                     {c}
                   </span>
                 ))}
               </div>
             ) : shop.category ? <p className="mt-2 text-xs uppercase tracking-wide text-[#C8973A]">{shop.category}</p> : null}
-            <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-zinc-300">
+            <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-[color:var(--paragraph)]">
               {locationLabel ? <span>{locationLabel}</span> : null}
               {shop.phone ? (
-                <a href={`tel:${shop.phone}`} className="inline-flex items-center gap-1.5 hover:text-[#C8973A]">
+                <a href={`tel:${shop.phone}`} className="inline-flex items-center gap-1.5 hover:text-[color:var(--brand-primary)]">
                   <Phone className="h-4 w-4" />
                   {shop.phone}
                 </a>
@@ -83,36 +86,36 @@ export default async function ShopDetailPage(props: Props) {
                   href={`https://wa.me/${shop.whatsapp_phone.replace(/[^\d]/g, "")}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 hover:text-[#C8973A]"
+                  className="inline-flex items-center gap-1.5 hover:text-[color:var(--brand-primary)]"
                 >
                   WhatsApp: {shop.whatsapp_phone}
                 </a>
               ) : null}
-              <Link href={`/queue/${shop.id}`} className="inline-flex items-center gap-1.5 hover:text-[#C8973A]">
+              <Link href={`/queue/${shop.id}`} className="inline-flex items-center gap-1.5 hover:text-[color:var(--brand-primary)]">
                 <Clock3 className="h-4 w-4" />
                 Live queue
               </Link>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 border-b border-zinc-800 bg-[#1f1f1f] sm:grid-cols-4">
-            <div className="border-r border-zinc-800 p-4 text-center">
-              <p className="text-xl font-semibold text-[#C8973A]">{servicePreview.length}</p>
-              <p className="text-xs text-zinc-400">Top services</p>
+          <div className="grid grid-cols-2 border-b border-[color:var(--border)] bg-[color:var(--surface-elevated)] sm:grid-cols-4">
+            <div className="border-r border-[color:var(--border)] p-4 text-center">
+              <p className="text-xl font-semibold text-[color:var(--brand-primary)]">{servicePreview.length}</p>
+              <p className="text-xs text-[color:var(--caption)]">Top services</p>
             </div>
-            <div className="border-r border-zinc-800 p-4 text-center">
-              <p className="text-xl font-semibold text-[#C8973A]">{staff.length}</p>
-              <p className="text-xs text-zinc-400">Master barbers</p>
+            <div className="border-r border-[color:var(--border)] p-4 text-center">
+              <p className="text-xl font-semibold text-[color:var(--brand-primary)]">{staff.length}</p>
+              <p className="text-xs text-[color:var(--caption)]">Master barbers</p>
             </div>
-            <div className="border-r border-zinc-800 p-4 text-center">
-              <p className="text-xl font-semibold text-[#C8973A]">{stats.completed}</p>
-              <p className="text-xs text-zinc-400">Completed jobs</p>
+            <div className="border-r border-[color:var(--border)] p-4 text-center">
+              <p className="text-xl font-semibold text-[color:var(--brand-primary)]">{stats.completed}</p>
+              <p className="text-xs text-[color:var(--caption)]">Completed jobs</p>
             </div>
             <div className="p-4 text-center">
-              <p className="text-xl font-semibold text-[#C8973A]">
+              <p className="text-xl font-semibold text-[color:var(--brand-primary)]">
                 {reviews_summary.avg_rating != null ? reviews_summary.avg_rating.toFixed(1) : "-"}
               </p>
-              <p className="text-xs text-zinc-400">Rating</p>
+              <p className="text-xs text-[color:var(--caption)]">Rating</p>
             </div>
           </div>
 
@@ -127,30 +130,50 @@ export default async function ShopDetailPage(props: Props) {
         </section>
 
         <section className="mt-8 section-wrap p-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Shop details</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--caption)]">Shop details</p>
           <h2 className="mt-2 text-2xl font-semibold">Business and contact info</h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {shop.email ? <p className="rounded-lg border border-zinc-700 bg-[#2c2c2c] p-3 text-sm">Email: {shop.email}</p> : null}
+            {shop.email ? (
+              <p className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-elevated)] p-3 text-sm">
+                Email: {shop.email}
+              </p>
+            ) : null}
             {shop.website ? (
-              <a href={shop.website} target="_blank" rel="noreferrer" className="rounded-lg border border-zinc-700 bg-[#2c2c2c] p-3 text-sm hover:text-[#C8973A]">
+              <a
+                href={shop.website}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-elevated)] p-3 text-sm hover:text-[color:var(--brand-primary)]"
+              >
                 Website
               </a>
             ) : null}
             {shop.google_maps_url ? (
-              <a href={shop.google_maps_url} target="_blank" rel="noreferrer" className="rounded-lg border border-zinc-700 bg-[#2c2c2c] p-3 text-sm hover:text-[#C8973A]">
+              <a
+                href={shop.google_maps_url}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-elevated)] p-3 text-sm hover:text-[color:var(--brand-primary)]"
+              >
                 Google Maps
               </a>
             ) : null}
-            {shop.established_year ? <p className="rounded-lg border border-zinc-700 bg-[#2c2c2c] p-3 text-sm">Established: {shop.established_year}</p> : null}
-            <p className="rounded-lg border border-zinc-700 bg-[#2c2c2c] p-3 text-sm inline-flex items-center gap-2">
-              <Truck className="h-4 w-4 text-[#C8973A]" />
+            {shop.established_year ? (
+              <p className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-elevated)] p-3 text-sm">
+                Established: {shop.established_year}
+              </p>
+            ) : null}
+            <p className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-elevated)] p-3 text-sm">
+              <Truck className="h-4 w-4 text-[color:var(--brand-primary)]" />
               Delivery: {shop.delivery_available ? "Available" : "Not available"}
             </p>
             {paymentMethods.length ? (
-              <p className="rounded-lg border border-zinc-700 bg-[#2c2c2c] p-3 text-sm">Payments: {paymentMethods.join(", ")}</p>
+              <p className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-elevated)] p-3 text-sm">
+                Payments: {paymentMethods.join(", ")}
+              </p>
             ) : null}
             {weeklyHolidays.length ? (
-              <p className="rounded-lg border border-zinc-700 bg-[#2c2c2c] p-3 text-sm sm:col-span-2 lg:col-span-3">
+              <p className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-elevated)] p-3 text-sm sm:col-span-2 lg:col-span-3">
                 Weekly holidays: {weeklyHolidays.join(", ")}
               </p>
             ) : null}
@@ -158,7 +181,13 @@ export default async function ShopDetailPage(props: Props) {
           <div className="mt-4 flex flex-wrap gap-3 text-sm">
             {socialProfiles.length
               ? socialProfiles.map((s) => (
-                  <a key={`${s.platform}-${s.url}`} href={s.url} target="_blank" rel="noreferrer" className="rounded-full border border-zinc-600 px-4 py-2 hover:border-[#C8973A] hover:text-[#C8973A]">
+                  <a
+                    key={`${s.platform}-${s.url}`}
+                    href={s.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-2 hover:border-[color:var(--brand-primary)] hover:text-[color:var(--brand-primary)]"
+                  >
                     {s.platform}
                   </a>
                 ))

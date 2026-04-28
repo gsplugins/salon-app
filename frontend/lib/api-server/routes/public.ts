@@ -309,6 +309,7 @@ export function mountPublicRoutes(router: Router): void {
         phone: shop.phone,
         latitude: shop.latitude,
         longitude: shop.longitude,
+        google_maps_url: typeof st.google_maps_url === "string" ? st.google_maps_url : null,
         photos: shop.photos ?? [],
         logo_url: typeof st.logo_url === "string" ? st.logo_url : null,
         division: typeof st.division === "string" ? st.division : null,

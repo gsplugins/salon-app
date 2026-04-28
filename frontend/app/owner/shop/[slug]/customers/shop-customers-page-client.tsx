@@ -115,7 +115,7 @@ function Body({ accessToken }: { accessToken: string }) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Input placeholder="Search name or mobile…" className="max-w-xs" value={q} onChange={(e) => setQ(e.target.value)} />
-        <label className="inline-flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
+        <label className="inline-flex items-center gap-2 text-sm text-zinc-800 dark:text-zinc-300">
           <input type="checkbox" checked={showRemoved} onChange={(e) => setShowRemoved(e.target.checked)} />
           Show removed
         </label>
@@ -149,7 +149,7 @@ function Body({ accessToken }: { accessToken: string }) {
                   <TD className="font-mono text-sm">{r.customer_mobile}</TD>
                   <TD>{r.last_service_name ?? "—"}</TD>
                   <TD>{r.visit_count}</TD>
-                  <TD className="text-sm text-zinc-600 dark:text-zinc-400">
+                  <TD className="text-sm text-zinc-800 dark:text-zinc-400">
                     {new Date(r.last_visit_at).toLocaleString()}
                   </TD>
                   <TD>
@@ -166,7 +166,7 @@ function Body({ accessToken }: { accessToken: string }) {
           </Table>
         </div>
       )}
-      <p className="text-xs text-zinc-500">
+      <p className="text-xs text-zinc-800">
         Customer status controls are shop-specific. Suspended/removed customers cannot create new public bookings for this shop.
       </p>
 

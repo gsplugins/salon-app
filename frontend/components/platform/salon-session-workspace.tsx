@@ -45,8 +45,8 @@ export function SalonSessionWorkspace(props: {
               onClick={() => setTab("profile")}
               className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition active:scale-[0.99] touch-manipulation ${
                 tab === "profile"
-                  ? "bg-zinc-900 text-white shadow-sm dark:bg-rose-100 dark:text-zinc-900"
-                  : "text-zinc-600 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
+                  ? "bg-zinc-900 text-white shadow-sm dark:bg-rose-100 dark:text-zinc-800"
+                  : "text-zinc-800 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
               }`}
             >
               <UserRound className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
@@ -61,8 +61,8 @@ export function SalonSessionWorkspace(props: {
               onClick={() => setTab("shop")}
               className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition active:scale-[0.99] touch-manipulation ${
                 tab === "shop"
-                  ? "bg-zinc-900 text-white shadow-sm dark:bg-rose-100 dark:text-zinc-900"
-                  : "text-zinc-600 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
+                  ? "bg-zinc-900 text-white shadow-sm dark:bg-rose-100 dark:text-zinc-800"
+                  : "text-zinc-800 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
               }`}
             >
               <Building2 className="h-4 w-4 shrink-0 opacity-90" aria-hidden />

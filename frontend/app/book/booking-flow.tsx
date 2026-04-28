@@ -424,7 +424,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
         <ol className="flex flex-wrap items-center gap-1 text-xs text-slate-400">
           {STEPS.map((s, idx) => (
             <li key={s.n} className="flex items-center gap-1">
-              {idx > 0 ? <span className="px-0.5 text-zinc-300 dark:text-zinc-600">/</span> : null}
+              {idx > 0 ? <span className="px-0.5 text-zinc-300 dark:text-zinc-800">/</span> : null}
               <span
                 className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-medium ${
                   step === s.n
@@ -493,7 +493,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                 </label>
               ))}
               {services.length === 0 && !busy && (
-                <p className="text-sm text-zinc-500">No services available.</p>
+                <p className="text-sm text-zinc-800">No services available.</p>
               )}
             </div>
             <button
@@ -606,13 +606,13 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
               </div>
             ) : null}
             {busy ? (
-              <p className="flex items-center gap-2 text-sm text-zinc-500">
+              <p className="flex items-center gap-2 text-sm text-zinc-800">
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
                 Loading slots…
               </p>
             ) : slots.length === 0 ? (
               <div className="space-y-3">
-                <p className="text-sm text-zinc-500">
+                <p className="text-sm text-zinc-800">
                   No available openings right now.
                   {" "}Try another date or stylist.
                 </p>
@@ -631,7 +631,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
             ) : (
               <div className="space-y-3">
                 {availableCount === 0 ? (
-                  <p className="text-sm text-zinc-500">
+                  <p className="text-sm text-zinc-800">
                     No open times right now.
                     {inProcessCount > 0
                       ? ` ${inProcessCount} slot(s) are in booking process and may free up soon (auto-refresh every 10 seconds).`
@@ -654,7 +654,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                           ? "border-blue-400 bg-blue-500 text-white"
                           : isAvailable
                             ? "border-slate-700 hover:bg-slate-900"
-                            : "cursor-not-allowed border-zinc-300 bg-zinc-100 text-zinc-500"
+                            : "cursor-not-allowed border-zinc-300 bg-zinc-100 text-zinc-800"
                       }`}
                     >
                       <span className="block">{formatSlotLabel(slot.starts_at)}</span>
@@ -715,7 +715,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                 inputMode="tel"
               />
               {signedInCustomer ? (
-                <p className="mt-1 text-[11px] text-zinc-500">Must match your account — change it in /app if needed.</p>
+                <p className="mt-1 text-[11px] text-zinc-800">Must match your account — change it in /app if needed.</p>
               ) : null}
             </div>
             <div>
@@ -730,7 +730,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
             </div>
             <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-900/70">
               <p className="text-xs font-medium text-zinc-700 dark:text-zinc-200">Reminder preferences</p>
-              <label className="mt-2 flex cursor-pointer items-center gap-2 text-xs text-zinc-600 dark:text-zinc-300">
+              <label className="mt-2 flex cursor-pointer items-center gap-2 text-xs text-zinc-800 dark:text-zinc-300">
                 <input
                   type="checkbox"
                   checked={reminderEnabled}
@@ -739,7 +739,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                 Send me a reminder before my appointment
               </label>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                <label className="text-xs text-zinc-500">
+                <label className="text-xs text-zinc-800">
                   Channel
                   <select
                     value={reminderChannel}
@@ -751,7 +751,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                     <option value="whatsapp">WhatsApp</option>
                   </select>
                 </label>
-                <label className="text-xs text-zinc-500">
+                <label className="text-xs text-zinc-800">
                   When
                   <select
                     value={String(reminderLeadHours)}
@@ -770,7 +770,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                 <strong>{bookingTotals.selected.map((s) => s.name).join(", ")}</strong>
                 {bookingTotals.totalCents != null ? ` · Total ${formatMoneyFromCents(bookingTotals.totalCents)}` : ""}
                 {bookingTotals.totalCents == null && bookingTotals.selected.length > 0 ? (
-                  <span className="block text-zinc-500">Total price shown when every service has a price.</span>
+                  <span className="block text-zinc-800">Total price shown when every service has a price.</span>
                 ) : null}
               </p>
               {bookingTotals.advanceAmount > 0 ? (
@@ -779,7 +779,7 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                   amount before the visit (no online card charge in this version; salon may confirm manually).
                 </p>
               ) : bookingAdvancePercent > 0 && bookingTotals.totalCents == null ? (
-                <p className="mt-2 text-zinc-500">Advance % applies once all selected services have prices.</p>
+                <p className="mt-2 text-zinc-800">Advance % applies once all selected services have prices.</p>
               ) : null}
               <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-lg border border-zinc-200 bg-white p-2 dark:border-zinc-600 dark:bg-zinc-950">
                 <input

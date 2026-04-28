@@ -40,7 +40,7 @@ function Body({ token }: { token: string }) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-zinc-500">Shops</CardTitle>
+            <CardTitle className="text-sm text-zinc-800">Shops</CardTitle>
           </CardHeader>
           <CardContent className="text-2xl font-semibold">
             {String(d.shops_active ?? "—")} / {String(d.shops_total ?? "—")} active
@@ -48,13 +48,13 @@ function Body({ token }: { token: string }) {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-zinc-500">Active subscriptions</CardTitle>
+            <CardTitle className="text-sm text-zinc-800">Active subscriptions</CardTitle>
           </CardHeader>
           <CardContent className="text-2xl font-semibold">{String(d.active_subscriptions ?? "—")}</CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-zinc-500">MRR (plan table, monthly)</CardTitle>
+            <CardTitle className="text-sm text-zinc-800">MRR (plan table, monthly)</CardTitle>
           </CardHeader>
           <CardContent className="text-2xl font-semibold">
             {((Number(d.mrr_cents_approx ?? 0) / 100).toFixed(2))} minor units
@@ -62,7 +62,7 @@ function Body({ token }: { token: string }) {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-zinc-500">Signups 7d / 30d</CardTitle>
+            <CardTitle className="text-sm text-zinc-800">Signups 7d / 30d</CardTitle>
           </CardHeader>
           <CardContent className="text-2xl font-semibold">
             {String(d.signups_last_7_days ?? "—")} / {String(d.signups_last_30_days ?? "—")}
@@ -70,7 +70,7 @@ function Body({ token }: { token: string }) {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-zinc-500">bKash revenue (completed)</CardTitle>
+            <CardTitle className="text-sm text-zinc-800">bKash revenue (completed)</CardTitle>
           </CardHeader>
           <CardContent className="text-2xl font-semibold">
             {(Number(d.bkash_revenue_paisa_total ?? 0) / 100).toFixed(2)} BDT
@@ -87,10 +87,10 @@ function Body({ token }: { token: string }) {
             {top.map((s) => (
               <li key={s.id} className="flex justify-between gap-4 border-b border-zinc-200 py-2 last:border-0 dark:border-zinc-700">
                 <span className="font-medium">{s.name}</span>
-                <span className="text-zinc-500">{(Number(s.revenue_paisa) / 100).toFixed(2)} BDT</span>
+                <span className="text-zinc-800">{(Number(s.revenue_paisa) / 100).toFixed(2)} BDT</span>
               </li>
             ))}
-            {top.length === 0 ? <li className="text-zinc-500">No completed bKash payments yet.</li> : null}
+            {top.length === 0 ? <li className="text-zinc-800">No completed bKash payments yet.</li> : null}
           </ul>
         </CardContent>
       </Card>

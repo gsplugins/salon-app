@@ -29,7 +29,7 @@ export function SalonTokenGate(props: {
         </p>
         <Link
           href="/app"
-          className="mt-4 inline-flex rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+          className="mt-4 inline-flex rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
         >
           Open /app
         </Link>

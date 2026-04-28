@@ -149,8 +149,8 @@ export function StaffAvailabilityClient() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">Availability</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">Availability</h1>
+        <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">
           Let the floor know if you are free, busy, or away. Custom blocks cover breaks; your manager can override in the shop
           system.
         </p>
@@ -161,8 +161,8 @@ export function StaffAvailabilityClient() {
           <CardTitle className="text-base">Current status</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
-          <p className="w-full text-sm text-zinc-600 dark:text-zinc-400">
-            Now: <strong className="text-zinc-900 dark:text-white">{availabilityStatusLabel(status)}</strong>
+          <p className="w-full text-sm text-zinc-800 dark:text-zinc-400">
+            Now: <strong className="text-zinc-800 dark:text-white">{availabilityStatusLabel(status)}</strong>
           </p>
           {(["available", "busy", "on_leave"] as const).map((s) => (
             <Button key={s} type="button" variant={status === s ? "default" : "outline"} className="min-h-11" onClick={() => void setAvail(s)}>
@@ -177,7 +177,7 @@ export function StaffAvailabilityClient() {
           <CardTitle className="text-base">This week at a glance</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-semibold uppercase text-zinc-500 sm:text-xs">
+          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-semibold uppercase text-zinc-800 sm:text-xs">
             {dayLabels.map((d) => (
               <div key={d}>{d.slice(0, 3)}</div>
             ))}
@@ -197,7 +197,7 @@ export function StaffAvailabilityClient() {
       </Card>
 
       <form className="space-y-3 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950/40" onSubmit={bf.handleSubmit(addBlock)}>
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Add unavailable window</h2>
+        <h2 className="text-sm font-semibold text-zinc-800 dark:text-white">Add unavailable window</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <Label htmlFor="b-start">Starts</Label>
@@ -218,10 +218,10 @@ export function StaffAvailabilityClient() {
       </form>
 
       <div>
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Upcoming blocks</h2>
+        <h2 className="text-sm font-semibold text-zinc-800 dark:text-white">Upcoming blocks</h2>
         <ul className="mt-2 space-y-2">
           {blocks.length === 0 ? (
-            <li className="text-sm text-zinc-500">No custom blocks in the next two weeks.</li>
+            <li className="text-sm text-zinc-800">No custom blocks in the next two weeks.</li>
           ) : (
             blocks.map((b) => (
               <li
@@ -229,10 +229,10 @@ export function StaffAvailabilityClient() {
                 className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-100 px-3 py-2 text-sm dark:border-zinc-800"
               >
                 <div>
-                  <p className="font-medium text-zinc-900 dark:text-white">
+                  <p className="font-medium text-zinc-800 dark:text-white">
                     {formatStaffDateTime(b.starts_at)} → {formatStaffDateTime(b.ends_at)}
                   </p>
-                  {b.note ? <p className="text-xs text-zinc-500">{b.note}</p> : null}
+                  {b.note ? <p className="text-xs text-zinc-800">{b.note}</p> : null}
                 </div>
                 <Button type="button" variant="outline" className="min-h-10 px-3 py-2 text-xs" onClick={() => void removeBlock(b.id)}>
                   Remove

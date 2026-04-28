@@ -92,7 +92,7 @@ function Body({ token }: { token: string }) {
       </Card>
 
       <div className="grid gap-2">
-        <label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Role permission overrides (JSON)</label>
+        <label className="text-xs font-medium text-zinc-800 dark:text-zinc-400">Role permission overrides (JSON)</label>
         <Textarea value={json} onChange={(e) => setJson(e.target.value)} className="min-h-[200px] font-mono text-xs" />
         <Button type="button" className="self-start" onClick={() => void saveOverrides()}>
           Save overrides

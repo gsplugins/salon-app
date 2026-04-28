@@ -57,8 +57,8 @@ function Body({ token }: { token: string }) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-zinc-900 dark:text-white">Reviews</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">Reply to customer feedback.</p>
+        <h1 className="text-xl font-semibold text-zinc-800 dark:text-white">Reviews</h1>
+        <p className="text-sm text-zinc-800 dark:text-zinc-400">Reply to customer feedback.</p>
       </div>
 
       {rows.length === 0 ? (
@@ -68,14 +68,14 @@ function Body({ token }: { token: string }) {
           {rows.map((r) => (
             <li key={r.id} className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900/50">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <p className="font-semibold text-zinc-900 dark:text-white">{r.rating}/5</p>
-                <p className="text-xs text-zinc-500">{r.created_at ? new Date(r.created_at).toLocaleString() : ""}</p>
+                <p className="font-semibold text-zinc-800 dark:text-white">{r.rating}/5</p>
+                <p className="text-xs text-zinc-800">{r.created_at ? new Date(r.created_at).toLocaleString() : ""}</p>
               </div>
               {r.customer ? (
-                <p className="mt-1 text-sm text-zinc-500">Customer: {r.customer.name}</p>
+                <p className="mt-1 text-sm text-zinc-800">Customer: {r.customer.name}</p>
               ) : null}
               {r.staff ? (
-                <p className="text-sm text-zinc-500">Staff: {r.staff.name}</p>
+                <p className="text-sm text-zinc-800">Staff: {r.staff.name}</p>
               ) : null}
               {r.comment ? <p className="mt-3 text-sm text-zinc-700 dark:text-zinc-300">{r.comment}</p> : null}
               {r.owner_reply ? (
@@ -95,7 +95,7 @@ function Body({ token }: { token: string }) {
                 <button
                   type="button"
                   onClick={() => void saveReply(r.id)}
-                  className="mt-2 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                  className="mt-2 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
                 >
                   Save reply
                 </button>

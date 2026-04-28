@@ -73,7 +73,7 @@ export function StaffActAsBar(props: { accessToken: string; onStaffContextChange
   return (
     <div className="mb-4 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
       <p className="text-xs font-semibold uppercase tracking-wide text-rose-800 dark:text-rose-200">Manager view</p>
-      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">
         Choose which team member you are viewing in the staff portal. You can switch to any staff profile.
       </p>
       <div className="mt-3">
@@ -108,7 +108,7 @@ export function StaffActAsBar(props: { accessToken: string; onStaffContextChange
           <Link href={managerShopStaffHref} className="font-medium text-rose-800 underline dark:text-rose-200">
             Manage staff access and permissions
           </Link>
-          <span className="text-zinc-500">Add/remove team members, logins, and active access in manager panel.</span>
+          <span className="text-zinc-800">Add/remove team members, logins, and active access in manager panel.</span>
         </div>
       </div>
     </div>

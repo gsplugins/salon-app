@@ -11,22 +11,22 @@ export function AdminWorkspaceFrame(props: {
   const { eyebrow = "Super admin", title, subtitle, badge, actions, children } = props;
   return (
     <div className="space-y-6 md:space-y-8">
-      <div className="relative overflow-hidden rounded-3xl border border-zinc-300 bg-gradient-to-br from-white via-zinc-50 to-rose-50/50 p-6 shadow-sm md:p-8 dark:border-zinc-700 dark:from-zinc-900 dark:via-zinc-900 dark:to-rose-950/30">
-        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-rose-200/45 blur-3xl dark:bg-rose-500/15" aria-hidden />
+      <div className="relative overflow-hidden rounded-3xl border border-[color:var(--border)] bg-gradient-to-br from-[color:var(--surface)] via-[color:var(--surface-elevated)] to-[color:color-mix(in_srgb,var(--brand-glow)_22%,var(--background))] p-6 shadow-sm md:p-8">
+        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-rose-200/45 blur-3xl" aria-hidden />
         <div className="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-700 dark:text-rose-200">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[color:var(--brand-primary)]">
                 {eyebrow}
               </p>
               {badge ? (
-                <span className="inline-flex items-center rounded-full border border-rose-200 bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-rose-700 dark:border-rose-800 dark:bg-zinc-900 dark:text-rose-200">
+                <span className="inline-flex items-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--brand-primary)]">
                   {badge}
                 </span>
               ) : null}
             </div>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-950 md:text-3xl dark:text-white">{title}</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">{subtitle}</p>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[color:var(--foreground)] md:text-3xl">{title}</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[color:var(--paragraph)]">{subtitle}</p>
           </div>
           {actions ? <div className="relative flex shrink-0 items-center gap-2">{actions}</div> : null}
         </div>

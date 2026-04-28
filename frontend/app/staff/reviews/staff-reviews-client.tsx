@@ -44,17 +44,17 @@ export function StaffReviewsClient() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">Reviews</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">What guests said about you. Replies are manager-only.</p>
+        <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">Reviews</h1>
+        <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">What guests said about you. Replies are manager-only.</p>
       </div>
 
       <div className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
-        <p className="text-sm text-zinc-500">Average</p>
-        <p className="mt-1 flex items-center gap-2 text-3xl font-bold text-zinc-900 dark:text-white">
+        <p className="text-sm text-zinc-800">Average</p>
+        <p className="mt-1 flex items-center gap-2 text-3xl font-bold text-zinc-800 dark:text-white">
           {data.average_rating != null ? data.average_rating.toFixed(2) : "—"}
           <Star className="h-7 w-7 fill-amber-400 text-amber-500" />
         </p>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{data.count} reviews shown</p>
+        <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">{data.count} reviews shown</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -70,7 +70,7 @@ export function StaffReviewsClient() {
 
       <ul className="space-y-2">
         {data.reviews.length === 0 ? (
-          <li className="rounded-2xl border border-dashed border-zinc-200 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700">
+          <li className="rounded-2xl border border-dashed border-zinc-200 p-6 text-center text-sm text-zinc-800 dark:border-zinc-700">
             No reviews match this filter.
           </li>
         ) : (
@@ -78,11 +78,11 @@ export function StaffReviewsClient() {
             <li key={rev.id} className="rounded-2xl border border-zinc-100 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950/40">
               <div className="flex items-center gap-1 text-amber-500">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className={`h-4 w-4 ${i < rev.rating ? "fill-amber-400" : "text-zinc-300 dark:text-zinc-600"}`} />
+                  <Star key={i} className={`h-4 w-4 ${i < rev.rating ? "fill-amber-400" : "text-zinc-300 dark:text-zinc-800"}`} />
                 ))}
               </div>
               {rev.comment ? <p className="mt-2 text-sm text-zinc-800 dark:text-zinc-200">{rev.comment}</p> : null}
-              {rev.created_at ? <p className="mt-2 text-xs text-zinc-500">{formatStaffDate(rev.created_at)}</p> : null}
+              {rev.created_at ? <p className="mt-2 text-xs text-zinc-800">{formatStaffDate(rev.created_at)}</p> : null}
             </li>
           ))
         )}

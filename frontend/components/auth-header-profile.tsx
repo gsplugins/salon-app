@@ -136,7 +136,7 @@ export function AuthHeaderProfile(props: {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className={`group flex items-center gap-2 rounded-full border border-zinc-200 bg-white pl-1 pr-2 shadow-sm transition hover:bg-zinc-900 hover:text-white dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800 ${
+        className={`group flex items-center gap-2 rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] pl-1 pr-2 text-[color:var(--foreground)] shadow-sm transition hover:bg-[color:var(--brand-primary)] hover:text-white ${
           compact ? "py-0.5 pl-0.5" : "py-1"
         }`}
         aria-expanded={open}
@@ -155,29 +155,29 @@ export function AuthHeaderProfile(props: {
           )}
         </span>
         {!compact ? (
-          <span className="hidden max-w-[140px] truncate text-left text-sm font-medium text-zinc-800 transition group-hover:text-white dark:text-zinc-100 sm:block">
+          <span className="hidden max-w-[140px] truncate text-left text-sm font-medium text-[color:var(--foreground)] transition group-hover:text-white sm:block">
             {me.name}
           </span>
         ) : null}
-        <ChevronDown className={`h-4 w-4 shrink-0 text-zinc-500 transition group-hover:text-white ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`h-4 w-4 shrink-0 text-[color:var(--foreground)] transition group-hover:text-white ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open ? (
         <div
-          className="absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl border border-zinc-200 bg-white py-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+          className="absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] py-2 shadow-lg"
           role="menu"
         >
-          <div className="border-b border-zinc-100 px-4 py-3 dark:border-zinc-800">
-            <p className="truncate font-semibold text-zinc-900 dark:text-white">{me.name}</p>
-            <p className="truncate text-xs text-zinc-500">{me.mobile}</p>
-            <p className="mt-1 inline-block rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-medium text-rose-900 dark:bg-rose-950/60 dark:text-rose-100">
+          <div className="border-b border-[color:var(--border)] px-4 py-3">
+            <p className="truncate font-semibold text-[color:var(--foreground)]">{me.name}</p>
+            <p className="truncate text-xs text-[color:var(--paragraph)]">{me.mobile}</p>
+            <p className="mt-1 inline-block rounded-full bg-[color:color-mix(in_srgb,var(--brand-glow)_18%,var(--background))] px-2 py-0.5 text-[11px] font-medium text-[color:var(--brand-primary)]">
               {role}
             </p>
           </div>
           <Link
             href={dash}
             role="menuitem"
-            className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-900 hover:text-white dark:text-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-white"
+            className="flex items-center gap-2 px-4 py-2.5 text-sm text-[color:var(--paragraph)] transition hover:bg-[color:var(--brand-primary)] hover:text-white"
             onClick={() => setOpen(false)}
           >
             <User className="h-4 w-4 shrink-0 opacity-70" />
@@ -187,7 +187,7 @@ export function AuthHeaderProfile(props: {
             <Link
               href="/app"
               role="menuitem"
-              className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-900 hover:text-white dark:text-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-white"
+              className="flex items-center gap-2 px-4 py-2.5 text-sm text-[color:var(--paragraph)] transition hover:bg-[color:var(--brand-primary)] hover:text-white"
               onClick={() => setOpen(false)}
             >
               Calendar &amp; bookings
@@ -197,7 +197,7 @@ export function AuthHeaderProfile(props: {
             <Link
               href="/admin/dashboard"
               role="menuitem"
-              className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-900 hover:text-white dark:text-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-white"
+              className="flex items-center gap-2 px-4 py-2.5 text-sm text-[color:var(--paragraph)] transition hover:bg-[color:var(--brand-primary)] hover:text-white"
               onClick={() => setOpen(false)}
             >
               Platform admin
@@ -207,7 +207,7 @@ export function AuthHeaderProfile(props: {
             <Link
               href="/shops"
               role="menuitem"
-              className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-900 hover:text-white dark:text-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-white"
+              className="flex items-center gap-2 px-4 py-2.5 text-sm text-[color:var(--paragraph)] transition hover:bg-[color:var(--brand-primary)] hover:text-white"
               onClick={() => setOpen(false)}
             >
               Browse shops
@@ -216,7 +216,7 @@ export function AuthHeaderProfile(props: {
           <Link
             href="/app"
             role="menuitem"
-            className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-900 hover:text-white dark:text-zinc-200 dark:hover:bg-zinc-800 dark:hover:text-white"
+            className="flex items-center gap-2 px-4 py-2.5 text-sm text-[color:var(--paragraph)] transition hover:bg-[color:var(--brand-primary)] hover:text-white"
             onClick={() => setOpen(false)}
           >
             Account settings
@@ -224,7 +224,7 @@ export function AuthHeaderProfile(props: {
           <button
             type="button"
             role="menuitem"
-            className="flex w-full items-center gap-2 border-t border-zinc-100 px-4 py-2.5 text-left text-sm text-red-700 hover:bg-red-50 dark:border-zinc-800 dark:text-red-300 dark:hover:bg-red-950/40"
+            className="flex w-full items-center gap-2 border-t border-[color:var(--border)] px-4 py-2.5 text-left text-sm text-red-700 transition hover:bg-red-50"
             onClick={() => void logout()}
           >
             <LogOut className="h-4 w-4 shrink-0" />

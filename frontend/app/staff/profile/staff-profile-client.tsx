@@ -179,8 +179,8 @@ export function StaffProfileClient() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">Profile</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Update how clients see you. Role, commission, and shop hours stay with your manager.</p>
+        <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">Profile</h1>
+        <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">Update how clients see you. Role, commission, and shop hours stay with your manager.</p>
         {readOnly ? (
           <p className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-300">
             Manager mode: this profile is view-only. Edit from salon staff management.
@@ -215,21 +215,21 @@ export function StaffProfileClient() {
         <CardHeader>
           <CardTitle className="text-base">Manager-controlled</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <CardContent className="space-y-1 text-sm text-zinc-800 dark:text-zinc-400">
           <p>
             Commission:{" "}
-            <strong className="text-zinc-900 dark:text-white">
+            <strong className="text-zinc-800 dark:text-white">
               {profile.commission_percent != null ? `${profile.commission_percent}%` : "—"}
             </strong>
           </p>
           <p>
-            Role / staff record: <strong className="text-zinc-900 dark:text-white">stylist account</strong> (not editable here)
+            Role / staff record: <strong className="text-zinc-800 dark:text-white">stylist account</strong> (not editable here)
           </p>
         </CardContent>
       </Card>
 
       <form className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950/40" onSubmit={pf.handleSubmit(onProfile)}>
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Public profile</h2>
+        <h2 className="text-sm font-semibold text-zinc-800 dark:text-white">Public profile</h2>
         <div>
           <Label htmlFor="p-name">Display name</Label>
           <Input id="p-name" className="mt-1 min-h-11" disabled={readOnly} {...pf.register("name")} />
@@ -278,7 +278,7 @@ export function StaffProfileClient() {
               }}
             />
           ) : null}
-          <p className="mt-1 text-xs text-zinc-500">Used in your profile icon and barber profile.</p>
+          <p className="mt-1 text-xs text-zinc-800">Used in your profile icon and barber profile.</p>
         </div>
         <div>
           <Label htmlFor="p-gallery-upload">Image gallery</Label>
@@ -295,7 +295,7 @@ export function StaffProfileClient() {
               }}
             />
           ) : null}
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-zinc-800">
             Placeholder: upload JPG/PNG/WEBP/GIF, up to 10MB each. Max 12 images. These appear on your profile and public page.
           </p>
           {galleryUrls.length > 0 ? (
@@ -317,7 +317,7 @@ export function StaffProfileClient() {
               ))}
             </div>
           ) : (
-            <p className="mt-2 text-xs text-zinc-500">No gallery images yet.</p>
+            <p className="mt-2 text-xs text-zinc-800">No gallery images yet.</p>
           )}
         </div>
         <div>
@@ -333,7 +333,7 @@ export function StaffProfileClient() {
         </Button>
       </form>
 
-      <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-300">
+      <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-800 dark:border-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-300">
         Password changes are managed by your shop admin/manager.
       </div>
     </div>

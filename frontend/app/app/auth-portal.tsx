@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Eye, EyeOff, Loader2, LogIn, Sparkles, Store, UserPlus } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, LogIn, Sparkles, Store, UserPlus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { authJson, fetchAuthMe, formatApiError, type ApiErrorBody, type AuthMePayload } from "@/lib/auth-api";
 import { broadcastSalonAuthChange } from "@/lib/auth-events";
 import { getPrimaryDashboardPath, getRoleLabel } from "@/lib/auth-session";
 import { canAccessBarberStaffRoutes, canAccessCustomerPortal, canAccessSalonManagement } from "@/lib/role-access";
 import { normalizeMobile } from "@/lib/normalize-mobile";
+import { CuttingLoader } from "@/components/ui/cutting-loader";
 
 const LS_ACCESS = "salon_access_token";
 const LS_REFRESH = "salon_refresh_token";
@@ -30,9 +31,9 @@ function slugifyShopSlug(input: string): string {
 function SectionCard(props: { title: string; subtitle: string; children: React.ReactNode }) {
   const { title, subtitle, children } = props;
   return (
-    <section className="section-wrap p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-white">{title}</h2>
-      <p className="mt-1 text-sm text-slate-300">{subtitle}</p>
+    <section className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+      <h2 className="text-lg font-semibold text-[color:var(--foreground)]">{title}</h2>
+      <p className="mt-1 text-sm text-[color:var(--paragraph)]">{subtitle}</p>
       <div className="mt-5">{children}</div>
     </section>
   );
@@ -329,56 +330,53 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
     <div className="w-full">
       {busy ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-          <div className="rounded-2xl border border-[#3b4a59] bg-[#1f3a4a] px-5 py-4 text-sm font-medium text-white shadow-xl">
-            <span className="inline-flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-              Processing...
-            </span>
+          <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-6 py-5 shadow-xl">
+            <CuttingLoader compact label="Processing..." />
           </div>
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-[28px] border border-[#2b333c] bg-[#1e262f]">
+      <div className="overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] shadow-sm">
         <div className="grid min-h-[720px] lg:grid-cols-[0.95fr_1.25fr]">
-          <aside className="relative border-r border-[#2b333c] bg-[#171e25] px-10 py-12">
+          <aside className="relative border-r border-[color:var(--border)] bg-[color:var(--surface-elevated)] px-10 py-12">
             <div className="mx-auto flex h-full w-full max-w-sm flex-col items-center justify-center text-center">
               <div className="mb-8 flex items-end gap-2">
-                <span className="h-16 w-2 rounded-full bg-[#c6a43f]" />
-                <span className="h-16 w-2 rounded-full bg-[#ffffff]" />
-                <span className="h-16 w-2 rounded-full bg-[#b0b8c1]" />
-                <span className="h-16 w-2 rounded-full bg-[#c6a43f]" />
-                <span className="h-16 w-2 rounded-full bg-[#ffffff]" />
+                <span className="h-16 w-2 rounded-full bg-[color:var(--brand-primary)]" />
+                <span className="h-16 w-2 rounded-full bg-[color:var(--surface)]" />
+                <span className="h-16 w-2 rounded-full bg-[color:var(--border)]" />
+                <span className="h-16 w-2 rounded-full bg-[color:var(--brand-primary)]" />
+                <span className="h-16 w-2 rounded-full bg-[color:var(--surface)]" />
               </div>
-              <h2 className="text-5xl font-semibold tracking-[0.08em] text-[#c6a43f]">THE</h2>
-              <h3 className="mt-2 text-5xl font-semibold tracking-[0.08em] text-[#c6a43f]">
+              <h2 className="text-5xl font-semibold tracking-[0.08em] text-[color:var(--brand-primary)]">THE</h2>
+              <h3 className="mt-2 text-5xl font-semibold tracking-[0.08em] text-[color:var(--brand-primary)]">
                 BLADE & CO.
               </h3>
-              <p className="mt-4 text-sm uppercase tracking-[0.35em] text-[#b0b8c1]">Est. 1987</p>
-              <div className="my-10 h-px w-14 bg-[#3b4a59]" />
-              <p className="max-w-[240px] text-lg italic leading-relaxed text-[#b0b8c1]">
+              <p className="mt-4 text-sm uppercase tracking-[0.35em] text-[color:var(--caption)]">Est. 1987</p>
+              <div className="my-10 h-px w-14 bg-[color:var(--border)]" />
+              <p className="max-w-[240px] text-lg italic leading-relaxed text-[color:var(--paragraph)]">
                 &quot;A cut above the rest - precision, style, and tradition.&quot;
               </p>
-              <div className="my-10 h-px w-14 bg-[#3b4a59]" />
-              <p className="text-sm uppercase tracking-[0.3em] text-[#b0b8c1]">Book · Style · Relax</p>
+              <div className="my-10 h-px w-14 bg-[color:var(--border)]" />
+              <p className="text-sm uppercase tracking-[0.3em] text-[color:var(--caption)]">Book · Style · Relax</p>
             </div>
           </aside>
 
-          <section className="flex items-center bg-[#0f151b] px-4 py-8 sm:px-8 sm:py-10">
-            <div className="mx-auto w-full max-w-xl rounded-2xl border border-[#2b333c] bg-[#111922] p-5 sm:p-8">
+          <section className="flex items-center bg-[color:var(--background)] px-4 py-8 sm:px-8 sm:py-10">
+            <div className="mx-auto w-full max-w-xl rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-5 sm:p-8">
               {accessToken && me ? (
-                <section className="mb-6 rounded-2xl border border-[#3b4a59] bg-[#1f3a4a] p-5">
+                <section className="mb-6 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-elevated)] p-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#c6a43f]">Signed in</p>
-                      <h2 className="mt-1 text-lg font-semibold text-white">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--brand-primary)]">Signed in</p>
+                      <h2 className="mt-1 text-lg font-semibold text-[color:var(--foreground)]">
                         {me.name} · {roleLabel}
                       </h2>
-                      <p className="text-xs text-[#b0b8c1]">{me.mobile}</p>
+                      <p className="text-xs text-[color:var(--paragraph)]">{me.mobile}</p>
                     </div>
                     {primaryPath ? (
                       <Link
                         href={primaryPath}
-                        className="inline-flex min-h-10 items-center gap-2 rounded-full bg-[#c6a43f] px-4 py-2 text-sm font-semibold text-[#1e262f] hover:bg-[#d4b14b]"
+                        className="inline-flex min-h-10 items-center gap-2 rounded-full bg-[color:var(--brand-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[color:var(--brand-primary-hover)]"
                       >
                         Open dashboard
                         <ArrowRight className="h-4 w-4" />
@@ -387,7 +385,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                   </div>
                   <ul className="mt-4 grid gap-2 sm:grid-cols-3">
                     {featureChips.map((chip) => (
-                      <li key={chip} className="rounded-xl border border-[#3b4a59] bg-[#1e262f] px-3 py-2 text-sm text-[#b0b8c1]">
+                      <li key={chip} className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--paragraph)]">
                         {chip}
                       </li>
                     ))}
@@ -397,7 +395,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                       type="button"
                       onClick={() => void handleRefresh()}
                       disabled={busy || !refreshToken}
-                      className="min-h-10 rounded-full border border-[#3b4a59] px-4 py-2 text-sm font-medium text-[#b0b8c1] disabled:opacity-60"
+                      className="min-h-10 rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--paragraph)] hover:bg-[color:var(--surface)] disabled:opacity-60"
                     >
                       Refresh token
                     </button>
@@ -405,24 +403,24 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                       type="button"
                       onClick={() => void handleLogout()}
                       disabled={busy}
-                      className="min-h-10 rounded-full border border-[#3b4a59] px-4 py-2 text-sm font-medium text-[#b0b8c1] disabled:opacity-60"
+                      className="min-h-10 rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--paragraph)] hover:bg-[color:var(--surface)] disabled:opacity-60"
                     >
                       Sign out
                     </button>
                   </div>
                   {canAccessBarberStaffRoutes(me) ? (
-                    <p className="mt-3 text-xs text-[#b0b8c1]">
+                    <p className="mt-3 text-xs text-[color:var(--paragraph)]">
                       Open the{" "}
-                      <Link href="/staff/dashboard" className="font-semibold text-[#c6a43f] underline">
+                      <Link href="/staff/dashboard" className="font-semibold text-[color:var(--brand-primary)] underline">
                         staff portal
                       </Link>{" "}
                       for schedule, earnings, and profile.
                     </p>
                   ) : null}
                   {canAccessCustomerPortal(me) ? (
-                    <p className="mt-3 text-xs text-[#b0b8c1]">
+                    <p className="mt-3 text-xs text-[color:var(--paragraph)]">
                       Open the{" "}
-                      <Link href="/customer/dashboard" className="font-semibold text-[#c6a43f] underline">
+                      <Link href="/customer/dashboard" className="font-semibold text-[color:var(--brand-primary)] underline">
                         customer portal
                       </Link>{" "}
                       for bookings and loyalty.
@@ -435,15 +433,15 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                 <div
                   className={`mb-5 rounded-xl border px-3 py-2 text-sm ${
                     notice.type === "ok"
-                      ? "border-[#3b4a59] bg-[#1f3a4a] text-white"
-                      : "border-[#7f1d1d] bg-[#3b1212] text-white"
+                      ? "border-[color:var(--border)] bg-[color:var(--surface-elevated)] text-[color:var(--foreground)]"
+                      : "border-red-200 bg-red-50 text-red-900"
                   }`}
                 >
                   {notice.text}
                 </div>
               ) : null}
 
-              <div className="mb-6 flex items-center gap-0 border-b border-[#2b333c] pb-4 sm:mb-8">
+              <div className="mb-6 flex items-center gap-0 border-b border-[color:var(--border)] pb-4 sm:mb-8">
                 <button
                   type="button"
                   onClick={() => {
@@ -451,10 +449,10 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                     setLoginView("login");
                     setNotice(null);
                   }}
-                  className={`inline-flex min-h-10 items-center justify-center gap-2 border border-[#2b333c] px-6 py-2 text-sm font-semibold tracking-[0.2em] transition ${
+                  className={`inline-flex min-h-10 items-center justify-center gap-2 border border-[color:var(--border)] px-6 py-2 text-sm font-semibold tracking-[0.2em] transition ${
                     mode === "login"
-                      ? "text-[#c6a43f]"
-                      : "text-[#b0b8c1] hover:text-white"
+                      ? "text-[color:var(--brand-primary)]"
+                      : "text-[color:var(--caption)] hover:text-[color:var(--foreground)]"
                   }`}
                 >
                   <LogIn className="h-4 w-4" aria-hidden />
@@ -466,10 +464,10 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                     setMode("register");
                     setNotice(null);
                   }}
-                  className={`inline-flex min-h-10 items-center justify-center gap-2 border border-l-0 border-[#2b333c] px-6 py-2 text-sm font-semibold tracking-[0.2em] transition ${
+                  className={`inline-flex min-h-10 items-center justify-center gap-2 border border-l-0 border-[color:var(--border)] px-6 py-2 text-sm font-semibold tracking-[0.2em] transition ${
                     mode === "register"
-                      ? "text-[#c6a43f]"
-                      : "text-[#b0b8c1] hover:text-white"
+                      ? "text-[color:var(--brand-primary)]"
+                      : "text-[color:var(--caption)] hover:text-[color:var(--foreground)]"
                   }`}
                 >
                   <UserPlus className="h-4 w-4" aria-hidden />
@@ -479,13 +477,13 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
 
               {mode === "login" && loginView === "login" ? (
                 <div>
-                  <h2 className="text-3xl font-semibold text-white sm:text-4xl">Welcome back</h2>
-                  <p className="mt-2 text-base text-[#b0b8c1] sm:text-xl">Sign in to manage your appointments</p>
+                  <h2 className="text-3xl font-semibold text-[color:var(--foreground)] sm:text-4xl">Welcome back</h2>
+                  <p className="mt-2 text-base text-[color:var(--paragraph)] sm:text-xl">Sign in to manage your appointments</p>
                   <form onSubmit={handleLogin} className="mt-6 space-y-5 sm:mt-7">
-                    <label className="text-xs font-medium text-[#b0b8c1]">
+                    <label className="text-xs font-medium text-[color:var(--paragraph)]">
                       Mobile
                       <input
-                        className="mt-1 w-full rounded-lg border border-[#3b4a59] bg-[#0f151b] px-3 py-2 text-sm text-white"
+                        className="mt-1 w-full rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--foreground)]"
                         value={loginMobile}
                         onChange={(e) => setLoginMobile(e.target.value)}
                         autoComplete="tel"
@@ -494,12 +492,12 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                         required
                       />
                     </label>
-                    <label className="text-xs font-medium text-[#b0b8c1]">
+                    <label className="text-xs font-medium text-[color:var(--paragraph)]">
                       Password
                       <div className="relative mt-1">
                         <input
                           type={showLoginPassword ? "text" : "password"}
-                          className="w-full rounded-xl border border-[#3b4a59] bg-[#0f151b] py-2.5 pl-3 pr-11 text-sm text-white"
+                          className="w-full rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] py-2.5 pl-3 pr-11 text-sm text-[color:var(--foreground)]"
                           value={loginPassword}
                           onChange={(e) => setLoginPassword(e.target.value)}
                           autoComplete="current-password"
@@ -508,7 +506,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                         <button
                           type="button"
                           disabled={busy}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-[#b0b8c1] hover:bg-[#1f3a4a]"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-[color:var(--paragraph)] hover:bg-[color:var(--surface-elevated)]"
                           onClick={() => setShowLoginPassword((v) => !v)}
                           aria-label={showLoginPassword ? "Hide password" : "Show password"}
                         >
@@ -519,7 +517,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                     <button
                       type="submit"
                       disabled={busy}
-                      className="mt-2 w-full min-h-12 rounded-xl border border-[#3b4a59] bg-transparent px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#c6a43f] hover:bg-[#1f3a4a] disabled:opacity-60"
+                      className="mt-2 w-full min-h-12 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-[color:var(--brand-primary)] hover:bg-[color:var(--surface-elevated)] disabled:opacity-60"
                     >
                       {busy ? (
                         "Signing in..."
@@ -533,7 +531,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                     <div className="pt-1 flex items-center justify-end">
                       <button
                         type="button"
-                        className="text-sm text-[#b0b8c1] hover:text-[#c6a43f]"
+                        className="text-sm text-[color:var(--paragraph)] hover:text-[color:var(--brand-primary)]"
                         disabled={busy}
                         onClick={() => {
                           setLoginView("forgot");
@@ -543,11 +541,11 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                         Forgot password?
                       </button>
                     </div>
-                    <p className="pt-1 text-center text-sm text-[#b0b8c1]">
+                    <p className="pt-1 text-center text-sm text-[color:var(--paragraph)]">
                       New here?{" "}
                       <button
                         type="button"
-                        className="font-medium text-[#c6a43f] underline"
+                        className="font-medium text-[color:var(--brand-primary)] underline"
                         disabled={busy}
                         onClick={() => {
                           setMode("register");
@@ -564,8 +562,8 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
 
               {mode === "register" ? (
                 <div>
-                  <h2 className="text-3xl font-semibold text-white sm:text-4xl">Create account</h2>
-                  <p className="mt-2 text-base text-[#b0b8c1] sm:text-xl">Register as customer or shop owner</p>
+                  <h2 className="text-3xl font-semibold text-[color:var(--foreground)] sm:text-4xl">Create account</h2>
+                  <p className="mt-2 text-base text-[color:var(--paragraph)] sm:text-xl">Register as customer or shop owner</p>
                   <form onSubmit={registerMode === "shop" ? handleRegisterShop : handleRegisterCustomer} className="mt-6 space-y-5 sm:mt-7">
               <div className="grid gap-3 sm:grid-cols-2">
                 <button
@@ -574,13 +572,13 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                   onClick={() => setRegisterMode("customer")}
                         className={`rounded-2xl border px-4 py-4 text-left transition ${
                     registerMode === "customer"
-                            ? "border-[#c6a43f] bg-[#1f3a4a]"
-                            : "border-[#3b4a59] bg-[#1e262f] hover:border-[#c6a43f]"
+                            ? "border-[color:var(--brand-primary)] bg-[color:var(--surface-elevated)]"
+                            : "border-[color:var(--border)] bg-[color:var(--surface)] hover:border-[color:var(--brand-primary)]"
                   }`}
                 >
-                        <Sparkles className="h-6 w-6 text-[#c6a43f]" aria-hidden />
-                        <p className="mt-2 font-semibold text-white">Customer</p>
-                        <p className="mt-1 text-xs text-[#b0b8c1]">Book visits and track loyalty.</p>
+                        <Sparkles className="h-6 w-6 text-[color:var(--brand-primary)]" aria-hidden />
+                        <p className="mt-2 font-semibold text-[color:var(--foreground)]">Customer</p>
+                        <p className="mt-1 text-xs text-[color:var(--paragraph)]">Book visits and track loyalty.</p>
                 </button>
                 <button
                   type="button"
@@ -588,22 +586,22 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                   onClick={() => setRegisterMode("shop")}
                         className={`rounded-2xl border px-4 py-4 text-left transition ${
                     registerMode === "shop"
-                            ? "border-[#c6a43f] bg-[#1f3a4a]"
-                            : "border-[#3b4a59] bg-[#1e262f] hover:border-[#c6a43f]"
+                            ? "border-[color:var(--brand-primary)] bg-[color:var(--surface-elevated)]"
+                            : "border-[color:var(--border)] bg-[color:var(--surface)] hover:border-[color:var(--brand-primary)]"
                   }`}
                 >
-                        <Store className="h-6 w-6 text-[#c6a43f]" aria-hidden />
-                        <p className="mt-2 font-semibold text-white">Shop owner</p>
-                        <p className="mt-1 text-xs text-[#b0b8c1]">Create business and booking link.</p>
+                        <Store className="h-6 w-6 text-[color:var(--brand-primary)]" aria-hidden />
+                        <p className="mt-2 font-semibold text-[color:var(--foreground)]">Shop owner</p>
+                        <p className="mt-1 text-xs text-[color:var(--paragraph)]">Create business and booking link.</p>
                 </button>
               </div>
 
               {registerMode === "shop" ? (
                 <div className="grid gap-3 sm:grid-cols-2">
-                        <label className="text-xs font-medium text-[#b0b8c1] sm:col-span-2">
+                        <label className="text-xs font-medium text-[color:var(--paragraph)] sm:col-span-2">
                     Business name
                     <input
-                            className="mt-1 w-full rounded-lg border border-[#3b4a59] bg-[#0f151b] px-3 py-2 text-sm text-white"
+                            className="mt-1 w-full rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--foreground)]"
                       value={shopName}
                       onChange={(e) => setShopName(e.target.value)}
                       required
@@ -611,10 +609,10 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                       placeholder="BarbarShop Studio"
                     />
                   </label>
-                        <label className="text-xs font-medium text-[#b0b8c1] sm:col-span-2">
+                        <label className="text-xs font-medium text-[color:var(--paragraph)] sm:col-span-2">
                     Public shop slug
                     <input
-                            className="mt-1 w-full rounded-lg border border-[#3b4a59] bg-[#0f151b] px-3 py-2 font-mono text-sm text-white"
+                            className="mt-1 w-full rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 font-mono text-sm text-[color:var(--foreground)]"
                       value={shopSlug}
                       onChange={(e) => {
                         setShopSlugTouched(true);
@@ -625,15 +623,15 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                       title="Lowercase letters, numbers and hyphen only"
                       placeholder="lumiere-studio"
                     />
-                          <p className="mt-1 text-[11px] text-[#b0b8c1]">
+                          <p className="mt-1 text-[11px] text-[color:var(--paragraph)]">
                       Booking URL preview: <span className="font-mono">/s/{shopSlug || "your-slug"}/book</span>
                     </p>
                   </label>
-                        <label className="text-xs font-medium text-[#b0b8c1] sm:col-span-2">
+                        <label className="text-xs font-medium text-[color:var(--paragraph)] sm:col-span-2">
                     Shop description (optional)
                     <textarea
                       rows={2}
-                            className="mt-1 w-full resize-none rounded-lg border border-[#3b4a59] bg-[#0f151b] px-3 py-2 text-sm text-white"
+                            className="mt-1 w-full resize-none rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--foreground)]"
                       value={shopDescription}
                       onChange={(e) => setShopDescription(e.target.value)}
                       placeholder="What makes your salon special?"
@@ -643,20 +641,20 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               ) : null}
 
               <div className="grid gap-3 sm:grid-cols-2">
-                      <label className="text-xs font-medium text-[#b0b8c1]">
+                      <label className="text-xs font-medium text-[color:var(--paragraph)]">
                   Your name {registerMode === "customer" ? "(optional)" : ""}
                   <input
-                          className="mt-1 w-full rounded-lg border border-[#3b4a59] bg-[#0f151b] px-3 py-2 text-sm text-white"
+                          className="mt-1 w-full rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--foreground)]"
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
                     required={registerMode === "shop"}
                     autoComplete="name"
                   />
                 </label>
-                      <label className="text-xs font-medium text-[#b0b8c1]">
+                      <label className="text-xs font-medium text-[color:var(--paragraph)]">
                   Mobile
                   <input
-                          className="mt-1 w-full rounded-lg border border-[#3b4a59] bg-[#0f151b] px-3 py-2 text-sm text-white"
+                          className="mt-1 w-full rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--foreground)]"
                     value={regMobile}
                     onChange={(e) => setRegMobile(e.target.value)}
                     required
@@ -664,12 +662,12 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                     inputMode="tel"
                   />
                 </label>
-                      <label className="text-xs font-medium text-[#b0b8c1]">
+                      <label className="text-xs font-medium text-[color:var(--paragraph)]">
                   Password (min 8 chars)
                   <div className="relative mt-1">
                     <input
                       type={showRegPassword ? "text" : "password"}
-                            className="w-full rounded-xl border border-[#3b4a59] bg-[#0f151b] py-2.5 pl-3 pr-11 text-sm text-white"
+                            className="w-full rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] py-2.5 pl-3 pr-11 text-sm text-[color:var(--foreground)]"
                       value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
                       required
@@ -679,7 +677,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                     <button
                       type="button"
                       disabled={busy}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-[#b0b8c1] hover:bg-[#1f3a4a]"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-[color:var(--paragraph)] hover:bg-[color:var(--surface-elevated)]"
                       onClick={() => setShowRegPassword((v) => !v)}
                       aria-label={showRegPassword ? "Hide password" : "Show password"}
                     >
@@ -687,12 +685,12 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                     </button>
                   </div>
                 </label>
-                      <label className="text-xs font-medium text-[#b0b8c1]">
+                      <label className="text-xs font-medium text-[color:var(--paragraph)]">
                   Confirm password
                   <div className="relative mt-1">
                     <input
                       type={showRegPassword2 ? "text" : "password"}
-                            className="w-full rounded-xl border border-[#3b4a59] bg-[#0f151b] py-2.5 pl-3 pr-11 text-sm text-white"
+                            className="w-full rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] py-2.5 pl-3 pr-11 text-sm text-[color:var(--foreground)]"
                       value={regPassword2}
                       onChange={(e) => setRegPassword2(e.target.value)}
                       required
@@ -701,7 +699,7 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                     <button
                       type="button"
                       disabled={busy}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-[#b0b8c1] hover:bg-[#1f3a4a]"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-[color:var(--paragraph)] hover:bg-[color:var(--surface-elevated)]"
                       onClick={() => setShowRegPassword2((v) => !v)}
                       aria-label={showRegPassword2 ? "Hide password" : "Show password"}
                     >
@@ -714,20 +712,20 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               <button
                 type="submit"
                 disabled={busy}
-                      className="w-full min-h-12 rounded-xl border border-[#3b4a59] bg-transparent px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#c6a43f] hover:bg-[#1f3a4a] disabled:opacity-60"
+                      className="w-full min-h-12 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-[color:var(--brand-primary)] hover:bg-[color:var(--surface-elevated)] disabled:opacity-60"
               >
                 {busy ? "Please wait..." : registerMode === "shop" ? "Create shop account" : "Create customer account"}
               </button>
                     <button
                       type="button"
-                      className="w-full text-center text-sm text-[#b0b8c1]"
+                      className="w-full text-center text-sm text-[color:var(--paragraph)]"
                       onClick={() => {
                         setMode("login");
                         setLoginView("login");
                         setNotice(null);
                       }}
                     >
-                      Already have an account? <span className="text-[#c6a43f]">Sign in now</span>
+                      Already have an account? <span className="text-[color:var(--brand-primary)]">Sign in now</span>
                     </button>
                   </form>
                 </div>
@@ -736,10 +734,10 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               {mode === "login" && loginView === "forgot" ? (
                 <SectionCard title="Forgot password" subtitle="Request OTP by SMS for your registered mobile number.">
                   <form onSubmit={handleForgot} className="space-y-4">
-                    <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                    <label className="block text-xs font-medium text-[color:var(--paragraph)]">
                 Mobile
                 <input
-                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  className="mt-1 w-full rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--foreground)]"
                   value={forgotMobile}
                   onChange={(e) => setForgotMobile(e.target.value)}
                   required
@@ -748,14 +746,14 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full min-h-11 rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                className="w-full min-h-11 rounded-full border border-[color:var(--border)] px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] hover:bg-[color:var(--surface-elevated)] disabled:opacity-60"
               >
                 {busy ? "Sending..." : "Send OTP"}
               </button>
               <button
                 type="button"
                 disabled={busy}
-                className="w-full min-h-11 rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                className="w-full min-h-11 rounded-full border border-[color:var(--border)] px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] hover:bg-[color:var(--surface-elevated)]"
                 onClick={() => setLoginView("login")}
               >
                 Back to login
@@ -767,19 +765,19 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               {mode === "login" && loginView === "reset" ? (
                 <SectionCard title="Reset password with OTP" subtitle="Enter mobile, 6-digit OTP, and your new password.">
                   <form onSubmit={handleReset} className="space-y-4">
-                    <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                    <label className="block text-xs font-medium text-[color:var(--paragraph)]">
                 Mobile
                 <input
-                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  className="mt-1 w-full rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--foreground)]"
                   value={resetMobile}
                   onChange={(e) => setResetMobile(e.target.value)}
                   required
                 />
               </label>
-              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              <label className="block text-xs font-medium text-[color:var(--paragraph)]">
                 OTP
                 <input
-                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm tracking-widest dark:border-zinc-700 dark:bg-zinc-950"
+                  className="mt-1 w-full rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm tracking-widest text-[color:var(--foreground)]"
                   value={resetOtp}
                   onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                   required
@@ -787,22 +785,22 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
                   inputMode="numeric"
                 />
               </label>
-              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              <label className="block text-xs font-medium text-[color:var(--paragraph)]">
                 New password
                 <input
                   type="password"
-                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  className="mt-1 w-full rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--foreground)]"
                   value={resetPassword}
                   onChange={(e) => setResetPassword(e.target.value)}
                   minLength={8}
                   required
                 />
               </label>
-              <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              <label className="block text-xs font-medium text-[color:var(--paragraph)]">
                 Confirm password
                 <input
                   type="password"
-                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  className="mt-1 w-full rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--foreground)]"
                   value={resetPassword2}
                   onChange={(e) => setResetPassword2(e.target.value)}
                   required
@@ -811,14 +809,14 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full min-h-11 rounded-full bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                className="w-full min-h-11 rounded-full bg-[color:var(--brand-primary)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
               >
                 {busy ? "Updating..." : "Update password"}
               </button>
               <button
                 type="button"
                 disabled={busy}
-                className="w-full min-h-11 rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                className="w-full min-h-11 rounded-full border border-[color:var(--border)] px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] hover:bg-[color:var(--surface-elevated)]"
                 onClick={() => setLoginView("login")}
               >
                 Back to login
@@ -831,8 +829,8 @@ export function AuthPortal({ initialTab = "login" }: { initialTab?: Tab }) {
         </div>
       </div>
 
-      <p className="mt-4 text-center text-xs text-[#b0b8c1]">
-        <Link href="/" className="font-medium text-[#c6a43f] hover:underline">
+      <p className="mt-4 text-center text-xs text-[color:var(--paragraph)]">
+        <Link href="/" className="font-medium text-[color:var(--brand-primary)] hover:underline">
           Back to marketing site
         </Link>
       </p>

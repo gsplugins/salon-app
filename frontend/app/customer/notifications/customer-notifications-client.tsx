@@ -70,8 +70,8 @@ export function CustomerNotificationsClient() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">Notifications</h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">Notifications</h1>
+          <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">
             Booking confirmation, completion updates, and review requests.
           </p>
         </div>
@@ -89,7 +89,7 @@ export function CustomerNotificationsClient() {
       {rows.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-zinc-300/80 bg-white p-8 text-center dark:border-zinc-700 dark:bg-zinc-900/50">
           <Bell className="mx-auto h-6 w-6 text-zinc-400" />
-          <p className="mt-2 text-sm text-zinc-500">No notifications yet.</p>
+          <p className="mt-2 text-sm text-zinc-800">No notifications yet.</p>
         </div>
       ) : (
         <ul className="space-y-3">
@@ -101,16 +101,16 @@ export function CustomerNotificationsClient() {
                 key={n.id}
                 className={`rounded-2xl border p-4 ${
                   n.is_read
-                    ? "border-zinc-300/90 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-zinc-100"
-                    : "border-rose-300 bg-rose-50 text-zinc-900 dark:border-rose-800 dark:bg-rose-950/45 dark:text-zinc-100"
+                    ? "border-zinc-300/90 bg-white text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-zinc-100"
+                    : "border-rose-300 bg-rose-50 text-zinc-800 dark:border-rose-800 dark:bg-rose-950/45 dark:text-zinc-100"
                 }`}
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
-                    <p className="font-medium text-zinc-900 dark:text-white">{n.title ?? "Notification"}</p>
+                    <p className="font-medium text-zinc-800 dark:text-white">{n.title ?? "Notification"}</p>
                     {n.body ? <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-200">{n.body}</p> : null}
                     {n.created_at ? (
-                      <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">{new Date(n.created_at).toLocaleString()}</p>
+                      <p className="mt-1 text-xs text-zinc-800 dark:text-zinc-300">{new Date(n.created_at).toLocaleString()}</p>
                     ) : null}
                   </div>
                   {!n.is_read ? (
@@ -126,7 +126,7 @@ export function CustomerNotificationsClient() {
                 {wantsReview ? (
                   <Link
                     href="/customer/appointments"
-                    className="mt-3 inline-flex rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                    className="mt-3 inline-flex rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
                   >
                     Write review
                   </Link>

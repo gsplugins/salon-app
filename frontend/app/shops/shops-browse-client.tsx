@@ -160,11 +160,11 @@ export function ShopsBrowseClient() {
   }
 
   return (
-    <div className="min-h-screen text-slate-100">
+    <div className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
       <PublicHeader />
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <h1 className="text-3xl font-semibold tracking-tight text-white">Find your nearest barbershop</h1>
-        <p className="mt-2 text-sm text-slate-300">
+        <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">Find your nearest barbershop</h1>
+        <p className="mt-2 text-sm text-[color:var(--paragraph)]">
           Search by area, compare verified shops, then book your preferred slot.
         </p>
         <div className="mt-4">
@@ -172,7 +172,7 @@ export function ShopsBrowseClient() {
             type="button"
             onClick={() => locateUser(false)}
             disabled={locating}
-            className="inline-flex items-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+            className="inline-flex items-center gap-2 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:bg-[color:var(--surface-elevated)] disabled:opacity-60"
           >
             <LocateFixed className="h-4 w-4" />
             {locating ? "Detecting location..." : coords ? "Refresh nearby results" : "Use my location"}
@@ -181,31 +181,31 @@ export function ShopsBrowseClient() {
 
         <form onSubmit={submitSearch} className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--caption)]" />
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder="Search by shop name or area..."
-              className="w-full rounded-xl border border-slate-700 bg-slate-900 py-2.5 pl-10 pr-4 text-sm text-slate-100 shadow-sm outline-none ring-blue-500/20 focus:border-blue-400 focus:ring-2"
+              className="w-full rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] py-2.5 pl-10 pr-4 text-sm text-[color:var(--foreground)] shadow-sm outline-none ring-blue-500/20 focus:border-blue-400 focus:ring-2"
             />
           </div>
           <input
             value={division}
             onChange={(e) => setDivision(e.target.value)}
             placeholder="Division (optional)"
-            className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 shadow-sm outline-none ring-blue-500/20 focus:border-blue-400 focus:ring-2"
+            className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-2.5 text-sm text-[color:var(--foreground)] shadow-sm outline-none ring-blue-500/20 focus:border-blue-400 focus:ring-2"
           />
           <input
             value={district}
             onChange={(e) => setDistrict(e.target.value)}
             placeholder="District (optional)"
-            className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 shadow-sm outline-none ring-blue-500/20 focus:border-blue-400 focus:ring-2"
+            className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-2.5 text-sm text-[color:var(--foreground)] shadow-sm outline-none ring-blue-500/20 focus:border-blue-400 focus:ring-2"
           />
           <input
             value={city}
             onChange={(e) => setCity(e.target.value)}
             placeholder="City / neighborhood"
-            className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 shadow-sm outline-none ring-blue-500/20 focus:border-blue-400 focus:ring-2"
+            className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-2.5 text-sm text-[color:var(--foreground)] shadow-sm outline-none ring-blue-500/20 focus:border-blue-400 focus:ring-2"
           />
           <button
             type="submit"
@@ -216,11 +216,11 @@ export function ShopsBrowseClient() {
         </form>
 
         {!busy && nearbyWithCoords.length > 0 ? (
-          <section className="mt-8 rounded-2xl border border-zinc-300 bg-white/80 p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/50">
+          <section className="mt-8 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4 shadow-sm">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Nearby salons on Google Maps</h2>
-                <p className="text-xs text-zinc-600 dark:text-zinc-300">
+                <h2 className="text-lg font-semibold text-[color:var(--foreground)]">Nearby salons on Google Maps</h2>
+                <p className="text-xs text-[color:var(--caption)]">
                   Showing registered nearby salons with map links and directions.
                 </p>
               </div>
@@ -230,7 +230,7 @@ export function ShopsBrowseClient() {
                     href={googleMapPlaceUrl(selectedLat, selectedLng)}
                     target="_blank"
                     rel="noreferrer"
-                    className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                    className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-1.5 text-xs font-medium text-[color:var(--foreground)] hover:bg-[color:var(--surface-elevated)]"
                   >
                     Open location
                   </a>
@@ -239,7 +239,7 @@ export function ShopsBrowseClient() {
                       href={googleMapDirectionsUrl(coords, { lat: selectedLat, lng: selectedLng })}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                      className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-1.5 text-xs font-medium text-[color:var(--foreground)] hover:bg-[color:var(--surface-elevated)]"
                     >
                       Directions
                     </a>
@@ -261,22 +261,22 @@ export function ShopsBrowseClient() {
                       onClick={() => setSelectedMapShopId(shop.id)}
                       className={`w-full rounded-xl border px-3 py-2 text-left transition ${
                         active
-                          ? "border-blue-400 bg-blue-50 text-zinc-900 dark:bg-zinc-800/70 dark:text-zinc-100"
-                          : "border-zinc-300 bg-white text-zinc-800 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-zinc-200 dark:hover:bg-zinc-800/60"
+                          ? "border-blue-400 bg-[color:color-mix(in srgb, var(--brand-primary) 12%, transparent)] text-[color:var(--foreground)]"
+                          : "border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--foreground)] hover:bg-[color:var(--surface-elevated)]"
                       }`}
                     >
                       <p className="truncate text-sm font-semibold">{shop.name}</p>
-                      <p className="mt-0.5 text-xs text-zinc-600 dark:text-zinc-300">
+                      <p className="mt-0.5 text-xs text-[color:var(--caption)]">
                         {typeof shop.distanceKm === "number"
                           ? shop.distanceKm < 1
                             ? `${Math.round(shop.distanceKm * 1000)} m away`
                             : `${shop.distanceKm.toFixed(1)} km away`
                           : "Distance unavailable"}
                       </p>
-                      <p className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">
+                      <p className="mt-1 truncate text-xs text-[color:var(--caption)]">
                         {[shop.city, shop.district].filter(Boolean).join(", ") || "Registered salon"}
                       </p>
-                      <p className="mt-1 text-[11px] text-blue-700 dark:text-blue-300">
+                      <p className="mt-1 text-[11px] text-[color:var(--brand-primary)]">
                         {lat}, {lng}
                       </p>
                     </button>
@@ -289,12 +289,12 @@ export function ShopsBrowseClient() {
                   <iframe
                     title="Nearby salon map"
                     src={selectedMapEmbedUrl}
-                    className="h-[360px] w-full rounded-xl border border-zinc-300 dark:border-zinc-700"
+                    className="h-[360px] w-full rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)]"
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
                   />
                 ) : (
-                  <div className="flex h-[360px] items-center justify-center rounded-xl border border-zinc-300 bg-zinc-50 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-300">
+                  <div className="flex h-[360px] items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-elevated)] text-sm text-[color:var(--caption)]">
                     No geocoded salon locations available yet.
                   </div>
                 )}
@@ -345,29 +345,29 @@ export function ShopsBrowseClient() {
                     // eslint-disable-next-line @next/next/no-img-element -- remote URLs from API
                     <img src={s.logo_url} alt={`${s.name} logo`} className="mb-3 h-10 w-10 rounded-full object-cover" />
                   ) : null}
-                  <h2 className="text-lg font-semibold text-white">{s.name}</h2>
+                  <h2 className="text-lg font-semibold text-[color:var(--foreground)]">{s.name}</h2>
                   {s.description ? (
-                    <p className="mt-2 line-clamp-2 text-sm text-slate-300">
+                    <p className="mt-2 line-clamp-2 text-sm text-[color:var(--paragraph)]">
                       {s.description}
                     </p>
                   ) : null}
                   {s.address ? (
-                    <p className="mt-3 flex items-start gap-2 text-sm text-slate-300">
-                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-300" />
+                    <p className="mt-3 flex items-start gap-2 text-sm text-[color:var(--paragraph)]">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--brand-primary)]" />
                       {s.address}
                     </p>
                   ) : (
-                    <p className="mt-3 text-sm text-slate-400">Online booking available</p>
+                    <p className="mt-3 text-sm text-[color:var(--caption)]">Online booking available</p>
                   )}
                   {typeof s.distanceKm === "number" ? (
-                    <p className="mt-2 text-xs font-medium text-emerald-300">
+                    <p className="mt-2 text-xs font-medium text-[color:var(--brand-primary)]">
                       {s.distanceKm < 1 ? `${Math.round(s.distanceKm * 1000)} m away` : `${s.distanceKm.toFixed(1)} km away`}
                     </p>
                   ) : null}
-                  <p className="mt-2 text-xs text-slate-400">
+                  <p className="mt-2 text-xs text-[color:var(--caption)]">
                     {[s.city, s.district, s.division].filter(Boolean).join(", ") || "Location details coming soon"}
                   </p>
-                  <span className="mt-4 text-sm font-medium text-blue-300">
+                  <span className="mt-4 text-sm font-medium text-[color:var(--brand-primary)]">
                     View shop and book →
                   </span>
                 </Link>

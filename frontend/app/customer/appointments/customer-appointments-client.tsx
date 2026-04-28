@@ -161,12 +161,12 @@ export function CustomerAppointmentsClient() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">Bookings</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Upcoming and past appointments.</p>
+        <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">Bookings</h1>
+        <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">Upcoming and past appointments.</p>
       </div>
 
       <section aria-labelledby="up-heading">
-        <h2 id="up-heading" className="text-lg font-semibold text-zinc-900 dark:text-white">
+        <h2 id="up-heading" className="text-lg font-semibold text-zinc-800 dark:text-white">
           Upcoming
         </h2>
         {upcoming.length === 0 ? (
@@ -188,12 +188,12 @@ export function CustomerAppointmentsClient() {
               const rebookHref = buildRebookHref(b);
               return (
                 <li key={b.id} className="rounded-2xl border border-zinc-300/90 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/50">
-                  <p className="font-medium text-zinc-900 dark:text-white">{bookingServicesLabel(b)}</p>
-                  <p className="text-sm text-zinc-500">{formatCustomerWhen(b.starts_at)}</p>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                  <p className="font-medium text-zinc-800 dark:text-white">{bookingServicesLabel(b)}</p>
+                  <p className="text-sm text-zinc-800">{formatCustomerWhen(b.starts_at)}</p>
+                  <p className="text-sm text-zinc-800 dark:text-zinc-400">
                     {b.shop?.name ?? "Shop"} · {b.staff.name}
                   </p>
-                  <p className="mt-1 text-xs capitalize text-zinc-500">{b.status}</p>
+                  <p className="mt-1 text-xs capitalize text-zinc-800">{b.status}</p>
                   {(b.status === "pending" || b.status === "confirmed") && b.shop?.slug ? (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {rebookHref ? (
@@ -218,7 +218,7 @@ export function CustomerAppointmentsClient() {
                         type="button"
                         disabled={cancellingId === b.id}
                         onClick={() => void cancelBooking(b.id)}
-                        className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-900"
+                        className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-800"
                       >
                         {cancellingId === b.id ? "Cancelling…" : "Cancel booking"}
                       </button>
@@ -232,11 +232,11 @@ export function CustomerAppointmentsClient() {
       </section>
 
       <section aria-labelledby="past-heading">
-        <h2 id="past-heading" className="text-lg font-semibold text-zinc-900 dark:text-white">
+        <h2 id="past-heading" className="text-lg font-semibold text-zinc-800 dark:text-white">
           Past
         </h2>
         {past.length === 0 ? (
-          <p className="mt-3 text-sm text-zinc-500">No past appointments.</p>
+          <p className="mt-3 text-sm text-zinc-800">No past appointments.</p>
         ) : (
           <ul className="mt-4 space-y-3">
             {past.slice(0, 40).map((b) => (
@@ -244,12 +244,12 @@ export function CustomerAppointmentsClient() {
                 key={b.id}
                 className="rounded-2xl border border-zinc-300/90 bg-white p-4 opacity-90 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/50"
               >
-                <p className="font-medium text-zinc-900 dark:text-white">{bookingServicesLabel(b)}</p>
-                <p className="text-sm text-zinc-500">{formatCustomerWhen(b.starts_at)}</p>
-                <p className="text-xs text-zinc-500">
+                <p className="font-medium text-zinc-800 dark:text-white">{bookingServicesLabel(b)}</p>
+                <p className="text-sm text-zinc-800">{formatCustomerWhen(b.starts_at)}</p>
+                <p className="text-xs text-zinc-800">
                   {b.shop?.name ?? "Shop"} · {b.staff.name}
                 </p>
-                <p className="text-xs capitalize text-zinc-500">{b.status}</p>
+                <p className="text-xs capitalize text-zinc-800">{b.status}</p>
                 {b.payment ? (
                   <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-300">
                     Paid: {(b.payment.amount_cents / 100).toFixed(2)} {b.payment.currency}
@@ -268,7 +268,7 @@ export function CustomerAppointmentsClient() {
                             setTipTaka("0");
                             setTrxId("");
                           }}
-                          className="rounded-lg bg-zinc-900 px-3 py-2 text-xs font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                          className="rounded-lg bg-zinc-900 px-3 py-2 text-xs font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
                         >
                           Pay now (manual / bKash + tip)
                         </button>
@@ -280,18 +280,18 @@ export function CustomerAppointmentsClient() {
                           {Array.from({ length: 5 }).map((_, i) => (
                             <Star
                               key={i}
-                              className={`h-4 w-4 ${i < Number(reviewedForBooking(b.id)?.rating ?? 0) ? "fill-amber-400" : "text-zinc-300 dark:text-zinc-600"}`}
+                              className={`h-4 w-4 ${i < Number(reviewedForBooking(b.id)?.rating ?? 0) ? "fill-amber-400" : "text-zinc-300 dark:text-zinc-800"}`}
                             />
                           ))}
                         </p>
                         {reviewedForBooking(b.id)?.comment ? (
                           <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">{reviewedForBooking(b.id)?.comment}</p>
                         ) : null}
-                        <p className="mt-1 text-xs text-zinc-500">Your review is visible to the shop manager and barber profile.</p>
+                        <p className="mt-1 text-xs text-zinc-800">Your review is visible to the shop manager and barber profile.</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <p className="text-xs font-medium text-zinc-600 dark:text-zinc-300">Rate your barber</p>
+                        <p className="text-xs font-medium text-zinc-800 dark:text-zinc-300">Rate your barber</p>
                         <div className="flex gap-1">
                           {Array.from({ length: 5 }).map((_, i) => {
                             const value = i + 1;
@@ -305,7 +305,7 @@ export function CustomerAppointmentsClient() {
                                 aria-label={`${value} stars`}
                               >
                                 <Star
-                                  className={`h-5 w-5 ${value <= draft.rating ? "fill-amber-400 text-amber-500" : "text-zinc-300 dark:text-zinc-600"}`}
+                                  className={`h-5 w-5 ${value <= draft.rating ? "fill-amber-400 text-amber-500" : "text-zinc-300 dark:text-zinc-800"}`}
                                 />
                               </button>
                             );
@@ -327,7 +327,7 @@ export function CustomerAppointmentsClient() {
                           type="button"
                           onClick={() => void submitReview(b.id)}
                           disabled={reviewBusyId === b.id}
-                          className="rounded-lg bg-zinc-900 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-900"
+                          className="rounded-lg bg-zinc-900 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-800"
                         >
                           {reviewBusyId === b.id ? "Submitting…" : "Submit review"}
                         </button>
@@ -349,10 +349,10 @@ export function CustomerAppointmentsClient() {
           {payFor ? (
             <div className="space-y-3 text-sm">
               <p>
-                <span className="text-zinc-500">Booking:</span> {bookingServicesLabel(payFor)}
+                <span className="text-zinc-800">Booking:</span> {bookingServicesLabel(payFor)}
               </p>
               <p>
-                <span className="text-zinc-500">Shop:</span> {payFor.shop?.name ?? "Shop"}
+                <span className="text-zinc-800">Shop:</span> {payFor.shop?.name ?? "Shop"}
               </p>
               <div>
                 <Label htmlFor="pay-method">Method</Label>

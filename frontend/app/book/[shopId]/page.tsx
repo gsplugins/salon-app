@@ -28,25 +28,25 @@ export default async function BookByShopPage(props: Props) {
   const { shop } = raw.data;
 
   return (
-    <div className="min-h-screen text-slate-100">
-      <header className="border-b border-slate-800 bg-[#0a1220]/95 backdrop-blur-md">
+    <div className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
+      <header className="border-b border-[color:var(--border)] bg-[color:color-mix(in srgb, var(--background) 92%, transparent)] backdrop-blur-md">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-blue-300">
+            <p className="text-xs font-medium uppercase tracking-wider text-[color:var(--brand-primary)]">
               Online booking
             </p>
-            <h1 className="font-semibold tracking-tight text-white">
-              Book your appointment at <span className="text-blue-300">{shop.name}</span>
+            <h1 className="font-semibold tracking-tight text-[color:var(--foreground)]">
+              Book your appointment at <span className="text-[color:var(--brand-primary)]">{shop.name}</span>
             </h1>
           </div>
           <div className="flex shrink-0 items-center gap-3">
             <Link
               href={`/shops/${shop.id}`}
-              className="text-sm font-medium text-blue-300 hover:underline"
+              className="text-sm font-medium text-[color:var(--brand-primary)] hover:underline"
             >
               Shop profile
             </Link>
-            <Link href="/" className="text-sm font-medium text-blue-300 hover:underline">
+            <Link href="/" className="text-sm font-medium text-[color:var(--brand-primary)] hover:underline">
               Home
             </Link>
           </div>

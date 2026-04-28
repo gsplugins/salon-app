@@ -16,8 +16,8 @@ export default async function OwnerShopSettingsPage(props: { params: Promise<{ s
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-white">Shop preferences</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <h1 className="text-xl font-semibold tracking-tight text-zinc-800 dark:text-white">Shop preferences</h1>
+        <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">
           Configure how your business appears and how you get notified. Day-to-day operations use the other menu items
           (queue, services, reports).
         </p>

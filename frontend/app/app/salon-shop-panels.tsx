@@ -110,8 +110,8 @@ export function ShopOverviewPanel({
       <div className="rounded-2xl border border-rose-100/80 bg-gradient-to-b from-white to-zinc-50/80 p-5 dark:border-zinc-800 dark:from-zinc-900/50 dark:to-zinc-950/40">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-base font-semibold text-zinc-900 dark:text-white">At a glance</h3>
-            <p className="mt-1 text-xs text-zinc-500">
+            <h3 className="text-base font-semibold text-zinc-800 dark:text-white">At a glance</h3>
+            <p className="mt-1 text-xs text-zinc-800">
               Revenue is estimated from completed appointments and listed service prices.
             </p>
           </div>
@@ -144,10 +144,10 @@ export function ShopOverviewPanel({
                   className="group rounded-xl border border-zinc-200/90 bg-white px-4 py-3 shadow-sm transition hover:border-rose-200/80 dark:border-zinc-700 dark:bg-zinc-950/60 dark:hover:border-rose-900/50"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">{c.label}</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-zinc-800">{c.label}</p>
                     <Icon className="h-4 w-4 shrink-0 text-rose-600/70 opacity-80 dark:text-rose-300/80" aria-hidden />
                   </div>
-                  <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900 dark:text-white">{c.value}</p>
+                  <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-800 dark:text-white">{c.value}</p>
                 </li>
               );
             })}
@@ -156,12 +156,12 @@ export function ShopOverviewPanel({
       </div>
       <div className="flex flex-col gap-3 rounded-2xl border border-dashed border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-700 dark:bg-zinc-900/30 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Customer booking link</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-zinc-800">Customer booking link</p>
           <p className="mt-1 font-mono text-sm text-zinc-800 dark:text-zinc-200">/s/{shopSlug}/book</p>
         </div>
         <Link
           href={`/s/${shopSlug}/book`}
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-rose-100 dark:text-zinc-900 dark:hover:bg-rose-50"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-rose-100 dark:text-zinc-800 dark:hover:bg-rose-50"
         >
           <Users className="h-4 w-4" />
           Open booking page
@@ -297,11 +297,11 @@ export function ShopServicesPanel({ accessToken }: { accessToken: string }) {
       )}
 
       <div className="rounded-2xl border border-rose-100/80 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
-        <h3 className="text-base font-semibold text-zinc-900 dark:text-white">
+        <h3 className="text-base font-semibold text-zinc-800 dark:text-white">
           {editing ? `Edit “${editing.name}”` : "Add service"}
         </h3>
         <form onSubmit={onSubmit} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <label className="text-xs font-medium text-zinc-500">
+          <label className="text-xs font-medium text-zinc-800">
             Name
             <input
               required
@@ -310,7 +310,7 @@ export function ShopServicesPanel({ accessToken }: { accessToken: string }) {
               onChange={(e) => setName(e.target.value)}
             />
           </label>
-          <label className="text-xs font-medium text-zinc-500">
+          <label className="text-xs font-medium text-zinc-800">
             Category (optional)
             <input
               className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -319,7 +319,7 @@ export function ShopServicesPanel({ accessToken }: { accessToken: string }) {
               placeholder="e.g. Haircuts"
             />
           </label>
-          <label className="text-xs font-medium text-zinc-500">
+          <label className="text-xs font-medium text-zinc-800">
             Duration (min)
             <input
               required
@@ -330,7 +330,7 @@ export function ShopServicesPanel({ accessToken }: { accessToken: string }) {
               onChange={(e) => setDuration(e.target.value)}
             />
           </label>
-          <label className="text-xs font-medium text-zinc-500">
+          <label className="text-xs font-medium text-zinc-800">
             Buffer after (min)
             <input
               type="number"
@@ -340,7 +340,7 @@ export function ShopServicesPanel({ accessToken }: { accessToken: string }) {
               onChange={(e) => setBuffer(e.target.value)}
             />
           </label>
-          <label className="text-xs font-medium text-zinc-500">
+          <label className="text-xs font-medium text-zinc-800">
             Price (USD)
             <input
               className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -349,7 +349,7 @@ export function ShopServicesPanel({ accessToken }: { accessToken: string }) {
               placeholder="25.00"
             />
           </label>
-          <label className="text-xs font-medium text-zinc-500">
+          <label className="text-xs font-medium text-zinc-800">
             Sort order
             <input
               type="number"
@@ -363,7 +363,7 @@ export function ShopServicesPanel({ accessToken }: { accessToken: string }) {
             <button
               type="submit"
               disabled={busy}
-              className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-900"
+              className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-800"
             >
               {busy ? "…" : editing ? "Save changes" : "Add service"}
             </button>
@@ -382,7 +382,7 @@ export function ShopServicesPanel({ accessToken }: { accessToken: string }) {
 
       <div className="overflow-x-auto rounded-2xl border border-rose-100/80 bg-white dark:border-zinc-800 dark:bg-zinc-900/40">
         <table className="w-full min-w-[720px] text-left text-sm">
-          <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950/80">
+          <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-800 dark:border-zinc-800 dark:bg-zinc-950/80">
             <tr>
               <th className="px-3 py-2">Service</th>
               <th className="px-3 py-2">Category</th>
@@ -397,7 +397,7 @@ export function ShopServicesPanel({ accessToken }: { accessToken: string }) {
             {rows.map((s) => (
               <tr key={s.id} className="border-b border-zinc-100 dark:border-zinc-800">
                 <td className="px-3 py-2 font-medium">{s.name}</td>
-                <td className="px-3 py-2 text-zinc-600">{s.category ?? "—"}</td>
+                <td className="px-3 py-2 text-zinc-800">{s.category ?? "—"}</td>
                 <td className="px-3 py-2">{s.duration_minutes} min</td>
                 <td className="px-3 py-2">{s.buffer_after_minutes} min</td>
                 <td className="px-3 py-2">{formatMoney(s.price_cents)}</td>
@@ -432,7 +432,7 @@ export function ShopServicesPanel({ accessToken }: { accessToken: string }) {
             ))}
             {rows.length === 0 && !busy && (
               <tr>
-                <td colSpan={7} className="px-3 py-6 text-center text-zinc-500">
+                <td colSpan={7} className="px-3 py-6 text-center text-zinc-800">
                   No services yet. Add your first service above.
                 </td>
               </tr>
@@ -633,13 +633,13 @@ export function ShopTeamPanel({ accessToken }: { accessToken: string }) {
       )}
 
       <div className="rounded-2xl border border-rose-100/80 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
-        <h3 className="text-base font-semibold text-zinc-900 dark:text-white">
+        <h3 className="text-base font-semibold text-zinc-800 dark:text-white">
           {editing ? `Edit “${editing.name}”` : "Add team member"}
         </h3>
-        <p className="mt-1 text-xs text-zinc-500">Choose which services each barber can perform for online booking.</p>
+        <p className="mt-1 text-xs text-zinc-800">Choose which services each barber can perform for online booking.</p>
         <form onSubmit={onSubmit} className="mt-4 space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="text-xs font-medium text-zinc-500">
+            <label className="text-xs font-medium text-zinc-800">
               Name
               <input
                 required
@@ -648,7 +648,7 @@ export function ShopTeamPanel({ accessToken }: { accessToken: string }) {
                 onChange={(e) => setName(e.target.value)}
               />
             </label>
-            <label className="text-xs font-medium text-zinc-500">
+            <label className="text-xs font-medium text-zinc-800">
               Sort order
               <input
                 type="number"
@@ -660,10 +660,10 @@ export function ShopTeamPanel({ accessToken }: { accessToken: string }) {
             </label>
           </div>
           <fieldset>
-            <legend className="text-xs font-medium text-zinc-500">Services offered</legend>
+            <legend className="text-xs font-medium text-zinc-800">Services offered</legend>
             <div className="mt-2 flex flex-wrap gap-2">
               {services.length === 0 ? (
-                <span className="text-sm text-zinc-500">Add services in the Services tab first.</span>
+                <span className="text-sm text-zinc-800">Add services in the Services tab first.</span>
               ) : (
                 services.map((s) => (
                   <label
@@ -686,7 +686,7 @@ export function ShopTeamPanel({ accessToken }: { accessToken: string }) {
             <button
               type="submit"
               disabled={busy}
-              className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-900"
+              className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-800"
             >
               {busy ? "…" : editing ? "Save" : "Add"}
             </button>
@@ -705,14 +705,14 @@ export function ShopTeamPanel({ accessToken }: { accessToken: string }) {
 
       {isShopOwner ? (
         <div className="rounded-2xl border border-amber-200/80 bg-amber-50/50 p-5 dark:border-amber-900/50 dark:bg-amber-950/20">
-          <h3 className="text-base font-semibold text-zinc-900 dark:text-white">Add stylist with app login</h3>
-          <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+          <h3 className="text-base font-semibold text-zinc-800 dark:text-white">Add stylist with app login</h3>
+          <p className="mt-1 text-xs text-zinc-800 dark:text-zinc-400">
             Only the shop owner can create login credentials. They sign in with mobile + password like customers,
             and use the barber schedule tools.
           </p>
           <form onSubmit={(e) => void onSubmitWithLogin(e)} className="mt-4 space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="text-xs font-medium text-zinc-500">
+              <label className="text-xs font-medium text-zinc-800">
                 Name
                 <input
                   required
@@ -721,7 +721,7 @@ export function ShopTeamPanel({ accessToken }: { accessToken: string }) {
                   onChange={(e) => setLoginName(e.target.value)}
                 />
               </label>
-              <label className="text-xs font-medium text-zinc-500">
+              <label className="text-xs font-medium text-zinc-800">
                 Mobile (login)
                 <input
                   required
@@ -731,7 +731,7 @@ export function ShopTeamPanel({ accessToken }: { accessToken: string }) {
                   autoComplete="off"
                 />
               </label>
-              <label className="text-xs font-medium text-zinc-500">
+              <label className="text-xs font-medium text-zinc-800">
                 Password
                 <input
                   required
@@ -743,7 +743,7 @@ export function ShopTeamPanel({ accessToken }: { accessToken: string }) {
                   autoComplete="new-password"
                 />
               </label>
-              <label className="text-xs font-medium text-zinc-500">
+              <label className="text-xs font-medium text-zinc-800">
                 Confirm password
                 <input
                   required
@@ -757,10 +757,10 @@ export function ShopTeamPanel({ accessToken }: { accessToken: string }) {
               </label>
             </div>
             <fieldset>
-              <legend className="text-xs font-medium text-zinc-500">Services offered</legend>
+              <legend className="text-xs font-medium text-zinc-800">Services offered</legend>
               <div className="mt-2 flex flex-wrap gap-2">
                 {services.length === 0 ? (
-                  <span className="text-sm text-zinc-500">Add services in the Services tab first.</span>
+                  <span className="text-sm text-zinc-800">Add services in the Services tab first.</span>
                 ) : (
                   services.map((s) => (
                     <label
@@ -791,7 +791,7 @@ export function ShopTeamPanel({ accessToken }: { accessToken: string }) {
 
       <div className="overflow-x-auto rounded-2xl border border-rose-100/80 bg-white dark:border-zinc-800 dark:bg-zinc-900/40">
         <table className="w-full min-w-[720px] text-left text-sm">
-          <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950/80">
+          <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-800 dark:border-zinc-800 dark:bg-zinc-950/80">
             <tr>
               <th className="px-3 py-2">Name</th>
               <th className="px-3 py-2">App login</th>
@@ -804,8 +804,8 @@ export function ShopTeamPanel({ accessToken }: { accessToken: string }) {
             {staff.map((s) => (
               <tr key={s.id} className="border-b border-zinc-100 dark:border-zinc-800">
                 <td className="px-3 py-2 font-medium">{s.name}</td>
-                <td className="px-3 py-2 text-zinc-600">{s.has_staff_login ? "Yes" : "No"}</td>
-                <td className="px-3 py-2 text-zinc-600">
+                <td className="px-3 py-2 text-zinc-800">{s.has_staff_login ? "Yes" : "No"}</td>
+                <td className="px-3 py-2 text-zinc-800">
                   {s.services.length ? s.services.map((x) => x.name).join(", ") : "—"}
                 </td>
                 <td className="px-3 py-2">{s.is_active ? "Yes" : "No"}</td>
@@ -839,7 +839,7 @@ export function ShopTeamPanel({ accessToken }: { accessToken: string }) {
             ))}
             {staff.length === 0 && !busy && (
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-zinc-500">
+                <td colSpan={5} className="px-3 py-6 text-center text-zinc-800">
                   No team members yet.
                 </td>
               </tr>
@@ -881,12 +881,12 @@ export function ShopClientsPanel({ accessToken }: { accessToken: string }) {
           {err}
         </div>
       )}
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="text-sm text-zinc-800 dark:text-zinc-400">
         Customers grouped by mobile number from your booking history (last 200 by recent visit).
       </p>
       <div className="overflow-x-auto rounded-2xl border border-rose-100/80 bg-white dark:border-zinc-800 dark:bg-zinc-900/40">
         <table className="w-full min-w-[560px] text-left text-sm">
-          <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950/80">
+          <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-800 dark:border-zinc-800 dark:bg-zinc-950/80">
             <tr>
               <th className="px-3 py-2">Name</th>
               <th className="px-3 py-2">Mobile</th>
@@ -898,7 +898,7 @@ export function ShopClientsPanel({ accessToken }: { accessToken: string }) {
             {rows.map((r) => (
               <tr key={r.customer_mobile} className="border-b border-zinc-100 dark:border-zinc-800">
                 <td className="px-3 py-2 font-medium">{r.customer_name}</td>
-                <td className="px-3 py-2 font-mono text-xs text-zinc-500">{r.customer_mobile}</td>
+                <td className="px-3 py-2 font-mono text-xs text-zinc-800">{r.customer_mobile}</td>
                 <td className="px-3 py-2">{r.visit_count}</td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   {new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(
@@ -909,7 +909,7 @@ export function ShopClientsPanel({ accessToken }: { accessToken: string }) {
             ))}
             {rows.length === 0 && !busy && (
               <tr>
-                <td colSpan={4} className="px-3 py-6 text-center text-zinc-500">
+                <td colSpan={4} className="px-3 py-6 text-center text-zinc-800">
                   No clients yet.
                 </td>
               </tr>
@@ -998,7 +998,7 @@ export function ShopSettingsPanel({ accessToken }: { accessToken: string }) {
   }
 
   if (!ready) {
-    return <p className="text-sm text-zinc-500">Loading shop settings…</p>;
+    return <p className="text-sm text-zinc-800">Loading shop settings…</p>;
   }
 
   if (!profile) {
@@ -1015,7 +1015,7 @@ export function ShopSettingsPanel({ accessToken }: { accessToken: string }) {
             setReady(false);
             void load();
           }}
-          className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+          className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
         >
           Retry
         </button>
@@ -1046,9 +1046,9 @@ export function ShopSettingsPanel({ accessToken }: { accessToken: string }) {
 
       <form onSubmit={onSubmit} className="space-y-8">
         <div className="rounded-2xl border border-rose-100/80 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
-          <h3 className="text-base font-semibold text-zinc-900 dark:text-white">Contact & basics</h3>
+          <h3 className="text-base font-semibold text-zinc-800 dark:text-white">Contact & basics</h3>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <label className="text-xs font-medium text-zinc-500 sm:col-span-2">
+            <label className="text-xs font-medium text-zinc-800 sm:col-span-2">
               Shop name
               <input
                 required
@@ -1058,7 +1058,7 @@ export function ShopSettingsPanel({ accessToken }: { accessToken: string }) {
                 onChange={(e) => setName(e.target.value)}
               />
             </label>
-            <label className="text-xs font-medium text-zinc-500 sm:col-span-2">
+            <label className="text-xs font-medium text-zinc-800 sm:col-span-2">
               Description
               <textarea
                 rows={3}
@@ -1068,7 +1068,7 @@ export function ShopSettingsPanel({ accessToken }: { accessToken: string }) {
                 onChange={(e) => setDescription(e.target.value)}
               />
             </label>
-            <label className="text-xs font-medium text-zinc-500">
+            <label className="text-xs font-medium text-zinc-800">
               Phone
               <input
                 disabled={!canEditBasics}
@@ -1077,7 +1077,7 @@ export function ShopSettingsPanel({ accessToken }: { accessToken: string }) {
                 onChange={(e) => setPhone(e.target.value)}
               />
             </label>
-            <label className="text-xs font-medium text-zinc-500">
+            <label className="text-xs font-medium text-zinc-800">
               Email
               <input
                 type="email"
@@ -1087,7 +1087,7 @@ export function ShopSettingsPanel({ accessToken }: { accessToken: string }) {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </label>
-            <label className="text-xs font-medium text-zinc-500 sm:col-span-2">
+            <label className="text-xs font-medium text-zinc-800 sm:col-span-2">
               Address
               <input
                 disabled={!canEditBasics}
@@ -1100,8 +1100,8 @@ export function ShopSettingsPanel({ accessToken }: { accessToken: string }) {
         </div>
 
         <div className="rounded-2xl border border-rose-100/80 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
-          <h3 className="text-base font-semibold text-zinc-900 dark:text-white">Business hours</h3>
-          <p className="mt-1 text-xs text-zinc-500">Used for online availability. Closed days block booking.</p>
+          <h3 className="text-base font-semibold text-zinc-800 dark:text-white">Business hours</h3>
+          <p className="mt-1 text-xs text-zinc-800">Used for online availability. Closed days block booking.</p>
           <ul className="mt-4 space-y-3">
             {DAYS.map(({ key, label }) => {
               const d = hours[key];
@@ -1123,7 +1123,7 @@ export function ShopSettingsPanel({ accessToken }: { accessToken: string }) {
                   </label>
                   {!d.closed ? (
                     <>
-                      <label className="flex items-center gap-2 text-xs text-zinc-500">
+                      <label className="flex items-center gap-2 text-xs text-zinc-800">
                         Open
                         <input
                           type="time"
@@ -1133,7 +1133,7 @@ export function ShopSettingsPanel({ accessToken }: { accessToken: string }) {
                           onChange={(e) => setDay(key, { open: e.target.value })}
                         />
                       </label>
-                      <label className="flex items-center gap-2 text-xs text-zinc-500">
+                      <label className="flex items-center gap-2 text-xs text-zinc-800">
                         Close
                         <input
                           type="time"
@@ -1152,9 +1152,9 @@ export function ShopSettingsPanel({ accessToken }: { accessToken: string }) {
         </div>
 
         <div className="rounded-2xl border border-rose-100/80 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
-          <h3 className="text-base font-semibold text-zinc-900 dark:text-white">Booking rules</h3>
+          <h3 className="text-base font-semibold text-zinc-800 dark:text-white">Booking rules</h3>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <label className="text-xs font-medium text-zinc-500">
+            <label className="text-xs font-medium text-zinc-800">
               Minimum lead time (hours)
               <input
                 type="number"
@@ -1165,7 +1165,7 @@ export function ShopSettingsPanel({ accessToken }: { accessToken: string }) {
                 onChange={(e) => setLeadHours(e.target.value)}
               />
             </label>
-            <label className="text-xs font-medium text-zinc-500">
+            <label className="text-xs font-medium text-zinc-800">
               Currency code
               <input
                 disabled={!canEditCurrency}
@@ -1181,7 +1181,7 @@ export function ShopSettingsPanel({ accessToken }: { accessToken: string }) {
         <button
           type="submit"
           disabled={busy || !canSubmitAny}
-          className="rounded-full bg-zinc-900 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-900"
+          className="rounded-full bg-zinc-900 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-800"
         >
           {busy ? "Saving…" : "Save shop settings"}
         </button>

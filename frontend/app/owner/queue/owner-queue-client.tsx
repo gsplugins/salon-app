@@ -89,10 +89,10 @@ function Body({ token }: { token: string }) {
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-zinc-200 bg-zinc-50/60 p-4 dark:border-zinc-800 dark:bg-zinc-900/30">
-        <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Waiting list assignments</h2>
-        <p className="mt-1 text-xs text-zinc-500">Assign waiting customers to a selected staff member.</p>
+        <h2 className="text-base font-semibold text-zinc-800 dark:text-white">Waiting list assignments</h2>
+        <p className="mt-1 text-xs text-zinc-800">Assign waiting customers to a selected staff member.</p>
         {waitlistRows.length === 0 ? (
-          <p className="mt-3 text-sm text-zinc-500">No waiting customers right now.</p>
+          <p className="mt-3 text-sm text-zinc-800">No waiting customers right now.</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {waitlistRows.map((w) => (
@@ -101,10 +101,10 @@ function Body({ token }: { token: string }) {
                 className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-950/40 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="min-w-0">
-                  <p className="font-medium text-zinc-900 dark:text-white">
+                  <p className="font-medium text-zinc-800 dark:text-white">
                     {w.customer_mobile ?? "Customer"} · {w.service?.name ?? "Service"}
                   </p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-zinc-800">
                     Preferred: {w.preferred_date} · Status: {w.status}
                   </p>
                 </div>
@@ -133,10 +133,10 @@ function Body({ token }: { token: string }) {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900 dark:text-white">Walk-in queue</h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <h1 className="text-xl font-semibold text-zinc-800 dark:text-white">Walk-in queue</h1>
+          <p className="text-sm text-zinc-800 dark:text-zinc-400">
             Update status as guests are served. Public view:{" "}
-            <span className="font-mono text-xs text-zinc-500">/queue/[shopId]</span>
+            <span className="font-mono text-xs text-zinc-800">/queue/[shopId]</span>
           </p>
         </div>
         <button
@@ -164,13 +164,13 @@ function Body({ token }: { token: string }) {
               className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-800 dark:bg-zinc-900/40 sm:flex-row sm:items-center sm:justify-between"
             >
               <div>
-                <p className="font-semibold text-zinc-900 dark:text-white">
+                <p className="font-semibold text-zinc-800 dark:text-white">
                   #{r.position} · {r.customer_name}
                 </p>
-                <p className="text-xs capitalize text-zinc-500">{r.status.replace("_", " ")}</p>
-                {r.staff ? <p className="text-xs text-zinc-500">Staff: {r.staff.name}</p> : null}
+                <p className="text-xs capitalize text-zinc-800">{r.status.replace("_", " ")}</p>
+                {r.staff ? <p className="text-xs text-zinc-800">Staff: {r.staff.name}</p> : null}
                 {r.estimated_wait_minutes != null ? (
-                  <p className="text-xs text-zinc-500">Est. wait ~{r.estimated_wait_minutes} min</p>
+                  <p className="text-xs text-zinc-800">Est. wait ~{r.estimated_wait_minutes} min</p>
                 ) : null}
               </div>
               <div className="flex flex-wrap gap-2">

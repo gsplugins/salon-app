@@ -16,8 +16,8 @@ export default async function OwnerShopAccountPage(props: { params: Promise<{ sl
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-white">Account</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <h1 className="text-xl font-semibold tracking-tight text-zinc-800 dark:text-white">Account</h1>
+        <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">
           Profile and roles only. For hours, contact, alerts, and policies, open{" "}
           <span className="font-medium text-zinc-800 dark:text-zinc-200">Shop preferences</span> in the sidebar.
         </p>

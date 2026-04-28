@@ -50,7 +50,7 @@ export function StaffPanelGate(props: { children: (accessToken: string) => React
           <p className="mt-1 opacity-90">Staff portal uses the same salon login as your mobile account.</p>
           <Link
             href="/app"
-            className="mt-4 inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+            className="mt-4 inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
           >
             Open /app
           </Link>
@@ -75,7 +75,7 @@ export function StaffPanelGate(props: { children: (accessToken: string) => React
             {me && canAccessCustomerPortal(me) ? (
               <Link
                 href="/customer/dashboard"
-                className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
               >
                 Customer portal
               </Link>
@@ -83,7 +83,7 @@ export function StaffPanelGate(props: { children: (accessToken: string) => React
             {me && canAccessSalonManagement(me) && !canAccessCustomerPortal(me) ? (
               <Link
                 href="/owner/dashboard"
-                className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
               >
                 Salon dashboard
               </Link>

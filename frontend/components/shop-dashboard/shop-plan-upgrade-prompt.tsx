@@ -18,7 +18,7 @@ export function ShopPlanUpgradePrompt(props: { shopSlug: string; title: string; 
       <div className="flex flex-wrap gap-2 pt-1">
         <Link
           href={ownerShopPath(shopSlug, "subscription")}
-          className="inline-flex min-h-9 items-center rounded-full bg-zinc-900 px-4 py-2 text-xs font-semibold text-white dark:bg-amber-100 dark:text-zinc-900"
+          className="inline-flex min-h-9 items-center rounded-full bg-zinc-900 px-4 py-2 text-xs font-semibold text-white dark:bg-amber-100 dark:text-zinc-800"
         >
           Subscription &amp; plans
         </Link>

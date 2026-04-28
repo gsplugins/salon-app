@@ -199,15 +199,15 @@ function FormBody({ accessToken }: { accessToken: string }) {
       </div>
 
       <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Staff schedule by status</h2>
+        <h2 className="text-sm font-semibold text-zinc-800 dark:text-white">Staff schedule by status</h2>
         {scheduleByStaff.length === 0 ? (
-          <p className="mt-2 text-sm text-zinc-500">No booking data in selected range.</p>
+          <p className="mt-2 text-sm text-zinc-800">No booking data in selected range.</p>
         ) : (
           <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {scheduleByStaff.map((row) => (
               <div key={row.staffId} className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-700">
-                <p className="font-medium text-zinc-900 dark:text-white">{row.staffName}</p>
-                <p className="mt-1 text-xs text-zinc-500">
+                <p className="font-medium text-zinc-800 dark:text-white">{row.staffName}</p>
+                <p className="mt-1 text-xs text-zinc-800">
                   Total {row.total}
                   {row.nextAt ? ` · Next ${new Date(row.nextAt).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}` : ""}
                 </p>
@@ -243,7 +243,7 @@ function FormBody({ accessToken }: { accessToken: string }) {
             <TBody>
               {sorted.length === 0 ? (
                 <TR>
-                  <TD colSpan={7} className="text-center text-sm text-zinc-500">
+                  <TD colSpan={7} className="text-center text-sm text-zinc-800">
                     No appointments in this range.
                   </TD>
                 </TR>
@@ -255,7 +255,7 @@ function FormBody({ accessToken }: { accessToken: string }) {
                     </TD>
                     <TD className="text-sm">
                       <div className="font-medium">{b.customer_name}</div>
-                      <div className="text-xs text-zinc-500">{b.customer_mobile}</div>
+                      <div className="text-xs text-zinc-800">{b.customer_mobile}</div>
                     </TD>
                     <TD className="text-sm">{b.service.name}</TD>
                     <TD className="text-sm">{b.staff.name}</TD>
@@ -277,7 +277,7 @@ function FormBody({ accessToken }: { accessToken: string }) {
         </div>
       )}
 
-      <p className="text-xs text-zinc-500">
+      <p className="text-xs text-zinc-800">
         Drag-and-drop reschedule and FullCalendar views can plug into the same <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">PATCH /my/shop/bookings/:id</code> endpoint.
       </p>
 
@@ -289,22 +289,22 @@ function FormBody({ accessToken }: { accessToken: string }) {
           {active ? (
             <div className="space-y-3 text-sm">
               <p>
-                <span className="text-zinc-500">Customer:</span> {active.customer_name} ({active.customer_mobile})
+                <span className="text-zinc-800">Customer:</span> {active.customer_name} ({active.customer_mobile})
               </p>
               <p>
-                <span className="text-zinc-500">Service:</span> {active.service.name}
+                <span className="text-zinc-800">Service:</span> {active.service.name}
               </p>
               <p>
-                <span className="text-zinc-500">Staff:</span> {active.staff.name}
+                <span className="text-zinc-800">Staff:</span> {active.staff.name}
               </p>
               <p>
-                <span className="text-zinc-500">Customer rating:</span>{" "}
+                <span className="text-zinc-800">Customer rating:</span>{" "}
                 {active.review ? `${active.review.rating}/5${active.review.comment ? ` - ${active.review.comment}` : ""}` : "No rating yet"}
               </p>
               <div className="rounded-xl border border-zinc-100 p-3 text-xs dark:border-zinc-800">
-                <p className="font-semibold uppercase tracking-wide text-zinc-500">Customer fraud/risk check</p>
+                <p className="font-semibold uppercase tracking-wide text-zinc-800">Customer fraud/risk check</p>
                 {riskBusy ? (
-                  <p className="mt-1 text-zinc-500">Loading profile…</p>
+                  <p className="mt-1 text-zinc-800">Loading profile…</p>
                 ) : riskProfile ? (
                   <>
                     <p className="mt-1">
@@ -323,7 +323,7 @@ function FormBody({ accessToken }: { accessToken: string }) {
                     </p>
                   </>
                 ) : (
-                  <p className="mt-1 text-zinc-500">No profile data.</p>
+                  <p className="mt-1 text-zinc-800">No profile data.</p>
                 )}
               </div>
               <div>

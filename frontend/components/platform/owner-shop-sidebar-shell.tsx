@@ -50,7 +50,7 @@ export function OwnerShopSidebarShell(props: {
         title: shopName,
         subtitle: "Shop manager",
         badge: planLabel ? (
-          <span className="rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+          <span className="rounded-full border border-[color:var(--border)] bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
             {planLabel}
           </span>
         ) : undefined,
@@ -60,7 +60,7 @@ export function OwnerShopSidebarShell(props: {
           {!shopInactive ? (
             <Link
               href={`/owner/shop/${encodeURIComponent(shopSlug)}/notifications`}
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[color:var(--border)] bg-white text-zinc-700 shadow-sm dark:bg-zinc-900 dark:text-zinc-200"
               aria-label="Shop notifications"
             >
               <Bell className="h-5 w-5" />
@@ -73,11 +73,11 @@ export function OwnerShopSidebarShell(props: {
       footerLink2={{ href: "/", label: "Marketing home" }}
     >
       <div className="mb-4 flex justify-end sm:hidden">
-        <div className="flex items-center gap-2 rounded-2xl border border-zinc-200/80 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
+        <div className="flex items-center gap-2 rounded-2xl border border-[color:var(--border)] bg-white px-3 py-2 dark:bg-zinc-900/50">
           {!shopInactive ? (
             <Link
               href={`/owner/shop/${encodeURIComponent(shopSlug)}/notifications`}
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[color:var(--border)] bg-white text-zinc-700 shadow-sm dark:bg-zinc-900 dark:text-zinc-200"
               aria-label="Shop notifications"
             >
               <Bell className="h-5 w-5" />
@@ -95,7 +95,7 @@ export function OwnerShopSidebarShell(props: {
           <div className="mt-3">
             <Link
               href={`/owner/shop/${encodeURIComponent(shopSlug)}/subscription`}
-              className="inline-flex rounded-full bg-zinc-900 px-4 py-2 text-xs font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+              className="inline-flex rounded-full bg-zinc-900 px-4 py-2 text-xs font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
             >
               Upgrade plan
             </Link>

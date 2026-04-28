@@ -124,10 +124,10 @@ function Body({ token }: { token: string }) {
           <TabsTrigger value="salon">Salon payments</TabsTrigger>
         </TabsList>
         <TabsContent value="bkash">
-          <p className="mb-2 text-xs text-zinc-500">Stripe keys live under Integrations.</p>
+          <p className="mb-2 text-xs text-zinc-800">Stripe keys live under Integrations.</p>
         </TabsContent>
         <TabsContent value="salon">
-          <p className="mb-2 text-xs text-zinc-500">PDF invoices are stubbed until a renderer is configured.</p>
+          <p className="mb-2 text-xs text-zinc-800">PDF invoices are stubbed until a renderer is configured.</p>
         </TabsContent>
       </Tabs>
 

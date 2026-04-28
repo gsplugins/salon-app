@@ -12,7 +12,7 @@ export function Table({ className, ...props }: React.HTMLAttributes<HTMLTableEle
 }
 
 export function THead({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className={cn("border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950/80", className)} {...props} />;
+  return <thead className={cn("border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-800 dark:border-zinc-800 dark:bg-zinc-950/80", className)} {...props} />;
 }
 
 export function TBody({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {

@@ -28,14 +28,14 @@ export function AccountPhotoCard() {
 
   return (
     <section className="card-clean mt-6 p-4">
-      <h3 className="text-sm font-semibold text-white">Profile picture</h3>
-      <p className="mt-1 text-xs text-slate-400">Used in your profile icon across panels.</p>
+      <h3 className="text-sm font-semibold text-[color:var(--foreground)]">Profile picture</h3>
+      <p className="mt-1 text-xs text-[color:var(--paragraph)]">Used in your profile icon across panels.</p>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         {photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- user uploaded URL/data URL
           <img src={photoUrl} alt="Profile" className="h-12 w-12 rounded-full object-cover" />
         ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-800 text-sm font-semibold text-slate-100">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[color:var(--brand-primary)] text-sm font-semibold text-white">
             {me.name.slice(0, 1).toUpperCase()}
           </div>
         )}
@@ -43,7 +43,7 @@ export function AccountPhotoCard() {
           value={photoUrl ?? ""}
           onChange={(e) => setPhotoUrl(e.target.value)}
           placeholder="https://..."
-          className="min-w-[220px] flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+          className="min-w-[220px] flex-1 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--foreground)]"
         />
         <input
           type="file"

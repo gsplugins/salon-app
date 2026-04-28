@@ -1,19 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0d0d0d; /* Void */
-  --foreground: #e8e8e8; /* Ivory */
-  --surface: #1a1a1a; /* Surface */
-  --surface-elevated: #111111; /* Charcoal */
-  --border: #222222; /* Border */
-  --brand-primary: #c8a96e; /* Gold */
-  --brand-primary-hover: #d4b882;
-  --brand-glow: #c8a96e;
-  --paragraph: #888888; /* Smoke */
-  --caption: #555555; /* Ash */
-  --trend-rose: #c13030; /* Barber Red */
-  --midnight: #0d0d0d;
-  --gold-accent: #c8a96e;
+  /* Screenshot-inspired blush + rose theme */
+  --background: #fff6f8; /* Blush */
+  --foreground: #2a1a1e; /* Cocoa ink */
+  --surface: #ffffff; /* Card */
+  --surface-elevated: #fff1f4; /* Soft blush */
+  --border: #e7b8c6; /* Soft rose border (never near-black) */
+  --brand-primary: #b35c6f; /* Rose */
+  --brand-primary-hover: #a65264;
+  --brand-glow: #d7a0ad;
+  --paragraph: #6e4d56; /* Muted cocoa */
+  --caption: #8a6a73; /* Muted */
+  --trend-rose: #b35c6f; /* Rose accent */
+  --midnight: #7f3f4f; /* Deep rose (used for dark blocks) */
+  --gold-accent: #d7a0ad; /* Soft accent */
 }
 
 @theme inline {
@@ -48,12 +49,12 @@ textarea:disabled {
 .glass-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  box-shadow: 0 12px 28px rgba(14, 23, 31, 0.35);
+  box-shadow: 0 14px 34px rgba(43, 26, 30, 0.08);
 }
 
 .neon-border {
   border: 1px solid var(--border);
-  box-shadow: 0 0 0 1px rgba(198, 164, 63, 0.35);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand-glow) 55%, transparent);
 }
 
 .section-wrap {
@@ -66,7 +67,7 @@ textarea:disabled {
   border: 1px solid var(--border);
   background: var(--surface-elevated);
   border-radius: 0.9rem;
-  box-shadow: 0 6px 18px rgba(14, 23, 31, 0.35);
+  box-shadow: 0 10px 26px rgba(43, 26, 30, 0.08);
 }
 
 .fade-up {
@@ -89,6 +90,15 @@ textarea:disabled {
   animation: barberSnip 780ms ease-in-out infinite;
 }
 
+.cutting-track {
+  height: 2px;
+  background: color-mix(in srgb, var(--brand-glow) 45%, var(--border));
+}
+
+.cutting-scissor {
+  animation: cuttingSlide 1.2s ease-in-out infinite;
+}
+
 @keyframes fadeUp {
   from {
     opacity: 0;
@@ -97,6 +107,21 @@ textarea:disabled {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes cuttingSlide {
+  0% {
+    left: 0.55rem;
+    transform: translateY(-50%) rotate(-10deg);
+  }
+  50% {
+    left: calc(100% - 2rem);
+    transform: translateY(-50%) rotate(10deg);
+  }
+  100% {
+    left: 0.55rem;
+    transform: translateY(-50%) rotate(-10deg);
   }
 }
 
@@ -137,22 +162,22 @@ textarea:disabled {
 /* Brand palette mappings for common utility classes used across pages. */
 .bg-blue-500 {
   background-color: var(--brand-primary) !important;
-  color: var(--midnight) !important;
+  color: #ffffff !important;
 }
 
 .hover\:bg-blue-400:hover {
   background-color: var(--brand-primary-hover) !important;
-  color: var(--midnight) !important;
+  color: #ffffff !important;
 }
 
 .text-blue-300,
 .text-blue-200 {
-  color: var(--paragraph) !important;
+  color: var(--brand-primary) !important;
 }
 
 .hover\:text-blue-300:hover,
 .hover\:text-blue-200:hover {
-  color: var(--gold-accent) !important;
+  color: var(--brand-primary-hover) !important;
 }
 
 .border-blue-400,
@@ -168,16 +193,27 @@ textarea:disabled {
   color: #ffffff !important;
 }
 
-.text-slate-300,
-.text-zinc-300 {
+/* Zinc/surface text scale tuned for blush theme (fix low-contrast issues). */
+.text-zinc-800,
+.text-zinc-800,
+.text-zinc-700,
+.text-slate-900,
+.text-slate-800 {
+  color: var(--foreground) !important;
+}
+
+.text-zinc-800,
+.text-zinc-800,
+.text-slate-600,
+.text-slate-500 {
   color: var(--paragraph) !important;
 }
 
-.text-slate-400,
 .text-zinc-400,
-.text-zinc-500,
-.text-zinc-600 {
-  color: #52525b !important;
+.text-zinc-300,
+.text-slate-400,
+.text-slate-300 {
+  color: var(--caption) !important;
 }
 
 .border-slate-700,
@@ -187,13 +223,19 @@ textarea:disabled {
   border-color: var(--border) !important;
 }
 
-/* Remove black-heavy UI tones globally and keep everything in brand palette. */
+/* Force explicit tokenized border utility to use theme color. */
+.border-\[color\:var\(--border\)\] {
+  border-color: var(--border) !important;
+}
+
+/* Map common "dark" utility backgrounds to deep-rose blocks (not pure black). */
 .bg-black,
 .bg-zinc-900,
 .bg-zinc-950,
 .bg-slate-900,
 .bg-slate-950 {
   background-color: var(--midnight) !important;
+  color: #ffffff !important;
 }
 
 .bg-black\/50,
@@ -217,7 +259,7 @@ textarea:disabled {
 .bg-rose-50,
 .bg-rose-100,
 .dark\:bg-rose-950:is(.dark *) {
-  background-color: color-mix(in srgb, var(--gold-accent) 18%, var(--midnight)) !important;
+  background-color: color-mix(in srgb, var(--brand-glow) 20%, var(--background)) !important;
 }
 
 .text-rose-700,
@@ -225,7 +267,7 @@ textarea:disabled {
 .text-rose-900,
 .dark\:text-rose-100:is(.dark *),
 .dark\:text-rose-200:is(.dark *) {
-  color: var(--trend-rose) !important;
+  color: var(--brand-primary) !important;
 }
 
 .text-amber-500,
@@ -234,13 +276,11 @@ textarea:disabled {
 .text-amber-900,
 .dark\:text-amber-300:is(.dark *),
 .dark\:text-amber-400:is(.dark *) {
-  color: var(--gold-accent) !important;
+  color: var(--brand-primary-hover) !important;
 }
 
-.text-black,
-.text-zinc-900,
-.text-zinc-800 {
-  color: #18181b !important;
+.text-black {
+  color: var(--foreground) !important;
 }
 
 .dark\:text-white:is(.dark *),
@@ -249,10 +289,16 @@ textarea:disabled {
   color: var(--foreground) !important;
 }
 
-.text-zinc-600,
+/* Dark-mode text fallbacks (if any pages use `dark:` utilities). */
+.dark\:text-white:is(.dark *),
+.dark\:text-zinc-100:is(.dark *),
+.dark\:text-zinc-50:is(.dark *) {
+  color: #ffffff !important;
+}
+
 .dark\:text-zinc-400:is(.dark *),
 .dark\:text-zinc-300:is(.dark *) {
-  color: #71717a !important;
+  color: #f4f4f5 !important;
 }
 
 .border-black,
@@ -269,7 +315,7 @@ textarea:disabled {
 .hover\:bg-zinc-100:hover,
 .hover\:bg-zinc-50:hover,
 .dark\:hover\:bg-zinc-800:is(.dark *):hover {
-  background-color: color-mix(in srgb, var(--surface-elevated) 70%, var(--midnight)) !important;
+  background-color: color-mix(in srgb, var(--brand-glow) 14%, var(--surface-elevated)) !important;
   color: var(--foreground) !important;
 }
 
@@ -280,8 +326,36 @@ textarea:disabled {
 .dark\:hover\:bg-slate-900:is(.dark *):hover,
 .dark\:hover\:bg-zinc-900:is(.dark *):hover,
 .dark\:hover\:bg-zinc-950:is(.dark *):hover {
-  background-color: color-mix(in srgb, var(--surface-elevated) 80%, var(--midnight)) !important;
-  color: var(--foreground) !important;
+  background-color: color-mix(in srgb, #000000 10%, var(--midnight)) !important;
+  color: #ffffff !important;
+}
+
+/* Universal readability guard:
+   if a component paints a dark zinc background, nested zinc text should stay light. */
+.bg-zinc-900 .text-zinc-900,
+.bg-zinc-900 .text-zinc-800,
+.bg-zinc-900 .text-zinc-700,
+.bg-zinc-900 .text-zinc-600,
+.bg-zinc-900 .text-zinc-500,
+.bg-zinc-950 .text-zinc-900,
+.bg-zinc-950 .text-zinc-800,
+.bg-zinc-950 .text-zinc-700,
+.bg-zinc-950 .text-zinc-600,
+.bg-zinc-950 .text-zinc-500,
+.bg-zinc-800 .text-zinc-900,
+.bg-zinc-800 .text-zinc-800,
+.bg-zinc-800 .text-zinc-700,
+.bg-zinc-800 .text-zinc-600,
+.bg-zinc-800 .text-zinc-500,
+.bg-slate-900 .text-zinc-900,
+.bg-slate-900 .text-zinc-800,
+.bg-slate-900 .text-zinc-700,
+.bg-slate-900 .text-zinc-600,
+.bg-slate-950 .text-zinc-900,
+.bg-slate-950 .text-zinc-800,
+.bg-slate-950 .text-zinc-700,
+.bg-slate-950 .text-zinc-600 {
+  color: #ffffff !important;
 }
 
 /* Admin panel readability: force white text on dark blocks. */
@@ -302,19 +376,52 @@ textarea:disabled {
   color: #ffffff !important;
 }
 
-.admin-theme-scope .text-zinc-300,
-.admin-theme-scope .text-zinc-400,
-.admin-theme-scope .text-zinc-500,
+/* Admin text scale aligned with site theme (readable on light surfaces). */
+.admin-theme-scope .text-zinc-900,
+.admin-theme-scope .text-zinc-800,
+.admin-theme-scope .text-zinc-700,
+.admin-theme-scope .dark\:text-zinc-900:is(.dark *),
+.admin-theme-scope .dark\:text-zinc-800:is(.dark *),
+.admin-theme-scope .dark\:text-zinc-700:is(.dark *) {
+  color: var(--foreground) !important;
+}
+
 .admin-theme-scope .text-zinc-600,
-.admin-theme-scope .dark\:text-zinc-300:is(.dark *),
+.admin-theme-scope .text-zinc-500,
+.admin-theme-scope .dark\:text-zinc-600:is(.dark *),
+.admin-theme-scope .dark\:text-zinc-500:is(.dark *) {
+  color: var(--paragraph) !important;
+}
+
+.admin-theme-scope .text-zinc-400,
+.admin-theme-scope .text-zinc-300,
 .admin-theme-scope .dark\:text-zinc-400:is(.dark *),
-.admin-theme-scope .dark\:text-zinc-500:is(.dark *),
-.admin-theme-scope .dark\:text-zinc-600:is(.dark *) {
-  color: #f4f4f5 !important;
+.admin-theme-scope .dark\:text-zinc-300:is(.dark *) {
+  color: var(--caption) !important;
+}
+
+/* Keep text/icons light when admin blocks are dark. */
+.admin-theme-scope .bg-zinc-900 .text-zinc-900,
+.admin-theme-scope .bg-zinc-900 .text-zinc-800,
+.admin-theme-scope .bg-zinc-900 .text-zinc-700,
+.admin-theme-scope .bg-zinc-900 .text-zinc-600,
+.admin-theme-scope .bg-zinc-950 .text-zinc-900,
+.admin-theme-scope .bg-zinc-950 .text-zinc-800,
+.admin-theme-scope .bg-zinc-950 .text-zinc-700,
+.admin-theme-scope .bg-zinc-950 .text-zinc-600,
+.admin-theme-scope .dark\:bg-zinc-900:is(.dark *) .text-zinc-900,
+.admin-theme-scope .dark\:bg-zinc-900:is(.dark *) .text-zinc-800,
+.admin-theme-scope .dark\:bg-zinc-900:is(.dark *) .text-zinc-700,
+.admin-theme-scope .dark\:bg-zinc-900:is(.dark *) .text-zinc-600,
+.admin-theme-scope .dark\:bg-zinc-950:is(.dark *) .text-zinc-900,
+.admin-theme-scope .dark\:bg-zinc-950:is(.dark *) .text-zinc-800,
+.admin-theme-scope .dark\:bg-zinc-950:is(.dark *) .text-zinc-700,
+.admin-theme-scope .dark\:bg-zinc-950:is(.dark *) .text-zinc-600 {
+  color: #ffffff !important;
 }
 
 /* Admin panel unified border palette (gray + brand-compatible). */
-.admin-theme-scope .border,
+/* .admin-theme-scope .border, */
 .admin-theme-scope .border-t,
 .admin-theme-scope .border-r,
 .admin-theme-scope .border-b,
@@ -329,24 +436,48 @@ textarea:disabled {
 .admin-theme-scope .border-zinc-400,
 .admin-theme-scope .border-slate-700,
 .admin-theme-scope .border-slate-800,
-.admin-theme-scope .border-black,
+/* .admin-theme-scope .border-black, */
 .admin-theme-scope .dark\:border-zinc-600:is(.dark *),
 .admin-theme-scope .dark\:border-zinc-700:is(.dark *),
 .admin-theme-scope .dark\:border-zinc-800:is(.dark *),
 .admin-theme-scope .dark\:border-zinc-900:is(.dark *) {
-  border-color: color-mix(in srgb, var(--gold-accent) 12%, #6b7280) !important;
+  border-color: color-mix(in srgb, var(--gold-accent) 12%, #e7b8c6) !important;
 }
 
 .admin-theme-scope .border-dashed,
 .admin-theme-scope .border-dotted {
-  border-color: color-mix(in srgb, var(--gold-accent) 16%, #6b7280) !important;
+  border-color: color-mix(in srgb, var(--gold-accent) 16%, #e7b8c6) !important;
 }
 
 .admin-theme-scope .hover\:border-zinc-300:hover,
 .admin-theme-scope .hover\:border-zinc-400:hover,
 .admin-theme-scope .dark\:hover\:border-zinc-600:is(.dark *):hover,
 .admin-theme-scope .dark\:hover\:border-zinc-700:is(.dark *):hover {
-  border-color: color-mix(in srgb, var(--gold-accent) 26%, #6b7280) !important;
+  border-color: color-mix(in srgb, var(--gold-accent) 26%, #e7b8c6) !important;
+}
+
+/* Admin grid/table separators + rings should follow site border tone too. */
+.admin-theme-scope .divide-zinc-100 > :not([hidden]) ~ :not([hidden]),
+.admin-theme-scope .divide-zinc-200 > :not([hidden]) ~ :not([hidden]),
+.admin-theme-scope .divide-zinc-300 > :not([hidden]) ~ :not([hidden]),
+.admin-theme-scope .dark\:divide-zinc-700:is(.dark *) > :not([hidden]) ~ :not([hidden]),
+.admin-theme-scope .dark\:divide-zinc-800:is(.dark *) > :not([hidden]) ~ :not([hidden]) {
+  border-color: color-mix(in srgb, var(--gold-accent) 12%, #6b7280) !important;
+}
+
+.admin-theme-scope .ring-zinc-100,
+.admin-theme-scope .ring-zinc-200,
+.admin-theme-scope .ring-zinc-300,
+.admin-theme-scope .ring-black\/5,
+.admin-theme-scope .ring-black\/10,
+.admin-theme-scope .dark\:ring-zinc-700:is(.dark *),
+.admin-theme-scope .dark\:ring-zinc-800:is(.dark *) {
+  --tw-ring-color: color-mix(in srgb, var(--gold-accent) 12%, #6b7280) !important;
+}
+
+/* Catch-all for arbitrary divide utilities used in admin grids. */
+.admin-theme-scope [class*="divide-"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: color-mix(in srgb, var(--gold-accent) 12%, #6b7280) !important;
 }
 
 /* Mobile / future native shell: respect safe areas (maps to React Native SafeAreaView). */

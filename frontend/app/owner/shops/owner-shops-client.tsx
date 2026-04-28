@@ -59,13 +59,13 @@ function Body({ token }: { token: string }) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900 dark:text-white">Branches</h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Locations tied to your account.</p>
+          <h1 className="text-xl font-semibold text-zinc-800 dark:text-white">Branches</h1>
+          <p className="text-sm text-zinc-800 dark:text-zinc-400">Locations tied to your account.</p>
         </div>
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+          className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
         >
           <Plus className="h-4 w-4" />
           Add branch
@@ -74,8 +74,8 @@ function Body({ token }: { token: string }) {
 
       {open ? (
         <form onSubmit={submit} className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">New branch</h2>
-          <label className="mt-3 block text-xs font-medium text-zinc-500">
+          <h2 className="text-sm font-semibold text-zinc-800 dark:text-white">New branch</h2>
+          <label className="mt-3 block text-xs font-medium text-zinc-800">
             Name
             <input
               value={name}
@@ -84,7 +84,7 @@ function Body({ token }: { token: string }) {
               className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
             />
           </label>
-          <label className="mt-3 block text-xs font-medium text-zinc-500">
+          <label className="mt-3 block text-xs font-medium text-zinc-800">
             Slug (lowercase, hyphens)
             <input
               value={slug}
@@ -96,7 +96,7 @@ function Body({ token }: { token: string }) {
           </label>
           <button
             type="submit"
-            className="mt-4 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+            className="mt-4 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
           >
             Create
           </button>
@@ -116,12 +116,12 @@ function Body({ token }: { token: string }) {
               key={b.id}
               className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"
             >
-              <p className="font-semibold text-zinc-900 dark:text-white">{b.name}</p>
-              <p className="text-sm text-zinc-500">{b.slug}</p>
+              <p className="font-semibold text-zinc-800 dark:text-white">{b.name}</p>
+              <p className="text-sm text-zinc-800">{b.slug}</p>
               {b.parent_shop_id ? (
-                <p className="mt-2 text-xs text-zinc-500">Branch of #{b.parent_shop_id}</p>
+                <p className="mt-2 text-xs text-zinc-800">Branch of #{b.parent_shop_id}</p>
               ) : (
-                <p className="mt-2 text-xs text-zinc-500">Primary location</p>
+                <p className="mt-2 text-xs text-zinc-800">Primary location</p>
               )}
             </li>
           ))}

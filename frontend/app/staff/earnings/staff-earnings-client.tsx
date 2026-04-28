@@ -109,15 +109,15 @@ export function StaffEarningsClient() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">Earnings</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Commission from completed appointments in the selected range.</p>
+        <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">Earnings</h1>
+        <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">Commission from completed appointments in the selected range.</p>
       </div>
 
       <Card className="border-zinc-200/80 dark:border-zinc-800">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold">Commission rate</CardTitle>
         </CardHeader>
-        <CardContent className="text-2xl font-bold text-zinc-900 dark:text-white">
+        <CardContent className="text-2xl font-bold text-zinc-800 dark:text-white">
           {data.commission_percent != null && String(data.commission_percent) !== "" ? `${data.commission_percent}%` : "—"}
         </CardContent>
       </Card>
@@ -160,7 +160,7 @@ export function StaffEarningsClient() {
         </CardHeader>
         <CardContent className="h-64 w-full">
           {chartData.length === 0 ? (
-            <p className="text-sm text-zinc-500">No completed bookings in this range.</p>
+            <p className="text-sm text-zinc-800">No completed bookings in this range.</p>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
@@ -180,10 +180,10 @@ export function StaffEarningsClient() {
 
       <div>
         <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">Breakdown</h2>
-        <p className="text-xs text-zinc-500">Range total: {formatMoneyCents(data.range.total_commission_cents)}</p>
+        <p className="text-xs text-zinc-800">Range total: {formatMoneyCents(data.range.total_commission_cents)}</p>
         <ul className="mt-3 space-y-2">
           {data.breakdown.length === 0 ? (
-            <li className="text-sm text-zinc-500">No rows.</li>
+            <li className="text-sm text-zinc-800">No rows.</li>
           ) : (
             data.breakdown.map((b) => (
               <li
@@ -191,14 +191,14 @@ export function StaffEarningsClient() {
                 className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-100 px-3 py-2 text-sm dark:border-zinc-800"
               >
                 <div>
-                  <p className="font-medium text-zinc-900 dark:text-white">{b.customer_name}</p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="font-medium text-zinc-800 dark:text-white">{b.customer_name}</p>
+                  <p className="text-xs text-zinc-800">
                     {formatStaffDate(b.starts_at)} · {b.service_name ?? "Service"}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-zinc-900 dark:text-white">{formatMoneyCents(b.commission_cents)}</p>
-                  <p className="text-[10px] uppercase text-zinc-500">{b.commission_status}</p>
+                  <p className="font-semibold text-zinc-800 dark:text-white">{formatMoneyCents(b.commission_cents)}</p>
+                  <p className="text-[10px] uppercase text-zinc-800">{b.commission_status}</p>
                 </div>
               </li>
             ))

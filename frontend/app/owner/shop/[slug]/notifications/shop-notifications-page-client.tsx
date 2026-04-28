@@ -110,14 +110,14 @@ function Body({ accessToken }: { accessToken: string }) {
       ) : null}
 
       <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-        <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Reminder timing</h2>
+        <h2 className="text-base font-semibold text-zinc-800 dark:text-white">Reminder timing</h2>
         <div className="mt-4">
           <Label htmlFor="rh">Hours before appointment</Label>
           <Input id="rh" type="number" className="mt-1 max-w-xs" disabled={!canEdit} {...form.register("reminder_hours_before")} />
         </div>
         <div className="mt-6 space-y-4">
           <div className="flex items-center justify-between gap-4 rounded-xl border border-zinc-100 px-3 py-3 dark:border-zinc-800">
-            <p className="text-sm font-medium text-zinc-900 dark:text-white">SMS reminders</p>
+            <p className="text-sm font-medium text-zinc-800 dark:text-white">SMS reminders</p>
             <Switch
               checked={form.watch("sms_enabled")}
               onCheckedChange={(v) => form.setValue("sms_enabled", v)}
@@ -125,7 +125,7 @@ function Body({ accessToken }: { accessToken: string }) {
             />
           </div>
           <div className="flex items-center justify-between gap-4 rounded-xl border border-zinc-100 px-3 py-3 dark:border-zinc-800">
-            <p className="text-sm font-medium text-zinc-900 dark:text-white">Email reminders</p>
+            <p className="text-sm font-medium text-zinc-800 dark:text-white">Email reminders</p>
             <Switch
               checked={form.watch("email_enabled")}
               onCheckedChange={(v) => form.setValue("email_enabled", v)}
@@ -133,7 +133,7 @@ function Body({ accessToken }: { accessToken: string }) {
             />
           </div>
           <div className="flex items-center justify-between gap-4 rounded-xl border border-zinc-100 px-3 py-3 dark:border-zinc-800">
-            <p className="text-sm font-medium text-zinc-900 dark:text-white">WhatsApp reminders</p>
+            <p className="text-sm font-medium text-zinc-800 dark:text-white">WhatsApp reminders</p>
             <Switch
               checked={form.watch("whatsapp_enabled")}
               onCheckedChange={(v) => form.setValue("whatsapp_enabled", v)}
@@ -144,8 +144,8 @@ function Body({ accessToken }: { accessToken: string }) {
       </section>
 
       <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-        <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Message templates</h2>
-        <p className="mt-1 text-xs text-zinc-500">Plain text for now; wire to your SMS/email provider in production.</p>
+        <h2 className="text-base font-semibold text-zinc-800 dark:text-white">Message templates</h2>
+        <p className="mt-1 text-xs text-zinc-800">Plain text for now; wire to your SMS/email provider in production.</p>
         <div className="mt-4 space-y-4">
           <div>
             <Label>Booking confirmation</Label>

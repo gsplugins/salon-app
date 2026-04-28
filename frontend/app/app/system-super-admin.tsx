@@ -271,8 +271,8 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
   return (
     <div className="mt-10 space-y-6 border-t border-rose-100/80 pt-10 dark:border-zinc-800">
       <div>
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Master admin</h2>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <h2 className="text-lg font-semibold text-zinc-800 dark:text-white">Master admin</h2>
+        <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">
           Central control for salons, subscriptions, bKash payment records, and account security.
         </p>
       </div>
@@ -283,8 +283,8 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
           onClick={() => setTab("salons")}
           className={`rounded-full px-4 py-1.5 text-sm font-medium ${
             tab === "salons"
-              ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
-              : "border border-zinc-200 text-zinc-600 dark:border-zinc-700 dark:text-zinc-300"
+              ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-800"
+              : "border border-zinc-200 text-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
           }`}
         >
           Salons & users
@@ -294,8 +294,8 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
           onClick={() => setTab("bkash")}
           className={`rounded-full px-4 py-1.5 text-sm font-medium ${
             tab === "bkash"
-              ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
-              : "border border-zinc-200 text-zinc-600 dark:border-zinc-700 dark:text-zinc-300"
+              ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-800"
+              : "border border-zinc-200 text-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
           }`}
         >
           bKash payments
@@ -329,8 +329,8 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                   }}
                   className={`rounded-full px-3 py-1 text-xs font-medium ${
                     filter === f.id
-                      ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
-                      : "border border-zinc-200 text-zinc-600 dark:border-zinc-700 dark:text-zinc-300"
+                      ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-800"
+                      : "border border-zinc-200 text-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
                   }`}
                 >
                   {f.label}
@@ -357,7 +357,7 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                   setSearch(searchDraft);
                   setPage(1);
                 }}
-                className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
               >
                 Search
               </button>
@@ -366,7 +366,7 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
 
           <div className="overflow-x-auto rounded-2xl border border-rose-100/80 bg-white dark:border-zinc-800 dark:bg-zinc-900/40">
             <table className="w-full min-w-[1180px] text-left text-sm">
-              <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950/80">
+              <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-800 dark:border-zinc-800 dark:bg-zinc-950/80">
                 <tr>
                   <th className="px-3 py-2">Salon</th>
                   <th className="px-3 py-2">Registered</th>
@@ -382,17 +382,17 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                   <tr key={s.id} className="border-b border-zinc-100 dark:border-zinc-800">
                     <td className="px-3 py-2">
                       <div className="font-medium">{s.name}</div>
-                      <code className="text-xs text-zinc-500">/s/{s.slug}/book</code>
-                      <div className="text-xs text-zinc-500">
+                      <code className="text-xs text-zinc-800">/s/{s.slug}/book</code>
+                      <div className="text-xs text-zinc-800">
                         {s.is_active ? "Shop on" : "Shop off"} · {approvalBadge(s.approval_status)}
                       </div>
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-zinc-600">{formatWhen(s.created_at)}</td>
+                    <td className="px-3 py-2 whitespace-nowrap text-zinc-800">{formatWhen(s.created_at)}</td>
                     <td className="px-3 py-2">
                       {s.owner ? (
                         <>
                           <div className="font-medium">{s.owner.name}</div>
-                          <div className="font-mono text-xs text-zinc-500">{s.owner.mobile}</div>
+                          <div className="font-mono text-xs text-zinc-800">{s.owner.mobile}</div>
                           {s.owner.is_locked ? (
                             <span className="text-xs font-semibold text-amber-800 dark:text-amber-200">Locked</span>
                           ) : null}
@@ -401,13 +401,13 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                         "—"
                       )}
                     </td>
-                    <td className="max-w-[280px] px-3 py-2 text-xs text-zinc-600">{subLabel(s)}</td>
-                    <td className="px-3 py-2 text-xs text-zinc-600">
+                    <td className="max-w-[280px] px-3 py-2 text-xs text-zinc-800">{subLabel(s)}</td>
+                    <td className="px-3 py-2 text-xs text-zinc-800">
                       <div>Total: {formatBdtPaisa(s.payment_summary?.total_paid_paisa ?? 0)}</div>
                       <div>Count: {s.payment_summary?.payments_count ?? 0}</div>
                       <div>Last: {formatWhen(s.payment_summary?.last_payment_at ?? undefined)}</div>
                     </td>
-                    <td className="px-3 py-2 text-xs text-zinc-600">
+                    <td className="px-3 py-2 text-xs text-zinc-800">
                       Staff limit: {s.staff_limit ?? 30}
                     </td>
                     <td className="px-3 py-2 text-right">
@@ -490,7 +490,7 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                 ))}
                 {rows.length === 0 && !busy && (
                   <tr>
-                    <td colSpan={7} className="px-3 py-6 text-center text-zinc-500">
+                    <td colSpan={7} className="px-3 py-6 text-center text-zinc-800">
                       No salons match this filter.
                     </td>
                   </tr>
@@ -501,7 +501,7 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
 
           {shopPage && shopPage.last_page > 1 ? (
             <div className="flex items-center justify-between gap-2 text-sm">
-              <span className="text-zinc-500">
+              <span className="text-zinc-800">
                 Page {shopPage.current_page} of {shopPage.last_page} ({shopPage.total} total)
               </span>
               <div className="flex gap-2">
@@ -529,15 +529,15 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
 
       {tab === "bkash" && (
         <>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm text-zinc-800 dark:text-zinc-400">
             Ledger of bKash payments (manual entry for now; connect webhooks in production). Amounts are stored in{" "}
             <strong>paisa</strong> (৳1 = 100 paisa).
           </p>
 
           <div className="rounded-2xl border border-rose-100/80 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
-            <h3 className="text-base font-semibold text-zinc-900 dark:text-white">Record payment</h3>
+            <h3 className="text-base font-semibold text-zinc-800 dark:text-white">Record payment</h3>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <label className="text-xs font-medium text-zinc-500">
+              <label className="text-xs font-medium text-zinc-800">
                 Shop ID
                 <input
                   className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -546,7 +546,7 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                   inputMode="numeric"
                 />
               </label>
-              <label className="text-xs font-medium text-zinc-500">
+              <label className="text-xs font-medium text-zinc-800">
                 Amount (paisa)
                 <input
                   className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -556,7 +556,7 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                   placeholder="150000"
                 />
               </label>
-              <label className="text-xs font-medium text-zinc-500">
+              <label className="text-xs font-medium text-zinc-800">
                 Trx ID (optional)
                 <input
                   className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -564,7 +564,7 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                   onChange={(e) => setBkashTrx(e.target.value)}
                 />
               </label>
-              <label className="text-xs font-medium text-zinc-500 sm:col-span-2 lg:col-span-4">
+              <label className="text-xs font-medium text-zinc-800 sm:col-span-2 lg:col-span-4">
                 Note (optional)
                 <input
                   className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -577,7 +577,7 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
               type="button"
               disabled={busy}
               onClick={() => void submitBkash()}
-              className="mt-4 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+              className="mt-4 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
             >
               Save payment
             </button>
@@ -585,7 +585,7 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
 
           <div className="overflow-x-auto rounded-2xl border border-rose-100/80 bg-white dark:border-zinc-800 dark:bg-zinc-900/40">
             <table className="w-full min-w-[720px] text-left text-sm">
-              <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950/80">
+              <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-800 dark:border-zinc-800 dark:bg-zinc-950/80">
                 <tr>
                   <th className="px-3 py-2">When</th>
                   <th className="px-3 py-2">Shop</th>
@@ -602,20 +602,20 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                       {p.shop ? (
                         <>
                           <div className="font-medium">{p.shop.name}</div>
-                          <div className="text-xs text-zinc-500">#{p.shop_id}</div>
+                          <div className="text-xs text-zinc-800">#{p.shop_id}</div>
                         </>
                       ) : (
                         `#${p.shop_id}`
                       )}
                     </td>
                     <td className="px-3 py-2">{formatBdtPaisa(p.amount_paisa)}</td>
-                    <td className="font-mono text-xs text-zinc-500">{p.trx_id ?? "—"}</td>
+                    <td className="font-mono text-xs text-zinc-800">{p.trx_id ?? "—"}</td>
                     <td className="px-3 py-2 capitalize">{p.status}</td>
                   </tr>
                 ))}
                 {bkashRows.length === 0 && !busy && (
                   <tr>
-                    <td colSpan={5} className="px-3 py-6 text-center text-zinc-500">
+                    <td colSpan={5} className="px-3 py-6 text-center text-zinc-800">
                       No bKash payments recorded yet.
                     </td>
                   </tr>
@@ -626,7 +626,7 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
 
           {bkashPage && bkashPage.last_page > 1 ? (
             <div className="flex items-center justify-between gap-2 text-sm">
-              <span className="text-zinc-500">
+              <span className="text-zinc-800">
                 Page {bkashPage.current_page} of {bkashPage.last_page}
               </span>
               <div className="flex gap-2">
@@ -655,9 +655,9 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
       {extendRow ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900">
-            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Extend subscription</h3>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{extendRow.name}</p>
-            <label className="mt-4 block text-xs font-medium text-zinc-500">
+            <h3 className="text-lg font-semibold text-zinc-800 dark:text-white">Extend subscription</h3>
+            <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">{extendRow.name}</p>
+            <label className="mt-4 block text-xs font-medium text-zinc-800">
               Days to add
               <input
                 type="number"
@@ -667,7 +667,7 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                 onChange={(e) => setExtendDays(e.target.value)}
               />
             </label>
-            <p className="mt-2 text-xs text-zinc-500">
+            <p className="mt-2 text-xs text-zinc-800">
               Extends from the current period end (or from today if already lapsed). Reactivates past-due or
               cancelled subscriptions.
             </p>
@@ -683,7 +683,7 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                 type="button"
                 disabled={busy}
                 onClick={() => void submitExtend()}
-                className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
               >
                 Apply
               </button>
@@ -695,9 +695,9 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
       {resetTarget ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900">
-            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Reset password</h3>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{resetTarget.label}</p>
-            <label className="mt-4 block text-xs font-medium text-zinc-500">
+            <h3 className="text-lg font-semibold text-zinc-800 dark:text-white">Reset password</h3>
+            <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">{resetTarget.label}</p>
+            <label className="mt-4 block text-xs font-medium text-zinc-800">
               New password (min 8 characters)
               <input
                 type="password"
@@ -719,7 +719,7 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                 type="button"
                 disabled={busy}
                 onClick={() => void submitReset()}
-                className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
               >
                 Save
               </button>
@@ -731,10 +731,10 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
       {editShop ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900">
-            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Edit shop</h3>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">#{editShop.id}</p>
+            <h3 className="text-lg font-semibold text-zinc-800 dark:text-white">Edit shop</h3>
+            <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">#{editShop.id}</p>
             <div className="mt-4 grid gap-3">
-              <label className="text-xs font-medium text-zinc-500">
+              <label className="text-xs font-medium text-zinc-800">
                 Name
                 <input
                   className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -742,7 +742,7 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                   onChange={(e) => setEditName(e.target.value)}
                 />
               </label>
-              <label className="text-xs font-medium text-zinc-500">
+              <label className="text-xs font-medium text-zinc-800">
                 Slug
                 <input
                   className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -750,7 +750,7 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                   onChange={(e) => setEditSlug(e.target.value)}
                 />
               </label>
-              <label className="text-xs font-medium text-zinc-500">
+              <label className="text-xs font-medium text-zinc-800">
                 Staff limit
                 <input
                   type="number"
@@ -760,7 +760,7 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                   onChange={(e) => setEditStaffLimit(e.target.value)}
                 />
               </label>
-              <label className="text-xs font-medium text-zinc-500">
+              <label className="text-xs font-medium text-zinc-800">
                 Approval status
                 <select
                   className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -785,7 +785,7 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
                 type="button"
                 disabled={busy}
                 onClick={() => void submitEditShop()}
-                className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
               >
                 Save
               </button>

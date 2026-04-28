@@ -4,7 +4,10 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { Calendar, Search, Sparkles } from "lucide-react";
 import { FeaturedShopsSection } from "@/components/marketing/featured-shops-section";
+import { HomeShopsMapSection } from "@/components/marketing/home-shops-map-section";
 import { PublicHeader } from "@/components/public-header";
+import { serverFetchJson } from "@/lib/server-api";
+import type { Paginated, PublicShopListRow } from "@/lib/salon-api";
 
 function normalizeApiBase(raw: string): string {
   const trimmed = raw.trim().replace(/\/$/, "");
@@ -103,14 +106,25 @@ const services = [
 
 export default async function Home() {
   const status = await fetchBackendJson();
+  const shopsRaw = await serverFetchJson<Paginated<PublicShopListRow>>("/public/shops?per_page=60");
+  const mapShops = (shopsRaw?.data ?? []).map((s) => ({
+    id: s.id,
+    name: s.name,
+    latitude: s.latitude ?? null,
+    longitude: s.longitude ?? null,
+    address: s.address ?? null,
+    google_maps_url: s.google_maps_url ?? null,
+    city: s.city ?? null,
+    district: s.district ?? null,
+  }));
 
   return (
-    <div className="min-h-screen text-slate-100">
+    <div className="min-h-screen text-[color:var(--foreground)]">
       <PublicHeader showMarketingNav />
 
       <main>
         <section
-          className="relative overflow-hidden border-b border-slate-800 bg-[#0d0d0d]"
+          className="relative overflow-hidden border-b border-[color:var(--border)] bg-[color:var(--background)]"
           aria-labelledby="hero-heading"
         >
           <div
@@ -118,16 +132,16 @@ export default async function Home() {
             aria-hidden
           />
           <div className="relative mx-auto max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-blue-300">
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-[color:var(--brand-primary)]">
               Barbershop · Beard · Grooming
             </p>
             <h1
               id="hero-heading"
-              className="mt-4 max-w-2xl text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl"
+              className="mt-4 max-w-2xl text-4xl font-semibold leading-tight tracking-tight text-[color:var(--foreground)] sm:text-5xl"
             >
               Discover nearby barbershops and book instantly.
             </h1>
-            <p className="mt-5 max-w-xl text-lg leading-relaxed text-slate-300">
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-[color:var(--paragraph)]">
               Compare registered local shops, see services and team profiles, then reserve your best time slot in minutes.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
@@ -139,7 +153,7 @@ export default async function Home() {
               </Link>
               <a
                 href="#services"
-                className="inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-900 px-6 py-3 text-sm font-semibold text-slate-200 backdrop-blur hover:border-blue-400"
+                className="inline-flex items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-6 py-3 text-sm font-semibold text-[color:var(--foreground)] backdrop-blur hover:border-blue-400"
               >
                 How booking works
               </a>
@@ -148,19 +162,20 @@ export default async function Home() {
         </section>
 
         <FeaturedShopsSection />
+        <HomeShopsMapSection shops={mapShops} />
 
         <section
-          className="border-y border-slate-800 bg-[#111111]"
+          className="border-y border-[color:var(--border)] bg-[color:var(--surface-elevated)]"
           aria-labelledby="how-heading"
         >
           <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
             <h2
               id="how-heading"
-              className="text-2xl font-semibold tracking-tight text-white"
+              className="text-2xl font-semibold tracking-tight text-[color:var(--foreground)]"
             >
               How it works
             </h2>
-            <p className="mt-2 max-w-2xl text-sm text-slate-300">
+            <p className="mt-2 max-w-2xl text-sm text-[color:var(--paragraph)]">
               Search by area, pick a trusted barber shop, and confirm your booking with your phone number.
             </p>
             <ol className="mt-10 grid gap-6 md:grid-cols-3">
@@ -188,14 +203,14 @@ export default async function Home() {
                   key={step}
                   className="card-clean p-6"
                 >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/20 text-blue-200">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color:color-mix(in srgb, var(--brand-primary) 16%, transparent)] text-[color:var(--brand-primary)]">
                     <Icon className="h-5 w-5" strokeWidth={1.75} />
                   </div>
-                  <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-blue-200/90">
+                  <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-[color:var(--caption)]">
                     Step {step}
                   </p>
-                  <h3 className="mt-1 text-lg font-semibold text-white">{title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-300">{text}</p>
+                  <h3 className="mt-1 text-lg font-semibold text-[color:var(--foreground)]">{title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[color:var(--paragraph)]">{text}</p>
                 </li>
               ))}
             </ol>
@@ -208,7 +223,7 @@ export default async function Home() {
               </Link>
               <Link
                 href="/app/auth?tab=login"
-                className="inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-900 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-blue-400"
+                className="inline-flex items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-6 py-3 text-sm font-semibold text-[color:var(--foreground)] hover:border-blue-400"
               >
                 Customer sign-in
               </Link>
@@ -224,11 +239,11 @@ export default async function Home() {
           <div className="max-w-2xl">
             <h2
               id="services-heading"
-              className="text-2xl font-semibold tracking-tight text-white"
+              className="text-2xl font-semibold tracking-tight text-[color:var(--foreground)]"
             >
               Popular barbershop services
             </h2>
-            <p className="mt-2 text-slate-300">
+            <p className="mt-2 text-[color:var(--paragraph)]">
               Services and pricing are shown per shop, so you can compare before booking.
             </p>
           </div>
@@ -238,10 +253,10 @@ export default async function Home() {
                 key={s.title}
                 className="card-clean p-6"
               >
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-lg font-semibold text-[color:var(--foreground)]">
                   {s.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                <p className="mt-2 text-sm leading-relaxed text-[color:var(--paragraph)]">
                   {s.blurb}
                 </p>
               </li>
@@ -251,32 +266,32 @@ export default async function Home() {
 
         <section
           id="visit"
-          className="border-y border-slate-800 bg-[#111111]"
+          className="border-y border-[color:var(--border)] bg-[color:var(--surface-elevated)]"
         >
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:grid-cols-2 sm:px-6 sm:py-20">
             <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-white">
+              <h2 className="text-2xl font-semibold tracking-tight text-[color:var(--foreground)]">
                 Find shops near you
               </h2>
-              <p className="mt-3 text-slate-300">
+              <p className="mt-3 text-[color:var(--paragraph)]">
                 Use the shop directory with division, district, and city filters.
                 <br />
                 Pick your nearest location and book directly.
               </p>
-              <p className="mt-4 text-sm text-slate-400">
+              <p className="mt-4 text-sm text-[color:var(--caption)]">
                 Each shop page includes address, map, services, team, and customer reviews.
               </p>
             </div>
-            <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-blue-300/90">
+            <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-[color:var(--brand-primary)]">
                 Quick start
               </h3>
-              <dl className="mt-3 space-y-2 text-sm text-slate-300">
-                <div className="flex justify-between gap-8 border-b border-slate-800 pb-2">
+              <dl className="mt-3 space-y-2 text-sm text-[color:var(--paragraph)]">
+                <div className="flex justify-between gap-8 border-b border-[color:var(--border)] pb-2">
                   <dt>Step 1</dt>
                   <dd>Search nearest shop</dd>
                 </div>
-                <div className="flex justify-between gap-8 border-b border-slate-800 pb-2">
+                <div className="flex justify-between gap-8 border-b border-[color:var(--border)] pb-2">
                   <dt>Step 2</dt>
                   <dd>Select service + barber</dd>
                 </div>
@@ -360,7 +375,7 @@ export default async function Home() {
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
                 href="/book"
-                className="inline-flex w-full max-w-xs items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-zinc-900 hover:bg-amber-50 sm:w-auto"
+                className="inline-flex w-full max-w-xs items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-zinc-800 hover:bg-amber-50 sm:w-auto"
               >
                 Book online
               </Link>
@@ -381,10 +396,10 @@ export default async function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-slate-800 bg-[#111111]">
+      <footer className="border-t border-[color:var(--border)] bg-[color:var(--surface-elevated)]">
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-[color:var(--paragraph)]">
               © {new Date().getFullYear()} BarbarShop. All rights reserved.
             </p>
             <div
@@ -405,11 +420,11 @@ export default async function Home() {
               ) : (
                 <span title={status.error}>
                   API: offline — start the API (`backend-supabase`) or check{" "}
-                  <code className="rounded bg-black/5 px-1 dark:bg-white/10">
+                  <code className="rounded bg-[color:var(--surface)] px-1">
                     BACKEND_URL
                   </code>{" "}
                   /{" "}
-                  <code className="rounded bg-black/5 px-1 dark:bg-white/10">
+                  <code className="rounded bg-[color:var(--surface)] px-1">
                     NEXT_PUBLIC_API_URL
                   </code>
                 </span>

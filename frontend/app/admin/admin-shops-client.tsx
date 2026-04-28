@@ -160,7 +160,7 @@ function Body({ token }: { token: string }) {
       subtitle="Filter by plan and registration window, assign catalog plans, open the manager workspace, or suspend and delete tenants."
     >
       <div className="space-y-6">
-        <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/80 bg-white/80 p-4 sm:p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
+        <div className="flex flex-col gap-4 rounded-2xl border border-[color:var(--border)] bg-white/80 p-4 sm:p-5 dark:bg-zinc-900/40">
           <div className="flex flex-wrap gap-2">
             {FILTERS.map((f) => (
               <button
@@ -173,8 +173,8 @@ function Body({ token }: { token: string }) {
                 }}
                 className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
                   filter === f.id
-                    ? "bg-zinc-900 text-white shadow dark:bg-rose-100 dark:text-zinc-900"
-                    : "border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-300"
+                    ? "bg-zinc-900 text-white shadow dark:bg-rose-100 dark:text-zinc-800"
+                    : "border border-[color:var(--border)] bg-white text-zinc-800 hover:border-[color:var(--brand-primary)] dark:bg-zinc-900/40 dark:text-zinc-300"
                 }`}
               >
                 {f.label}
@@ -182,11 +182,11 @@ function Body({ token }: { token: string }) {
             ))}
           </div>
           <div className="grid gap-3 lg:grid-cols-2">
-            <div className="flex flex-wrap gap-2">
-              <div className="relative min-w-[200px] flex-1">
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="relative min-w-[120px] flex-1">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
                 <input
-                  className="w-full rounded-2xl border border-zinc-200 bg-white py-2.5 pl-10 pr-3 text-sm outline-none ring-zinc-400/30 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950"
+                  className="w-full rounded-2xl border border-[color:var(--border)] bg-white py-2.5 pl-10 pr-3 text-sm outline-none ring-zinc-400/30 focus:ring-2 dark:bg-zinc-950"
                   placeholder="Search name, slug, owner…"
                   value={searchDraft}
                   onChange={(e) => setSearchDraft(e.target.value)}
@@ -200,6 +200,7 @@ function Body({ token }: { token: string }) {
               </div>
               <Button
                 type="button"
+                className="h-11 rounded-2xl px-5"
                 disabled={busy}
                 onClick={() => {
                   setSearch(searchDraft);
@@ -242,7 +243,7 @@ function Body({ token }: { token: string }) {
           </div>
         </div>
 
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="text-xs text-zinc-800 dark:text-zinc-400">
           bKash ledger and bulk approvals live under{" "}
           <Link href="/admin/tools" className="font-semibold text-rose-800 underline-offset-2 hover:underline dark:text-rose-200">
             Tools (bKash)
@@ -253,15 +254,15 @@ function Body({ token }: { token: string }) {
         <ul className="grid gap-4 sm:grid-cols-2">
           {data.data.map((s) => (
             <li key={s.id}>
-              <div className="flex h-full flex-col rounded-3xl border border-zinc-200/90 bg-white p-5 shadow-sm transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-zinc-600">
+              <div className="flex h-full flex-col rounded-3xl border border-[color:var(--border)] bg-white p-5 shadow-sm transition hover:border-[color:var(--brand-primary)] hover:shadow-md dark:bg-zinc-900/50">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-100 to-zinc-100 text-rose-800 dark:from-rose-950 dark:to-zinc-900 dark:text-rose-200">
                     <Store className="h-5 w-5" aria-hidden />
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate font-semibold text-zinc-900 dark:text-white">{s.name}</p>
-                    <p className="font-mono text-xs text-zinc-500">/{s.slug}</p>
+                    <p className="truncate font-semibold text-zinc-800 dark:text-white">{s.name}</p>
+                    <p className="font-mono text-xs text-zinc-800">/{s.slug}</p>
                   </div>
                 </div>
                 <span
@@ -275,7 +276,7 @@ function Body({ token }: { token: string }) {
                 </span>
               </div>
 
-              <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-medium text-zinc-600 dark:text-zinc-400">
+              <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-medium text-zinc-800 dark:text-zinc-400">
                 <span className="rounded-md bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">{approvalLabel(s.approval_status)}</span>
                 <span className="rounded-md bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">Since {formatWhen(s.created_at)}</span>
                 {s.subscription ? (
@@ -295,7 +296,7 @@ function Body({ token }: { token: string }) {
                 <button
                   type="button"
                   onClick={() => openSalonDashboard(s)}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition active:scale-[0.99] dark:bg-rose-100 dark:text-zinc-900"
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition active:scale-[0.99] dark:bg-rose-100 dark:text-zinc-800"
                 >
                   Open salon
                   <ExternalLink className="h-4 w-4 opacity-80" aria-hidden />
@@ -315,7 +316,7 @@ function Body({ token }: { token: string }) {
                 <button
                   type="button"
                   onClick={() => void toggleActive(s)}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-zinc-200 px-3 py-2.5 text-sm font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800/80"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-[color:var(--border)] px-3 py-2.5 text-sm font-medium text-zinc-800 hover:bg-zinc-50 dark:text-zinc-100 dark:hover:bg-zinc-800/80"
                   title={s.is_active ? "Suspend salon" : "Activate salon"}
                 >
                   {s.is_active ? (
@@ -341,14 +342,14 @@ function Body({ token }: { token: string }) {
         </ul>
 
         {data.data.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-zinc-200 py-12 text-center text-sm text-zinc-500 dark:border-zinc-700">
+          <p className="rounded-2xl border border-dashed border-[color:var(--border)] py-12 text-center text-sm text-zinc-800">
             No salons match this filter.
           </p>
         ) : null}
 
         {data.last_page > 1 ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-100 pt-6 text-sm dark:border-zinc-800">
-            <span className="text-zinc-500">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--border)] pt-6 text-sm">
+            <span className="text-zinc-800">
               Page {data.current_page} of {data.last_page} · {data.total} salons
             </span>
             <div className="flex gap-2">
@@ -356,7 +357,7 @@ function Body({ token }: { token: string }) {
                 type="button"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-medium disabled:opacity-40 dark:border-zinc-600"
+                className="rounded-xl border border-[color:var(--border)] px-4 py-2 text-sm font-medium disabled:opacity-40"
               >
                 Previous
               </button>
@@ -364,7 +365,7 @@ function Body({ token }: { token: string }) {
                 type="button"
                 disabled={page >= data.last_page}
                 onClick={() => setPage((p) => p + 1)}
-                className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-medium disabled:opacity-40 dark:border-zinc-600"
+                className="rounded-xl border border-[color:var(--border)] px-4 py-2 text-sm font-medium disabled:opacity-40"
               >
                 Next
               </button>
@@ -405,7 +406,7 @@ function Body({ token }: { token: string }) {
           <div className="grid gap-2">
             <Label>Plan</Label>
             <select
-              className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+              className="h-10 w-full rounded-xl border border-[color:var(--border)] bg-white px-3 text-sm dark:bg-zinc-950"
               value={assignPlanId}
               onChange={(e) => setAssignPlanId(e.target.value)}
             >

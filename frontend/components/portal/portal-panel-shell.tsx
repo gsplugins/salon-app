@@ -51,18 +51,18 @@ export function PortalPanelShell(props: {
   const drawerItems = [...props.primaryNav, ...secondary];
 
   return (
-    <div className="min-h-[100dvh] bg-[#f8f7f4] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+    <div className="min-h-[100dvh] bg-[color:var(--background)] text-[color:var(--foreground)]">
       <div className="mx-auto flex w-full max-w-6xl lg:max-w-none">
-        <aside className="sticky top-0 hidden h-[100dvh] w-56 shrink-0 flex-col border-r border-zinc-300/90 bg-white px-3 py-4 dark:border-zinc-700 dark:bg-zinc-950/95 lg:flex">
+        <aside className="sticky top-0 hidden h-[100dvh] w-56 shrink-0 flex-col border-r border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-4 lg:flex">
           <div className="mb-4 px-2">
             <Link
               href={props.brandHref}
-              className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-800 dark:text-rose-200"
+              className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--brand-primary)]"
             >
               {props.brandLabel}
             </Link>
             {props.sidebarContextLine ? (
-              <p className="mt-1 truncate text-sm font-semibold text-zinc-900 dark:text-white">{props.sidebarContextLine}</p>
+              <p className="mt-1 truncate text-sm font-semibold text-[color:var(--foreground)]">{props.sidebarContextLine}</p>
             ) : null}
           </div>
           <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
@@ -71,7 +71,7 @@ export function PortalPanelShell(props: {
             ))}
             {secondary.length > 0 ? (
               <>
-                <div className="my-2 border-t border-zinc-300/80 pt-2 dark:border-zinc-700" />
+                <div className="my-2 border-t border-[color:var(--border)] pt-2" />
                 {secondary.map((item) => (
                   <PortalNavLink key={item.href} {...item} pathname={pathname} />
                 ))}
@@ -81,7 +81,7 @@ export function PortalPanelShell(props: {
           {props.footerLink ? (
             <Link
               href={props.footerLink.href}
-              className="mt-3 rounded-xl px-3 py-2 text-xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+              className="mt-3 rounded-xl px-3 py-2 text-xs font-medium text-[color:var(--paragraph)] transition hover:text-[color:var(--brand-primary)]"
             >
               {props.footerLink.label}
             </Link>
@@ -89,7 +89,7 @@ export function PortalPanelShell(props: {
           {props.footerLink2 ? (
             <Link
               href={props.footerLink2.href}
-              className="mt-1 rounded-xl px-3 py-2 text-xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+              className="mt-1 rounded-xl px-3 py-2 text-xs font-medium text-[color:var(--paragraph)] transition hover:text-[color:var(--brand-primary)]"
             >
               {props.footerLink2.label}
             </Link>
@@ -97,7 +97,7 @@ export function PortalPanelShell(props: {
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col pb-24 lg:pb-6">
-          <header className="sticky top-0 z-30 border-b border-zinc-300/90 bg-[#f8f7f4] px-4 py-3 dark:border-zinc-700 dark:bg-zinc-950/95">
+          <header className="sticky top-0 z-30 border-b border-[color:var(--border)] bg-[color:var(--background)] px-4 py-3 backdrop-blur-sm">
             <div className="flex items-center gap-3">
               <Button
                 type="button"
@@ -119,20 +119,20 @@ export function PortalPanelShell(props: {
                   </>
                 ) : (
                   <>
-                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border border-zinc-300/90 bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800">
+                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border border-[color:var(--border)] bg-[color:var(--surface-elevated)]">
                       {props.header.avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element -- portal avatars may be external URLs
                         <img src={props.header.avatarUrl} alt="" className="h-full w-full object-cover" />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-zinc-500">
+                        <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-[color:var(--foreground)]">
                           {props.header.avatarFallback}
                         </div>
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-zinc-900 dark:text-white">{props.header.title}</p>
+                      <p className="truncate text-sm font-semibold text-[color:var(--foreground)]">{props.header.title}</p>
                       {props.header.subtitle ? (
-                        <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">{props.header.subtitle}</p>
+                        <p className="truncate text-xs text-[color:var(--paragraph)]">{props.header.subtitle}</p>
                       ) : null}
                     </div>
                     {props.header.badge ? (
@@ -152,8 +152,8 @@ export function PortalPanelShell(props: {
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
           <button type="button" className="absolute inset-0 bg-black/40" aria-label="Close menu" onClick={() => setMobileOpen(false)} />
-          <div className="absolute left-0 top-0 flex h-full w-[min(20rem,92vw)] flex-col bg-white p-4 shadow-xl dark:bg-zinc-950">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-800 dark:text-rose-200">Menu</p>
+        <div className="absolute left-0 top-0 flex h-full w-[min(20rem,92vw)] flex-col bg-[color:var(--surface)] p-4 shadow-xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--brand-primary)]">Menu</p>
             <nav className="mt-4 flex flex-1 flex-col gap-1 overflow-y-auto">
               {drawerItems.map((item) => (
                 <PortalNavLink key={item.href} {...item} pathname={pathname} onClick={() => setMobileOpen(false)} />
@@ -162,7 +162,7 @@ export function PortalPanelShell(props: {
             {props.footerLink ? (
               <Link
                 href={props.footerLink.href}
-                className="mt-2 text-sm text-zinc-600 dark:text-zinc-400"
+                className="mt-2 text-sm text-[color:var(--paragraph)]"
                 onClick={() => setMobileOpen(false)}
               >
                 {props.footerLink.label}
@@ -171,7 +171,7 @@ export function PortalPanelShell(props: {
             {props.footerLink2 ? (
               <Link
                 href={props.footerLink2.href}
-                className="mt-1 text-sm text-zinc-600 dark:text-zinc-400"
+                className="mt-1 text-sm text-[color:var(--paragraph)]"
                 onClick={() => setMobileOpen(false)}
               >
                 {props.footerLink2.label}
@@ -181,7 +181,7 @@ export function PortalPanelShell(props: {
         </div>
       ) : null}
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-300/90 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-zinc-700 dark:bg-zinc-950/95 lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-[color:var(--border)] bg-[color:color-mix(in srgb, var(--surface) 92%, transparent)] pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
         <ul className="mx-auto flex max-w-lg items-stretch justify-between gap-0 px-1 pt-1">
           {props.primaryNav.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -192,10 +192,10 @@ export function PortalPanelShell(props: {
                   href={item.href}
                   className={cn(
                     "flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 py-1 text-[10px] font-semibold",
-                    active ? "text-rose-800 dark:text-rose-200" : "text-zinc-500 dark:text-zinc-400"
+                    active ? "text-[color:var(--brand-primary)]" : "text-[color:var(--caption)]"
                   )}
                 >
-                  <Icon className={cn("h-5 w-5 shrink-0", active ? "text-rose-800 dark:text-rose-200" : "")} />
+                  <Icon className={cn("h-5 w-5 shrink-0", active ? "text-[color:var(--brand-primary)]" : "")} />
                   <span className="truncate text-center leading-tight">{item.label}</span>
                 </Link>
               </li>
@@ -219,8 +219,8 @@ function PortalNavLink(props: PortalNavItem & { pathname: string; onClick?: () =
       className={cn(
         "flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
         active
-          ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
-          : "text-zinc-800 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          ? "bg-[color:var(--brand-primary)] text-white shadow-sm"
+          : "text-[color:var(--foreground)] hover:bg-[color:color-mix(in_srgb,var(--brand-glow)_14%,var(--surface-elevated))]"
       )}
     >
       <Icon className="h-4 w-4 shrink-0 opacity-90" />

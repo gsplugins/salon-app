@@ -118,11 +118,11 @@ function FormBody({ accessToken }: { accessToken: string }) {
       ) : null}
 
       <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-        <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Online booking</h2>
+        <h2 className="text-base font-semibold text-zinc-800 dark:text-white">Online booking</h2>
         <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-zinc-100 px-3 py-3 dark:border-zinc-800">
           <div>
-            <p className="text-sm font-medium text-zinc-900 dark:text-white">Enable public booking</p>
-            <p className="text-xs text-zinc-500">When off, customers cannot self-serve (walk-ins still allowed).</p>
+            <p className="text-sm font-medium text-zinc-800 dark:text-white">Enable public booking</p>
+            <p className="text-xs text-zinc-800">When off, customers cannot self-serve (walk-ins still allowed).</p>
           </div>
           <Switch
             checked={form.watch("online_booking_enabled")}
@@ -141,8 +141,8 @@ function FormBody({ accessToken }: { accessToken: string }) {
           </div>
           <div className="flex items-center justify-between gap-3 sm:col-span-2 rounded-xl border border-zinc-100 px-3 py-3 dark:border-zinc-800">
             <div>
-              <p className="text-sm font-medium text-zinc-900 dark:text-white">Auto-confirm new bookings</p>
-              <p className="text-xs text-zinc-500">Otherwise they stay pending until you confirm.</p>
+              <p className="text-sm font-medium text-zinc-800 dark:text-white">Auto-confirm new bookings</p>
+              <p className="text-xs text-zinc-800">Otherwise they stay pending until you confirm.</p>
             </div>
             <Switch checked={form.watch("auto_confirm")} onCheckedChange={(v) => form.setValue("auto_confirm", v)} disabled={!canEdit} />
           </div>
@@ -158,7 +158,7 @@ function FormBody({ accessToken }: { accessToken: string }) {
       </section>
 
       <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-        <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Cancellation policy</h2>
+        <h2 className="text-base font-semibold text-zinc-800 dark:text-white">Cancellation policy</h2>
         <div className="mt-4 grid gap-4">
           <div>
             <Label htmlFor="cdl">Customer cancellation deadline (hours before)</Label>
@@ -172,8 +172,8 @@ function FormBody({ accessToken }: { accessToken: string }) {
       </section>
 
       <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-        <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Booking form custom fields</h2>
-        <p className="mt-1 text-xs text-zinc-500">
+        <h2 className="text-base font-semibold text-zinc-800 dark:text-white">Booking form custom fields</h2>
+        <p className="mt-1 text-xs text-zinc-800">
           Structured custom fields are stored as <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">booking_rules.custom_fields</code>{" "}
           via API. This UI focuses on core rules; extend the payload when you add more inputs.
         </p>

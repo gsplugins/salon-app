@@ -1121,6 +1121,7 @@ export type PublicShopListRow = {
   phone: string | null;
   latitude?: string | null;
   longitude?: string | null;
+  google_maps_url?: string | null;
   logo_url?: string | null;
   division?: string | null;
   district?: string | null;

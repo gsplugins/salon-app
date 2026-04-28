@@ -299,7 +299,7 @@ function Body({ token }: { token: string }) {
                   <TR key={shop.id}>
                     <TD>
                       <div className="font-medium">{shop.name}</div>
-                      <div className="font-mono text-xs text-zinc-500">/{shop.slug}</div>
+                      <div className="font-mono text-xs text-zinc-800">/{shop.slug}</div>
                     </TD>
                     <TD className="font-medium">{sub.plan_key}</TD>
                     <TD>
@@ -321,7 +321,7 @@ function Body({ token }: { token: string }) {
               })}
               {visibleSubscribers.length === 0 ? (
                 <TR>
-                  <TD colSpan={6} className="py-8 text-center text-zinc-500">
+                  <TD colSpan={6} className="py-8 text-center text-zinc-800">
                     No subscribers found for this filter.
                   </TD>
                 </TR>
@@ -330,7 +330,7 @@ function Body({ token }: { token: string }) {
           </Table>
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
-            <span className="text-zinc-500">
+            <span className="text-zinc-800">
               Page {subscribers.current_page} of {subscribers.last_page} · {subscribers.total} total subscribers
             </span>
             <div className="flex gap-2">

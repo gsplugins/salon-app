@@ -37,6 +37,7 @@ import {
   type ShopStats,
 } from "@/lib/salon-api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CuttingLoader } from "@/components/ui/cutting-loader";
 import {
   ShopClientsPanel,
   ShopOverviewPanel,
@@ -398,7 +399,7 @@ export function SalonBookingAdmin({
             >
               <CalendarDays className="h-4 w-4 opacity-80" />
               <span className="font-medium tabular-nums">{headerStats.bookings_today}</span>
-              <span className={embedInSession ? "text-zinc-500" : "text-white/70"}>today</span>
+              <span className={embedInSession ? "text-zinc-800" : "text-white/70"}>today</span>
             </span>
             <button
               type="button"
@@ -437,8 +438,8 @@ export function SalonBookingAdmin({
           onClick={() => void copyBookingUrl()}
           className={`inline-flex min-h-9 items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold shadow-sm touch-manipulation active:scale-[0.99] ${
             embedInSession
-              ? "bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-rose-100 dark:text-zinc-900"
-              : "bg-white text-zinc-900 hover:bg-zinc-100"
+              ? "bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-rose-100 dark:text-zinc-800"
+              : "bg-white text-zinc-800 hover:bg-zinc-100"
           }`}
         >
           <Copy className="h-4 w-4" />
@@ -488,8 +489,8 @@ export function SalonBookingAdmin({
               <p className="text-[11px] font-semibold uppercase tracking-wider text-rose-800 dark:text-rose-200">
                 Shop management
               </p>
-              <h2 className="truncate text-lg font-semibold text-zinc-900 dark:text-white">{shopTitle}</h2>
-              <p className="text-xs text-zinc-500">
+              <h2 className="truncate text-lg font-semibold text-zinc-800 dark:text-white">{shopTitle}</h2>
+              <p className="text-xs text-zinc-800">
                 {accessLabel} · <span className="font-mono">/s/{shopSlug}</span>
               </p>
             </div>
@@ -530,8 +531,8 @@ export function SalonBookingAdmin({
                       onClick={() => setSection(s.id)}
                       className={`flex shrink-0 snap-start items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors ${
                         active
-                          ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
-                          : "text-zinc-600 hover:bg-zinc-200/80 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                          ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-800"
+                          : "text-zinc-800 hover:bg-zinc-200/80 dark:text-zinc-300 dark:hover:bg-zinc-800"
                       }`}
                     >
                       <Icon className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
@@ -556,8 +557,8 @@ export function SalonBookingAdmin({
                     onClick={() => setSection(s.id)}
                     className={`flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${
                       active
-                        ? "bg-zinc-900 text-white shadow-sm dark:bg-rose-100 dark:text-zinc-900"
-                        : "text-zinc-600 hover:bg-zinc-200/70 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
+                        ? "bg-zinc-900 text-white shadow-sm dark:bg-rose-100 dark:text-zinc-800"
+                        : "text-zinc-800 hover:bg-zinc-200/70 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
                     }`}
                   >
                     <Icon
@@ -568,7 +569,7 @@ export function SalonBookingAdmin({
                       <span className="block text-sm font-medium">{s.label}</span>
                       <span
                         className={`block text-[11px] leading-tight ${
-                          active ? "text-white/75 dark:text-zinc-600" : "text-zinc-500 dark:text-zinc-500"
+                          active ? "text-white/75 dark:text-zinc-800" : "text-zinc-800 dark:text-zinc-800"
                         }`}
                       >
                         {s.hint}
@@ -600,11 +601,17 @@ export function SalonBookingAdmin({
                 <div
                   className="pointer-events-none absolute inset-0 z-10 rounded-xl bg-white/40 backdrop-blur-[1px] dark:bg-zinc-950/30"
                   aria-busy
-                />
+                >
+                  <div className="flex h-full items-center justify-center">
+                    <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-5 py-4 shadow-sm">
+                      <CuttingLoader compact label="Updating bookings..." />
+                    </div>
+                  </div>
+                </div>
               ) : null}
               <div>
-                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Bookings</h3>
-                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                <h3 className="text-lg font-semibold text-zinc-800 dark:text-white">Bookings</h3>
+                <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">
                   Review requests, approve or decline, reassign stylists while pending, and add walk-ins or blocked
                   time.
                 </p>
@@ -638,8 +645,8 @@ export function SalonBookingAdmin({
                         onClick={() => setRangeMode("week")}
                         className={`rounded-full px-3 py-1.5 text-sm font-medium ${
                           rangeMode === "week"
-                            ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
-                            : "text-zinc-600 dark:text-zinc-300"
+                            ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-800"
+                            : "text-zinc-800 dark:text-zinc-300"
                         }`}
                       >
                         This week
@@ -649,14 +656,14 @@ export function SalonBookingAdmin({
                         onClick={() => setRangeMode("all")}
                         className={`rounded-full px-3 py-1.5 text-sm font-medium ${
                           rangeMode === "all"
-                            ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
-                            : "text-zinc-600 dark:text-zinc-300"
+                            ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-800"
+                            : "text-zinc-800 dark:text-zinc-300"
                         }`}
                       >
                         All bookings
                       </button>
                     </div>
-                    <label className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
+                    <label className="flex items-center gap-2 text-xs text-zinc-800 dark:text-zinc-400">
                       Status
                       <select
                         value={statusFilter}
@@ -680,8 +687,8 @@ export function SalonBookingAdmin({
                       onClick={() => setView("calendar")}
                       className={`rounded-full px-4 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40 ${
                         view === "calendar"
-                          ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
-                          : "text-zinc-600 dark:text-zinc-300"
+                          ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-800"
+                          : "text-zinc-800 dark:text-zinc-300"
                       }`}
                     >
                       Calendar
@@ -691,8 +698,8 @@ export function SalonBookingAdmin({
                       onClick={() => setView("list")}
                       className={`rounded-full px-4 py-1.5 text-sm font-medium ${
                         view === "list"
-                          ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-900"
-                          : "text-zinc-600 dark:text-zinc-300"
+                          ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-800"
+                          : "text-zinc-800 dark:text-zinc-300"
                       }`}
                     >
                       List
@@ -736,7 +743,7 @@ export function SalonBookingAdmin({
                     </div>
                   ) : (
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-xs text-zinc-500">Showing up to ~3 years of bookings (list view).</p>
+                      <p className="text-xs text-zinc-800">Showing up to ~3 years of bookings (list view).</p>
                       <button
                         type="button"
                         disabled={busy}
@@ -837,8 +844,8 @@ function CalendarWeek(props: {
                       key={b.id}
                       className="rounded-lg border border-zinc-200 bg-zinc-50 p-2 text-xs dark:border-zinc-700 dark:bg-zinc-950/60"
                     >
-                      <p className="font-medium text-zinc-900 dark:text-white">{b.customer_name}</p>
-                      <p className="text-zinc-500">
+                      <p className="font-medium text-zinc-800 dark:text-white">{b.customer_name}</p>
+                      <p className="text-zinc-800">
                         {new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(
                           new Date(b.starts_at)
                         )}{" "}
@@ -848,7 +855,7 @@ function CalendarWeek(props: {
                         ) : null}
                       </p>
                       {pending ? (
-                        <label className="mt-1 block text-[10px] font-medium text-zinc-500">
+                        <label className="mt-1 block text-[10px] font-medium text-zinc-800">
                           Stylist
                           <select
                             disabled={busy || staffOpts.length === 0}
@@ -864,7 +871,7 @@ function CalendarWeek(props: {
                           </select>
                         </label>
                       ) : (
-                        <p className="text-zinc-500">{b.staff.name}</p>
+                        <p className="text-zinc-800">{b.staff.name}</p>
                       )}
                       <select
                         disabled={busy}
@@ -923,7 +930,7 @@ function ListView(props: {
   return (
     <div className="overflow-x-auto rounded-2xl border border-rose-100/80 bg-white dark:border-zinc-800 dark:bg-zinc-900/40">
       <table className="w-full min-w-[720px] text-left text-sm">
-        <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950/80">
+        <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-zinc-800 dark:border-zinc-800 dark:bg-zinc-950/80">
           <tr>
             <th className="px-3 py-2">When</th>
             <th className="px-3 py-2">Customer</th>
@@ -943,12 +950,12 @@ function ListView(props: {
                 <td className="px-3 py-2 whitespace-nowrap">{formatShort(b.starts_at)}</td>
                 <td className="px-3 py-2">
                   <div className="font-medium">{b.customer_name}</div>
-                  <div className="font-mono text-xs text-zinc-500">{b.customer_mobile}</div>
+                  <div className="font-mono text-xs text-zinc-800">{b.customer_mobile}</div>
                 </td>
                 <td className="px-3 py-2">
                   <div>{b.service.name}</div>
                   {b.service.category ? (
-                    <div className="text-xs text-zinc-500">{b.service.category}</div>
+                    <div className="text-xs text-zinc-800">{b.service.category}</div>
                   ) : null}
                 </td>
                 <td className="px-3 py-2">
@@ -1013,7 +1020,7 @@ function ListView(props: {
           })}
           {sorted.length === 0 && (
             <tr>
-              <td colSpan={7} className="px-3 py-6 text-center text-zinc-500">
+              <td colSpan={7} className="px-3 py-6 text-center text-zinc-800">
                 No bookings in this range.
               </td>
             </tr>
@@ -1086,10 +1093,10 @@ function WalkInForm(props: {
 
   return (
     <div className="rounded-2xl border border-rose-100/80 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
-      <h3 className="text-base font-semibold text-zinc-900 dark:text-white">Add walk-in</h3>
-      <p className="mt-1 text-xs text-zinc-500">Creates a booking with source &quot;walk in&quot; (default status: confirmed).</p>
+      <h3 className="text-base font-semibold text-zinc-800 dark:text-white">Add walk-in</h3>
+      <p className="mt-1 text-xs text-zinc-800">Creates a booking with source &quot;walk in&quot; (default status: confirmed).</p>
       <form onSubmit={onSubmit} className="mt-4 grid gap-3 sm:grid-cols-2">
-        <label className="text-xs font-medium text-zinc-500 sm:col-span-2">
+        <label className="text-xs font-medium text-zinc-800 sm:col-span-2">
           Service
           <select
             required
@@ -1105,7 +1112,7 @@ function WalkInForm(props: {
             ))}
           </select>
         </label>
-        <label className="text-xs font-medium text-zinc-500 sm:col-span-2">
+        <label className="text-xs font-medium text-zinc-800 sm:col-span-2">
           Stylist (optional)
           <select
             className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -1125,7 +1132,7 @@ function WalkInForm(props: {
               ))}
           </select>
         </label>
-        <label className="text-xs font-medium text-zinc-500 sm:col-span-2">
+        <label className="text-xs font-medium text-zinc-800 sm:col-span-2">
           Start time
           <input
             required
@@ -1135,7 +1142,7 @@ function WalkInForm(props: {
             onChange={(e) => setStartsLocal(e.target.value)}
           />
         </label>
-        <label className="text-xs font-medium text-zinc-500">
+        <label className="text-xs font-medium text-zinc-800">
           Name
           <input
             required
@@ -1144,7 +1151,7 @@ function WalkInForm(props: {
             onChange={(e) => setName(e.target.value)}
           />
         </label>
-        <label className="text-xs font-medium text-zinc-500">
+        <label className="text-xs font-medium text-zinc-800">
           Mobile
           <input
             required
@@ -1153,7 +1160,7 @@ function WalkInForm(props: {
             onChange={(e) => setMobile(e.target.value)}
           />
         </label>
-        <label className="text-xs font-medium text-zinc-500 sm:col-span-2">
+        <label className="text-xs font-medium text-zinc-800 sm:col-span-2">
           Notes (optional)
           <input
             className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -1164,7 +1171,7 @@ function WalkInForm(props: {
         <button
           type="submit"
           disabled={props.busy}
-          className="sm:col-span-2 rounded-full bg-zinc-900 py-2.5 text-sm font-semibold text-white disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-900"
+          className="sm:col-span-2 rounded-full bg-zinc-900 py-2.5 text-sm font-semibold text-white disabled:opacity-50 dark:bg-rose-100 dark:text-zinc-800"
         >
           {props.busy ? "…" : "Save walk-in"}
         </button>
@@ -1235,12 +1242,12 @@ function BlockTimeForm(props: {
 
   return (
     <div className="rounded-2xl border border-rose-100/80 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
-      <h3 className="text-base font-semibold text-zinc-900 dark:text-white">Block time</h3>
-      <p className="mt-1 text-xs text-zinc-500">
+      <h3 className="text-base font-semibold text-zinc-800 dark:text-white">Block time</h3>
+      <p className="mt-1 text-xs text-zinc-800">
         Staff leave blocks one stylist. Shop holiday blocks everyone for that window.
       </p>
       <form onSubmit={onSubmit} className="mt-4 grid gap-3 sm:grid-cols-2">
-        <label className="text-xs font-medium text-zinc-500 sm:col-span-2">
+        <label className="text-xs font-medium text-zinc-800 sm:col-span-2">
           Scope
           <select
             className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -1264,7 +1271,7 @@ function BlockTimeForm(props: {
             ))}
           </select>
         </label>
-        <label className="text-xs font-medium text-zinc-500">
+        <label className="text-xs font-medium text-zinc-800">
           From
           <input
             required
@@ -1274,7 +1281,7 @@ function BlockTimeForm(props: {
             onChange={(e) => setStartsLocal(e.target.value)}
           />
         </label>
-        <label className="text-xs font-medium text-zinc-500">
+        <label className="text-xs font-medium text-zinc-800">
           To
           <input
             required
@@ -1284,7 +1291,7 @@ function BlockTimeForm(props: {
             onChange={(e) => setEndsLocal(e.target.value)}
           />
         </label>
-        <label className="text-xs font-medium text-zinc-500 sm:col-span-2">
+        <label className="text-xs font-medium text-zinc-800 sm:col-span-2">
           Kind
           <select
             className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -1295,7 +1302,7 @@ function BlockTimeForm(props: {
             <option value="holiday">Shop holiday</option>
           </select>
         </label>
-        <label className="text-xs font-medium text-zinc-500 sm:col-span-2">
+        <label className="text-xs font-medium text-zinc-800 sm:col-span-2">
           Reason (optional)
           <input
             className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -1323,7 +1330,7 @@ function BlockedList(props: {
   if (props.blocks.length === 0) return null;
   return (
     <div className="rounded-2xl border border-rose-100/80 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
-      <h3 className="text-base font-semibold text-zinc-900 dark:text-white">Blocked times (selected range)</h3>
+      <h3 className="text-base font-semibold text-zinc-800 dark:text-white">Blocked times (selected range)</h3>
       <ul className="mt-3 space-y-2 text-sm">
         {props.blocks.map((b) => (
           <li
@@ -1332,7 +1339,7 @@ function BlockedList(props: {
           >
             <span>
               <span className="font-medium capitalize">{b.scope === "shop" ? "Shop" : b.staff?.name}</span>
-              <span className="text-zinc-500">
+              <span className="text-zinc-800">
                 {" "}
                 · {formatShort(b.starts_at)} – {formatShort(b.ends_at)} · {b.kind}
               </span>

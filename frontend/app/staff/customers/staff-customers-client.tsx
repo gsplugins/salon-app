@@ -109,12 +109,12 @@ export function StaffCustomersClient() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">Customers</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">People you have seen on your calendar (read-only profiles).</p>
+        <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">Customers</h1>
+        <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">People you have seen on your calendar (read-only profiles).</p>
       </div>
       <ul className="space-y-2">
         {rows.length === 0 ? (
-          <li className="rounded-2xl border border-dashed border-zinc-200 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700">
+          <li className="rounded-2xl border border-dashed border-zinc-200 p-6 text-center text-sm text-zinc-800 dark:border-zinc-700">
             No customers yet.
           </li>
         ) : (
@@ -125,9 +125,9 @@ export function StaffCustomersClient() {
                 onClick={() => void openDetail(r.customer_mobile)}
                 className="flex w-full min-h-[52px] flex-col rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left transition hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950/40 dark:hover:bg-zinc-900/50"
               >
-                <span className="font-medium text-zinc-900 dark:text-white">{r.customer_name}</span>
-                <span className="text-sm text-zinc-600 dark:text-zinc-400">{r.customer_mobile}</span>
-                <span className="mt-1 text-xs text-zinc-500">
+                <span className="font-medium text-zinc-800 dark:text-white">{r.customer_name}</span>
+                <span className="text-sm text-zinc-800 dark:text-zinc-400">{r.customer_mobile}</span>
+                <span className="mt-1 text-xs text-zinc-800">
                   {r.visit_count} visits · last {formatStaffDateTime(r.last_visit_at)}
                 </span>
               </button>
@@ -143,19 +143,19 @@ export function StaffCustomersClient() {
           </DialogHeader>
           {openMobile ? (
             <div className="space-y-4 text-sm">
-              <p className="font-mono text-xs text-zinc-500">{openMobile}</p>
+              <p className="font-mono text-xs text-zinc-800">{openMobile}</p>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">History with you</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-800">History with you</p>
                 {detailBusy || history === null ? (
                   <Skeleton className="mt-2 h-24 w-full" />
                 ) : history.length === 0 ? (
-                  <p className="mt-2 text-zinc-500">No past visits.</p>
+                  <p className="mt-2 text-zinc-800">No past visits.</p>
                 ) : (
                   <ul className="mt-2 max-h-48 space-y-2 overflow-y-auto">
                     {history.map((h) => (
                       <li key={h.id} className="rounded-lg border border-zinc-100 px-3 py-2 dark:border-zinc-800">
-                        <p className="font-medium text-zinc-900 dark:text-white">{h.service?.name ?? "Service"}</p>
-                        <p className="text-xs text-zinc-500">
+                        <p className="font-medium text-zinc-800 dark:text-white">{h.service?.name ?? "Service"}</p>
+                        <p className="text-xs text-zinc-800">
                           {formatStaffDateTime(h.starts_at)} · {bookingStatusLabel(h.status)}
                         </p>
                       </li>
@@ -164,7 +164,7 @@ export function StaffCustomersClient() {
                 )}
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Internal notes</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-800">Internal notes</p>
                 {notes === null ? (
                   <Skeleton className="mt-2 h-16 w-full" />
                 ) : (
@@ -172,7 +172,7 @@ export function StaffCustomersClient() {
                     {notes.map((n) => (
                       <li key={n.id} className="rounded-lg bg-zinc-50 px-3 py-2 text-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
                         <p>{n.note}</p>
-                        {n.created_at ? <p className="mt-1 text-[10px] text-zinc-500">{formatStaffDateTime(n.created_at)}</p> : null}
+                        {n.created_at ? <p className="mt-1 text-[10px] text-zinc-800">{formatStaffDateTime(n.created_at)}</p> : null}
                       </li>
                     ))}
                   </ul>

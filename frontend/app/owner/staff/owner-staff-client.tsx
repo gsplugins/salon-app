@@ -262,17 +262,17 @@ function Body({ token }: { token: string }) {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-xl font-semibold text-zinc-900 dark:text-white">Staff</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <h1 className="text-xl font-semibold text-zinc-800 dark:text-white">Staff</h1>
+        <p className="text-sm text-zinc-800 dark:text-zinc-400">
           Real-life team records and staff login credentials. Staff can edit only their own profile; managers can update
           or remove any staff member here.
         </p>
-        {me?.shop?.name ? <p className="mt-1 text-xs text-zinc-500">Managing staff for shop: {me.shop.name}</p> : null}
+        {me?.shop?.name ? <p className="mt-1 text-xs text-zinc-800">Managing staff for shop: {me.shop.name}</p> : null}
         <div className="mt-3">
           <button
             type="button"
             onClick={() => setShowAddForm((v) => !v)}
-            className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+            className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
           >
             {showAddForm ? "Close add staff form" : "Add staff"}
           </button>
@@ -281,11 +281,11 @@ function Body({ token }: { token: string }) {
 
       {showAddForm ? (
         <form onSubmit={addStaff} className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Add staff</h2>
-          <p className="mt-1 text-xs text-zinc-500">
+          <h2 className="text-sm font-semibold text-zinc-800 dark:text-white">Add staff</h2>
+          <p className="mt-1 text-xs text-zinc-800">
             Quick add for managers: fill only required team details now. Extra profile info can be updated later.
           </p>
-          <p className="mt-1 text-xs text-zinc-500">Staff login accounts are bound to this shop and cannot be reused in another shop.</p>
+          <p className="mt-1 text-xs text-zinc-800">Staff login accounts are bound to this shop and cannot be reused in another shop.</p>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             <input
               value={adding.name}
@@ -328,7 +328,7 @@ function Body({ token }: { token: string }) {
           </div>
           {services && services.length > 0 ? (
             <fieldset className="mt-3">
-              <legend className="text-xs font-medium text-zinc-500">Services</legend>
+              <legend className="text-xs font-medium text-zinc-800">Services</legend>
               <div className="mt-2 flex max-h-32 flex-wrap gap-2 overflow-y-auto">
                 {services.map((s) => (
                   <label key={s.id} className="flex items-center gap-2 text-sm">
@@ -440,12 +440,12 @@ function Body({ token }: { token: string }) {
               ) : null}
             </>
           ) : (
-            <p className="mt-3 text-xs text-zinc-500">Managers can add staff profiles. Staff login credentials can be created by the shop owner.</p>
+            <p className="mt-3 text-xs text-zinc-800">Managers can add staff profiles. Staff login credentials can be created by the shop owner.</p>
           )}
           <button
             type="submit"
             disabled={saving}
-            className="mt-4 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+            className="mt-4 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
           >
             {saving ? "Saving..." : "Save"}
           </button>
@@ -463,25 +463,25 @@ function Body({ token }: { token: string }) {
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="font-semibold text-zinc-900 dark:text-white">{row.name}</p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="font-semibold text-zinc-800 dark:text-white">{row.name}</p>
+                  <p className="text-xs text-zinc-800">
                     {row.position_title || row.staff_role || "No role set"} · {row.is_active ? "Active" : "Inactive"}
                   </p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-zinc-800">
                     Services: {row.services.map((s) => s.name).join(", ") || "No services"}
                   </p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-zinc-800">
                     Login: {row.has_staff_login ? row.login_mobile || "Linked account" : "No login account"}
                   </p>
                   {!row.has_staff_login ? (
-                    <p className="text-xs text-zinc-500">Manager can still open this staff profile in view mode.</p>
+                    <p className="text-xs text-zinc-800">Manager can still open this staff profile in view mode.</p>
                   ) : null}
                 </div>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => openStaffPortalAs(row)}
-                    className="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white dark:bg-rose-100 dark:text-zinc-900"
+                    className="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white dark:bg-rose-100 dark:text-zinc-800"
                   >
                     View staff profile
                   </button>
@@ -491,7 +491,7 @@ function Body({ token }: { token: string }) {
                         type="button"
                         onClick={() => void saveEdit(row)}
                         disabled={saving}
-                        className="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm text-white dark:bg-rose-100 dark:text-zinc-900"
+                        className="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm text-white dark:bg-rose-100 dark:text-zinc-800"
                       >
                         Save
                       </button>
@@ -629,7 +629,7 @@ function Body({ token }: { token: string }) {
                   />
                   {services && services.length > 0 ? (
                     <fieldset className="md:col-span-2">
-                      <legend className="text-xs font-medium text-zinc-500">Services</legend>
+                      <legend className="text-xs font-medium text-zinc-800">Services</legend>
                       <div className="mt-2 flex max-h-28 flex-wrap gap-2 overflow-y-auto">
                         {services.map((s) => (
                           <label key={s.id} className="flex items-center gap-2 text-sm">

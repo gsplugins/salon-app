@@ -79,7 +79,7 @@ function Body({ token }: { token: string }) {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
-            <div className="flex items-center gap-2 text-zinc-600 dark:text-zinc-300">
+            <div className="flex items-center gap-2 text-zinc-800 dark:text-zinc-300">
               <LayoutDashboard className="h-5 w-5" />
               <span className="text-xs font-semibold uppercase tracking-wide">Shops on platform</span>
             </div>

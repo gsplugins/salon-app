@@ -20,11 +20,11 @@ export default async function AuthPage({ searchParams }: Props) {
   const initialTab = tab && ALLOWED_TABS.has(tab) ? (tab as "login" | "register" | "forgot" | "reset") : "login";
 
   return (
-    <div className="min-h-[100dvh] bg-[#0d0d0d] text-white">
+    <div className="min-h-[100dvh] bg-[color:var(--background)] text-[color:var(--foreground)]">
       <PublicHeader />
       <main className="mx-auto w-full max-w-[1280px] px-4 py-6 sm:px-6 sm:py-8">
         <div className="mb-4">
-          <Link href="/app" className="text-sm font-medium text-[#c6a43f] hover:underline">
+          <Link href="/app" className="text-sm font-medium text-[color:var(--brand-primary)] hover:underline">
             Back to portal hub
           </Link>
         </div>

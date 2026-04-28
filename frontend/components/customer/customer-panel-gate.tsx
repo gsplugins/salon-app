@@ -45,7 +45,7 @@ export function CustomerPanelGate(props: { children: (accessToken: string) => Re
           <p className="mt-1 opacity-90">Use your customer account to manage bookings and loyalty.</p>
           <Link
             href="/app"
-            className="mt-4 inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+            className="mt-4 inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
           >
             Open /app
           </Link>
@@ -73,7 +73,7 @@ export function CustomerPanelGate(props: { children: (accessToken: string) => Re
             {me && canAccessSalonManagement(me) ? (
               <Link
                 href="/owner/dashboard"
-                className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
               >
                 Salon dashboard
               </Link>
@@ -81,7 +81,7 @@ export function CustomerPanelGate(props: { children: (accessToken: string) => Re
             {me && (me.is_super_admin || me.role === "super_admin") ? (
               <Link
                 href="/admin/dashboard"
-                className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
               >
                 Platform admin
               </Link>

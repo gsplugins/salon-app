@@ -116,17 +116,61 @@ export type AuthMePayload = {
   } | null;
 };
 
+type AuthMeResult =
+  | { ok: true; data: AuthMePayload }
+  | { ok: false; status: number; body: ApiErrorBody };
+
+const AUTH_ME_CACHE_TTL_MS = 2500;
+const authMeCache = new Map<string, { expiresAt: number; result: AuthMeResult }>();
+const authMeInFlight = new Map<string, Promise<AuthMeResult>>();
+
+function clearAuthMeCache(accessToken?: string): void {
+  if (accessToken) {
+    authMeCache.delete(accessToken);
+    authMeInFlight.delete(accessToken);
+    return;
+  }
+  authMeCache.clear();
+  authMeInFlight.clear();
+}
+
 export async function fetchAuthMe(
-  accessToken: string
-): Promise<{ ok: true; data: AuthMePayload } | { ok: false; status: number; body: ApiErrorBody }> {
-  return authJson<AuthMePayload>("/auth/me", { accessToken });
+  accessToken: string,
+  opts?: { force?: boolean }
+): Promise<AuthMeResult> {
+  const force = opts?.force === true;
+  if (!force) {
+    const cached = authMeCache.get(accessToken);
+    if (cached && cached.expiresAt > Date.now()) return cached.result;
+    const pending = authMeInFlight.get(accessToken);
+    if (pending) return pending;
+  }
+
+  const request = authJson<AuthMePayload>("/auth/me", { accessToken }).then((res) => {
+    if (!res.ok && (res.status === 401 || res.status === 403)) {
+      clearAuthMeCache(accessToken);
+      return res;
+    }
+    authMeCache.set(accessToken, {
+      expiresAt: Date.now() + AUTH_ME_CACHE_TTL_MS,
+      result: res,
+    });
+    return res;
+  }).finally(() => {
+    authMeInFlight.delete(accessToken);
+  });
+
+  authMeInFlight.set(accessToken, request);
+  return request;
 }
 
 export async function patchAuthMe(
   accessToken: string,
   body: { name?: string; photo_url?: string | null }
 ): Promise<{ ok: true; data: Pick<AuthMePayload, "id" | "name" | "mobile" | "photo_url" | "role"> } | { ok: false; status: number; body: ApiErrorBody }> {
-  return authJson("/auth/me", { method: "PATCH", accessToken, body: JSON.stringify(body) });
+  const res = await authJson("/auth/me", { method: "PATCH", accessToken, body: JSON.stringify(body) });
+  clearAuthMeCache(accessToken);
+  return res;
 }
 
 export async function uploadAuthProfilePhoto(
@@ -139,6 +183,7 @@ export async function uploadAuthProfilePhoto(
     body: JSON.stringify({ data_url: dataUrl }),
   });
   if (!res.ok) return res;
+  clearAuthMeCache(accessToken);
   const payload = (res.data as { data?: { url?: string; path?: string }; url?: string; path?: string }) ?? {};
   const directUrl = typeof payload.url === "string" ? payload.url : "";
   const directPath = typeof payload.path === "string" ? payload.path : "";

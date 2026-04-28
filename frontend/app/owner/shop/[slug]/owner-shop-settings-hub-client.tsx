@@ -92,7 +92,7 @@ function SettingsBody({ token, shopSlug }: { token: string; shopSlug: string }) 
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-800 dark:text-rose-200">
             Shop preferences
           </p>
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="mt-1 text-xs text-zinc-800 dark:text-zinc-400">
             Hours, contact, alerts, and policies. Operations (bookings calendar, services, staff) stay in their menu
             items — no duplicate consoles here.
           </p>
@@ -113,8 +113,8 @@ function SettingsBody({ token, shopSlug }: { token: string; shopSlug: string }) 
                   onClick={() => setTab(t.id)}
                   className={`flex shrink-0 items-center gap-1.5 rounded-xl px-2.5 py-2 text-sm font-medium transition ${
                     active
-                      ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-white"
-                      : "text-zinc-600 hover:bg-white/70 dark:text-zinc-400 dark:hover:bg-zinc-800/80"
+                      ? "bg-white text-zinc-800 shadow-sm dark:bg-zinc-800 dark:text-white"
+                      : "text-zinc-800 hover:bg-white/70 dark:text-zinc-400 dark:hover:bg-zinc-800/80"
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5 shrink-0 opacity-90" aria-hidden />
@@ -131,16 +131,16 @@ function SettingsBody({ token, shopSlug }: { token: string; shopSlug: string }) 
           {tab === "notifications" && (
             <div className="mx-auto max-w-xl space-y-6">
               <div>
-                <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Customer &amp; team alerts</h2>
-                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                <h2 className="text-base font-semibold text-zinc-800 dark:text-white">Customer &amp; team alerts</h2>
+                <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">
                   Preferences are stored on this device for the demo. Wire to your SMS/email provider in production.
                 </p>
               </div>
               <ul className="space-y-4">
                 <li className="flex items-start justify-between gap-4 rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-700 dark:bg-zinc-950/40">
                   <div>
-                    <p className="font-medium text-zinc-900 dark:text-white">SMS appointment reminders</p>
-                    <p className="mt-0.5 text-sm text-zinc-500">Send a reminder before each visit.</p>
+                    <p className="font-medium text-zinc-800 dark:text-white">SMS appointment reminders</p>
+                    <p className="mt-0.5 text-sm text-zinc-800">Send a reminder before each visit.</p>
                   </div>
                   <button
                     type="button"
@@ -160,8 +160,8 @@ function SettingsBody({ token, shopSlug }: { token: string; shopSlug: string }) 
                 </li>
                 <li className="flex items-start justify-between gap-4 rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-700 dark:bg-zinc-950/40">
                   <div>
-                    <p className="font-medium text-zinc-900 dark:text-white">Email daily summary</p>
-                    <p className="mt-0.5 text-sm text-zinc-500">Tomorrow&apos;s schedule and revenue snapshot.</p>
+                    <p className="font-medium text-zinc-800 dark:text-white">Email daily summary</p>
+                    <p className="mt-0.5 text-sm text-zinc-800">Tomorrow&apos;s schedule and revenue snapshot.</p>
                   </div>
                   <button
                     type="button"
@@ -181,8 +181,8 @@ function SettingsBody({ token, shopSlug }: { token: string; shopSlug: string }) 
                 </li>
                 <li className="flex items-start justify-between gap-4 rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-700 dark:bg-zinc-950/40">
                   <div>
-                    <p className="font-medium text-zinc-900 dark:text-white">Push / in-app new booking</p>
-                    <p className="mt-0.5 text-sm text-zinc-500">Alert when a customer books online.</p>
+                    <p className="font-medium text-zinc-800 dark:text-white">Push / in-app new booking</p>
+                    <p className="mt-0.5 text-sm text-zinc-800">Alert when a customer books online.</p>
                   </div>
                   <button
                     type="button"
@@ -207,8 +207,8 @@ function SettingsBody({ token, shopSlug }: { token: string; shopSlug: string }) 
           {tab === "policies" && (
             <div className="mx-auto max-w-xl space-y-4">
               <div>
-                <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Cancellation &amp; rules</h2>
-                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                <h2 className="text-base font-semibold text-zinc-800 dark:text-white">Cancellation &amp; rules</h2>
+                <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">
                   Shown to customers on your booking flow when you connect this field in the product.
                 </p>
               </div>
@@ -223,7 +223,7 @@ function SettingsBody({ token, shopSlug }: { token: string; shopSlug: string }) 
                 <button
                   type="button"
                   onClick={savePolicy}
-                  className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                  className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
                 >
                   Save draft
                 </button>
@@ -241,27 +241,27 @@ function SettingsBody({ token, shopSlug }: { token: string; shopSlug: string }) 
               ) : (
                 <>
                   <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-700 dark:bg-zinc-900/40">
-                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">Subscription</h3>
+                    <h3 className="text-sm font-semibold text-zinc-800 dark:text-white">Subscription</h3>
                     {canViewShopBilling(me) && me.subscription ? (
                       <dl className="mt-3 space-y-2 text-sm">
                         <div className="flex justify-between gap-4">
-                          <dt className="text-zinc-500">Plan</dt>
-                          <dd className="font-medium text-zinc-900 dark:text-white">{me.subscription.plan_key}</dd>
+                          <dt className="text-zinc-800">Plan</dt>
+                          <dd className="font-medium text-zinc-800 dark:text-white">{me.subscription.plan_key}</dd>
                         </div>
                         <div className="flex justify-between gap-4">
-                          <dt className="text-zinc-500">Status</dt>
-                          <dd className="font-medium text-zinc-900 dark:text-white">{me.subscription.status}</dd>
+                          <dt className="text-zinc-800">Status</dt>
+                          <dd className="font-medium text-zinc-800 dark:text-white">{me.subscription.status}</dd>
                         </div>
                       </dl>
                     ) : (
-                      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                      <p className="mt-2 text-sm text-zinc-800 dark:text-zinc-400">
                         Subscription details are visible to the shop owner only.
                       </p>
                     )}
                   </div>
                   <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-4 dark:border-zinc-600 dark:bg-zinc-950/40">
-                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">bKash &amp; payouts</h3>
-                    <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                    <h3 className="text-sm font-semibold text-zinc-800 dark:text-white">bKash &amp; payouts</h3>
+                    <p className="mt-2 text-sm text-zinc-800 dark:text-zinc-400">
                       Connect merchant numbers, settlement schedule, and receipt templates in your payment dashboard
                       (integration placeholder).
                     </p>
@@ -274,8 +274,8 @@ function SettingsBody({ token, shopSlug }: { token: string; shopSlug: string }) 
       </div>
 
       <div className="rounded-2xl border border-zinc-200/80 bg-zinc-50/50 p-4 dark:border-zinc-800 dark:bg-zinc-900/30">
-        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Operations shortcuts</p>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-800">Operations shortcuts</p>
+        <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">
           Manage day-to-day work from the sidebar — same tools, one place each.
         </p>
         <ul className="mt-3 flex flex-wrap gap-2 text-sm">
@@ -287,13 +287,13 @@ function SettingsBody({ token, shopSlug }: { token: string; shopSlug: string }) 
               Services &amp; pricing
             </Link>
           </li>
-          <span className="text-zinc-300 dark:text-zinc-600">·</span>
+          <span className="text-zinc-300 dark:text-zinc-800">·</span>
           <li>
             <Link href={ownerShopPath(shopSlug, "queue")} className="font-medium text-rose-800 underline dark:text-rose-200">
               Walk-in queue
             </Link>
           </li>
-          <span className="text-zinc-300 dark:text-zinc-600">·</span>
+          <span className="text-zinc-300 dark:text-zinc-800">·</span>
           <li>
             <Link
               href={ownerShopPath(shopSlug, "reports")}

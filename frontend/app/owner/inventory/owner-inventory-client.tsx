@@ -69,7 +69,7 @@ function ExtraProductFields({ row, token, onSaved }: { row: InventoryRow; token:
 
   return (
     <form onSubmit={saveDetails} className="mt-2 grid gap-2 rounded-lg border border-zinc-100 bg-zinc-50/80 p-3 text-xs dark:border-zinc-800 dark:bg-zinc-950/40 sm:grid-cols-2 lg:grid-cols-3">
-      <label className="text-zinc-600 dark:text-zinc-400">
+      <label className="text-zinc-800 dark:text-zinc-400">
         SKU
         <input
           value={sku}
@@ -77,7 +77,7 @@ function ExtraProductFields({ row, token, onSaved }: { row: InventoryRow; token:
           className="mt-1 w-full rounded border border-zinc-200 px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-950"
         />
       </label>
-      <label className="text-zinc-600 dark:text-zinc-400">
+      <label className="text-zinc-800 dark:text-zinc-400">
         Unit
         <input
           value={unit}
@@ -85,7 +85,7 @@ function ExtraProductFields({ row, token, onSaved }: { row: InventoryRow; token:
           className="mt-1 w-full rounded border border-zinc-200 px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-950"
         />
       </label>
-      <label className="text-zinc-600 dark:text-zinc-400">
+      <label className="text-zinc-800 dark:text-zinc-400">
         Low stock at
         <input
           value={low}
@@ -95,7 +95,7 @@ function ExtraProductFields({ row, token, onSaved }: { row: InventoryRow; token:
           inputMode="decimal"
         />
       </label>
-      <label className="text-zinc-600 dark:text-zinc-400 sm:col-span-2 lg:col-span-1">
+      <label className="text-zinc-800 dark:text-zinc-400 sm:col-span-2 lg:col-span-1">
         Your cost per {unit || "unit"} (BDT, staff-side COGS hint)
         <input
           value={cost}
@@ -105,7 +105,7 @@ function ExtraProductFields({ row, token, onSaved }: { row: InventoryRow; token:
           inputMode="decimal"
         />
       </label>
-      <label className="sm:col-span-2 text-zinc-600 dark:text-zinc-400">
+      <label className="sm:col-span-2 text-zinc-800 dark:text-zinc-400">
         Supplier / reorder notes
         <input
           value={supplier}
@@ -116,7 +116,7 @@ function ExtraProductFields({ row, token, onSaved }: { row: InventoryRow; token:
       <div className="flex items-end">
         <button
           type="submit"
-          className="rounded-lg bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+          className="rounded-lg bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
         >
           Save details
         </button>
@@ -227,8 +227,8 @@ function Body({ token }: { token: string }) {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-xl font-semibold text-zinc-900 dark:text-white">Inventory</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <h1 className="text-xl font-semibold text-zinc-800 dark:text-white">Inventory</h1>
+        <p className="text-sm text-zinc-800 dark:text-zinc-400">
           Track stock, SKU, and your unit cost (used for staff-side service material estimates).
         </p>
       </div>
@@ -261,7 +261,7 @@ function Body({ token }: { token: string }) {
           />
           <button
             type="submit"
-            className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+            className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
           >
             Add
           </button>
@@ -306,8 +306,8 @@ function Body({ token }: { token: string }) {
               className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-800 dark:bg-zinc-900/50"
             >
               <div className="min-w-0 flex-1">
-                <p className="font-medium text-zinc-900 dark:text-white">{r.name}</p>
-                <p className="text-sm text-zinc-500">
+                <p className="font-medium text-zinc-800 dark:text-white">{r.name}</p>
+                <p className="text-sm text-zinc-800">
                   {r.quantity} {r.unit}
                   {r.sku ? ` · SKU ${r.sku}` : ""}
                   {r.low_stock_threshold ? ` · low at ${r.low_stock_threshold}` : ""}

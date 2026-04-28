@@ -65,8 +65,8 @@ export function CustomerHomeClient() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">Home</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">Home</h1>
+        <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">
           Search shops, see reminders, and manage bookings using your phone number account.
         </p>
       </div>
@@ -85,8 +85,8 @@ export function CustomerHomeClient() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-zinc-900 dark:text-white">{loyalty.points}</p>
-            <p className="mt-1 text-xs text-zinc-500">Points available</p>
+            <p className="text-3xl font-bold text-zinc-800 dark:text-white">{loyalty.points}</p>
+            <p className="mt-1 text-xs text-zinc-800">Points available</p>
             <Button asChild variant="outline" className="mt-3 min-h-11 w-full sm:w-auto">
               <Link href="/customer/loyalty">View activity</Link>
             </Button>
@@ -101,9 +101,9 @@ export function CustomerHomeClient() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="font-medium text-zinc-900 dark:text-white">{bookingServicesLabel(next)}</p>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">{formatCustomerWhen(next.starts_at)}</p>
-              <p className="text-xs text-zinc-500">
+              <p className="font-medium text-zinc-800 dark:text-white">{bookingServicesLabel(next)}</p>
+              <p className="text-sm text-zinc-800 dark:text-zinc-400">{formatCustomerWhen(next.starts_at)}</p>
+              <p className="text-xs text-zinc-800">
                 {next.shop?.name ?? "Salon"} · {next.staff.name}
               </p>
               <Button asChild variant="outline" className="mt-3 min-h-11 w-full sm:w-auto">
@@ -133,7 +133,7 @@ export function CustomerHomeClient() {
               Explore nearby and popular
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+          <CardContent className="space-y-2 text-sm text-zinc-800 dark:text-zinc-400">
             <p>Nearby shops (with location permission), featured salons, and recently visited places.</p>
             <Button asChild variant="outline" className="min-h-11 w-full sm:w-auto">
               <Link href="/customer/explore">Open explore</Link>

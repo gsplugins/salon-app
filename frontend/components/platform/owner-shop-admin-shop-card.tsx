@@ -32,10 +32,10 @@ export function OwnerShopAdminShopCard(props: {
           />
         ) : null}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-zinc-900 dark:text-white" title={shopName}>
+          <p className="truncate text-sm font-semibold text-zinc-800 dark:text-white" title={shopName}>
             {shopName}
           </p>
-          <p className="mt-0.5 truncate font-mono text-[11px] text-zinc-500">/owner/shop/{shopSlug}</p>
+          <p className="mt-0.5 truncate font-mono text-[11px] text-zinc-800">/owner/shop/{shopSlug}</p>
           {planLabel ? (
             <div className="mt-2">
               <Badge className="text-[10px] font-semibold uppercase tracking-wide">

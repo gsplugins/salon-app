@@ -105,8 +105,8 @@ export function StaffNotificationsClient() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">Notifications</h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Assignments, cancellations, leave decisions, and manager messages.</p>
+          <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">Notifications</h1>
+          <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">Assignments, cancellations, leave decisions, and manager messages.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" className="min-h-11" onClick={() => void readAll()}>
@@ -119,7 +119,7 @@ export function StaffNotificationsClient() {
       </div>
 
       <div className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
-        <p className="text-sm font-semibold text-zinc-900 dark:text-white">Delivery preferences</p>
+        <p className="text-sm font-semibold text-zinc-800 dark:text-white">Delivery preferences</p>
         <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="flex items-center justify-between gap-4 rounded-xl border border-zinc-100 px-3 py-2 dark:border-zinc-800 sm:min-w-[200px]">
             <Label htmlFor="email-alerts" className="text-sm">
@@ -152,7 +152,7 @@ export function StaffNotificationsClient() {
 
       <ul className="space-y-2">
         {rows.length === 0 ? (
-          <li className="rounded-2xl border border-dashed border-zinc-200 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700">
+          <li className="rounded-2xl border border-dashed border-zinc-200 p-6 text-center text-sm text-zinc-800 dark:border-zinc-700">
             You&apos;re all caught up.
           </li>
         ) : (
@@ -167,9 +167,9 @@ export function StaffNotificationsClient() {
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  <p className="font-semibold text-zinc-900 dark:text-white">{n.title ?? n.type}</p>
+                  <p className="font-semibold text-zinc-800 dark:text-white">{n.title ?? n.type}</p>
                   {n.body ? <p className="mt-1 text-zinc-700 dark:text-zinc-300">{n.body}</p> : null}
-                  {n.created_at ? <p className="mt-2 text-xs text-zinc-500">{formatStaffDateTime(n.created_at)}</p> : null}
+                  {n.created_at ? <p className="mt-2 text-xs text-zinc-800">{formatStaffDateTime(n.created_at)}</p> : null}
                 </div>
                 {!n.is_read ? (
                   <Button type="button" variant="outline" className="min-h-10 shrink-0 px-3 py-2 text-xs" onClick={() => void markRead(n.id)}>

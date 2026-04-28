@@ -49,7 +49,7 @@ export function BarberStaffGate(props: { children: (accessToken: string) => Reac
         <p className="mt-1 opacity-90">Stylist tools use a staff barber account linked to your shop.</p>
         <Link
           href="/app"
-          className="mt-4 inline-flex rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+          className="mt-4 inline-flex rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
         >
           Open /app
         </Link>
@@ -71,7 +71,7 @@ export function BarberStaffGate(props: { children: (accessToken: string) => Reac
         </p>
         <Link
           href="/admin/dashboard"
-          className="mt-4 inline-flex rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+          className="mt-4 inline-flex rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
         >
           Platform admin
         </Link>
@@ -90,7 +90,7 @@ export function BarberStaffGate(props: { children: (accessToken: string) => Reac
         <div className="mt-5 flex flex-wrap gap-3">
           <Link
             href="/owner/dashboard"
-            className="inline-flex rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+            className="inline-flex rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
           >
             Owner dashboard
           </Link>

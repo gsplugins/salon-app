@@ -198,26 +198,26 @@ export function StaffAppointmentsClient() {
   return (
     <div className="space-y-4">
       <div className="section-wrap p-5">
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">Appointments</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">Appointments</h1>
+        <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">
           Calendar and list for your assigned bookings. Swipe a card right to complete, left for no-show. Use the floating
           button for quick status updates on mobile.
         </p>
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div className="card-clean p-3">
-            <p className="text-[11px] uppercase tracking-wide text-zinc-500">Upcoming</p>
-            <p className="mt-1 text-lg font-semibold text-zinc-900 dark:text-white">{upcomingCount}</p>
+            <p className="text-[11px] uppercase tracking-wide text-zinc-800">Upcoming</p>
+            <p className="mt-1 text-lg font-semibold text-zinc-800 dark:text-white">{upcomingCount}</p>
           </div>
           <div className="card-clean p-3">
-            <p className="text-[11px] uppercase tracking-wide text-zinc-500">Starting soon</p>
+            <p className="text-[11px] uppercase tracking-wide text-zinc-800">Starting soon</p>
             <p className="mt-1 text-lg font-semibold text-rose-700 dark:text-rose-300">{soonCount}</p>
           </div>
           <div className="card-clean p-3">
-            <p className="text-[11px] uppercase tracking-wide text-zinc-500">Completed</p>
+            <p className="text-[11px] uppercase tracking-wide text-zinc-800">Completed</p>
             <p className="mt-1 text-lg font-semibold text-emerald-700 dark:text-emerald-300">{completedCount}</p>
           </div>
           <div className="card-clean p-3">
-            <p className="text-[11px] uppercase tracking-wide text-zinc-500">No-show</p>
+            <p className="text-[11px] uppercase tracking-wide text-zinc-800">No-show</p>
             <p className="mt-1 text-lg font-semibold text-amber-700 dark:text-amber-300">{noShowCount}</p>
           </div>
         </div>
@@ -261,7 +261,7 @@ export function StaffAppointmentsClient() {
           </div>
           <ul className="space-y-2">
             {filtered.length === 0 ? (
-              <li className="rounded-2xl border border-dashed border-zinc-200 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700">
+              <li className="rounded-2xl border border-dashed border-zinc-200 p-6 text-center text-sm text-zinc-800 dark:border-zinc-700">
                 No appointments in this view.
               </li>
             ) : (
@@ -286,17 +286,17 @@ export function StaffAppointmentsClient() {
                         )}
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span className="font-medium text-zinc-900 dark:text-white">{b.customer_name}</span>
+                          <span className="font-medium text-zinc-800 dark:text-white">{b.customer_name}</span>
                           {soon ? (
                             <span className="shrink-0 rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
                               Soon
                             </span>
                           ) : null}
                         </div>
-                        <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                        <span className="text-sm text-zinc-800 dark:text-zinc-400">
                           {b.service?.name ?? "Service"} · {formatStaffDateTime(b.starts_at)}
                         </span>
-                        <span className="text-xs text-zinc-500">
+                        <span className="text-xs text-zinc-800">
                           <span className={statusTone(b.status)}>{bookingStatusLabel(b.status)}</span>
                           {b.review ? ` · Rating ${b.review.rating}/5` : ""}
                         </span>
@@ -319,34 +319,34 @@ export function StaffAppointmentsClient() {
               </DialogHeader>
               <div className="space-y-3 text-sm">
                 <div className="flex items-center gap-3 rounded-xl border border-zinc-100 p-3 dark:border-zinc-800">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 dark:bg-zinc-800">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-800 dark:bg-zinc-800">
                     <User className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="font-semibold text-zinc-900 dark:text-white">{detail.customer_name}</p>
-                    <p className="mt-0.5 flex items-center gap-1 text-zinc-600 dark:text-zinc-400">
+                    <p className="font-semibold text-zinc-800 dark:text-white">{detail.customer_name}</p>
+                    <p className="mt-0.5 flex items-center gap-1 text-zinc-800 dark:text-zinc-400">
                       <Phone className="h-3.5 w-3.5" />
                       {detail.customer_mobile}
                     </p>
                   </div>
                 </div>
                 <div className="rounded-xl border border-zinc-100 p-3 dark:border-zinc-800">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Service</p>
-                  <p className="font-medium text-zinc-900 dark:text-white">{detail.service?.name ?? "—"}</p>
-                  <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-800">Service</p>
+                  <p className="font-medium text-zinc-800 dark:text-white">{detail.service?.name ?? "—"}</p>
+                  <p className="mt-1 text-zinc-800 dark:text-zinc-400">
                     {detail.service?.duration_minutes ?? "—"} min
                     {detail.service?.price_cents != null ? ` · ${(detail.service.price_cents / 100).toLocaleString()} BDT` : ""}
                   </p>
-                  <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+                  <p className="mt-1 text-zinc-800 dark:text-zinc-400">
                     Rating: {detail.review ? `${detail.review.rating}/5` : "No rating yet"}
                   </p>
                 </div>
                 <div className="rounded-xl border border-zinc-100 p-3 dark:border-zinc-800">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Customer risk check</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-800">Customer risk check</p>
                   {riskBusy ? (
-                    <p className="mt-1 text-xs text-zinc-500">Loading profile…</p>
+                    <p className="mt-1 text-xs text-zinc-800">Loading profile…</p>
                   ) : riskProfile ? (
-                    <div className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">
+                    <div className="mt-1 text-xs text-zinc-800 dark:text-zinc-300">
                       <p>
                         Completed: <strong>{riskProfile.completed}</strong> · Cancelled: <strong>{riskProfile.cancelled}</strong> · No-show:{" "}
                         <strong>{riskProfile.no_show}</strong>
@@ -363,19 +363,19 @@ export function StaffAppointmentsClient() {
                       </p>
                     </div>
                   ) : (
-                    <p className="mt-1 text-xs text-zinc-500">No profile data.</p>
+                    <p className="mt-1 text-xs text-zinc-800">No profile data.</p>
                   )}
                 </div>
                 <div className="flex items-start gap-2 text-zinc-700 dark:text-zinc-300">
                   <Clock className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" />
                   <div>
                     <p>{formatStaffDateTime(detail.starts_at)}</p>
-                    <p className="text-xs text-zinc-500">Status: {bookingStatusLabel(detail.status)}</p>
+                    <p className="text-xs text-zinc-800">Status: {bookingStatusLabel(detail.status)}</p>
                   </div>
                 </div>
                 {detail.notes ? (
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Notes</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-800">Notes</p>
                     <p className="mt-1 whitespace-pre-wrap text-zinc-700 dark:text-zinc-300">{detail.notes}</p>
                   </div>
                 ) : null}
@@ -391,7 +391,7 @@ export function StaffAppointmentsClient() {
                   <Button type="button" variant="outline" className="mt-2 min-h-11 w-full" onClick={() => void submitReschedule(detail.id)}>
                     Send request to manager
                   </Button>
-                  <p className="mt-1 text-xs text-zinc-500">You cannot cancel bookings from here — only your manager can.</p>
+                  <p className="mt-1 text-xs text-zinc-800">You cannot cancel bookings from here — only your manager can.</p>
                 </div>
               </div>
               <DialogFooter className="flex-col gap-2 sm:flex-col">
@@ -422,7 +422,7 @@ export function StaffAppointmentsClient() {
       {upcomingCount > 0 ? (
         <button
           type="button"
-          className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-900 text-white shadow-lg lg:hidden dark:bg-rose-100 dark:text-zinc-900"
+          className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-900 text-white shadow-lg lg:hidden dark:bg-rose-100 dark:text-zinc-800"
           aria-label="Quick appointment actions"
           onClick={() => setFabOpen(true)}
         >
@@ -435,7 +435,7 @@ export function StaffAppointmentsClient() {
           <DialogHeader>
             <DialogTitle>Update a booking</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Pick an upcoming booking, then mark completed or no-show.</p>
+          <p className="text-sm text-zinc-800 dark:text-zinc-400">Pick an upcoming booking, then mark completed or no-show.</p>
           <ul className="max-h-64 space-y-2 overflow-y-auto">
             {rows
               .filter((b) => isUpcomingBookingStatus(b.status))
@@ -444,7 +444,7 @@ export function StaffAppointmentsClient() {
                 <li key={b.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-100 p-2 dark:border-zinc-800">
                   <div className="min-w-0 flex-1 text-sm">
                     <p className="truncate font-medium">{b.customer_name}</p>
-                    <p className="truncate text-xs text-zinc-500">{formatStaffDateTime(b.starts_at)}</p>
+                    <p className="truncate text-xs text-zinc-800">{formatStaffDateTime(b.starts_at)}</p>
                   </div>
                   <Button type="button" className="min-h-10 px-3 py-2 text-xs" onClick={() => void markStatus(b.id, "completed")}>
                     Done

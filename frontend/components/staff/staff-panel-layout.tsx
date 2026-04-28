@@ -45,9 +45,9 @@ function statusBadgeClass(status: string): string {
     case "busy":
       return "border-amber-300 bg-amber-50 text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100";
     case "on_leave":
-      return "border-zinc-300 bg-zinc-100 text-zinc-800 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100";
+      return "border-[color:var(--border)] bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-100";
     default:
-      return "border-zinc-200 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200";
+      return "border-[color:var(--border)] bg-white text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200";
   }
 }
 
@@ -115,7 +115,7 @@ export function StaffPanelLayout(props: { accessToken: string; children: React.R
           {!shopInactive ? (
             <Link
               href="/staff/notifications"
-              className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+              className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[color:var(--border)] bg-white text-zinc-700 shadow-sm dark:bg-zinc-900 dark:text-zinc-200"
               aria-label="Notifications"
             >
               <Bell className="h-5 w-5" />
@@ -132,7 +132,7 @@ export function StaffPanelLayout(props: { accessToken: string; children: React.R
     >
       {!shopInactive ? <StaffActAsBar accessToken={accessToken} onStaffContextChange={() => void load()} /> : null}
       <div className="mb-4 flex justify-end sm:hidden">
-        <div className="flex items-center gap-2 rounded-2xl border border-zinc-200/80 bg-white px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
+        <div className="flex items-center gap-2 rounded-2xl border border-[color:var(--border)] bg-white px-3 py-2 dark:bg-zinc-900/50">
           <AuthHeaderProfile />
         </div>
       </div>

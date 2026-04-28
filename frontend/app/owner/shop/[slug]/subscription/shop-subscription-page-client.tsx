@@ -32,24 +32,24 @@ export function ShopSubscriptionPageClient() {
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-        <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Current plan</h2>
+        <h2 className="text-base font-semibold text-zinc-800 dark:text-white">Current plan</h2>
         <dl className="mt-4 space-y-2 text-sm">
           <div className="flex justify-between gap-4">
-            <dt className="text-zinc-500">Plan</dt>
-            <dd className="font-medium text-zinc-900 dark:text-white">{sub?.plan_name ?? sub?.plan_key ?? meSub?.plan_key ?? "—"}</dd>
+            <dt className="text-zinc-800">Plan</dt>
+            <dd className="font-medium text-zinc-800 dark:text-white">{sub?.plan_name ?? sub?.plan_key ?? meSub?.plan_key ?? "—"}</dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-zinc-500">Status</dt>
+            <dt className="text-zinc-800">Status</dt>
             <dd className="font-medium capitalize">{sub?.status ?? meSub?.status ?? "—"}</dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-zinc-500">Current period ends</dt>
+            <dt className="text-zinc-800">Current period ends</dt>
             <dd className="text-right font-mono text-xs text-zinc-800 dark:text-zinc-200">
               {sub?.current_period_end ? new Date(sub.current_period_end).toLocaleDateString() : meSub?.current_period_end ?? "—"}
             </dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-zinc-500">Trial ends</dt>
+            <dt className="text-zinc-800">Trial ends</dt>
             <dd className="text-right font-mono text-xs text-zinc-800 dark:text-zinc-200">
               {sub?.trial_ends_at ? new Date(sub.trial_ends_at).toLocaleDateString() : meSub?.trial_ends_at ?? "—"}
             </dd>
@@ -66,7 +66,7 @@ export function ShopSubscriptionPageClient() {
       </section>
       {sub?.features && typeof sub.features === "object" ? (
         <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 text-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-          <h3 className="font-semibold text-zinc-900 dark:text-white">Plan limits</h3>
+          <h3 className="font-semibold text-zinc-800 dark:text-white">Plan limits</h3>
           <pre className="mt-3 max-h-48 overflow-auto rounded-lg bg-zinc-50 p-3 text-xs dark:bg-zinc-950">
             {JSON.stringify(sub.features, null, 2)}
           </pre>

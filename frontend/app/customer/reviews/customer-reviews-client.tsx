@@ -41,8 +41,8 @@ export function CustomerReviewsClient() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">My reviews</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">My reviews</h1>
+        <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">
           Reviews you submitted after completed services, with barber and shop info.
         </p>
       </div>
@@ -55,7 +55,7 @@ export function CustomerReviewsClient() {
           action={
             <Link
               href="/customer/appointments"
-              className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+              className="inline-flex min-h-11 items-center rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
             >
               Go to appointments
             </Link>
@@ -68,14 +68,14 @@ export function CustomerReviewsClient() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-300">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className={`h-4 w-4 ${i < r.rating ? "fill-amber-400" : "text-zinc-300 dark:text-zinc-600"}`} />
+                    <Star key={i} className={`h-4 w-4 ${i < r.rating ? "fill-amber-400" : "text-zinc-300 dark:text-zinc-800"}`} />
                   ))}
                   <span className="ml-1 text-sm font-medium">{r.rating}/5</span>
                 </p>
-                <p className="text-xs text-zinc-500">{r.created_at ? new Date(r.created_at).toLocaleString() : ""}</p>
+                <p className="text-xs text-zinc-800">{r.created_at ? new Date(r.created_at).toLocaleString() : ""}</p>
               </div>
 
-              <div className="mt-2 space-y-1 text-sm text-zinc-600 dark:text-zinc-300">
+              <div className="mt-2 space-y-1 text-sm text-zinc-800 dark:text-zinc-300">
                 {r.staff_name ? <p>Barber: {r.staff_name}</p> : null}
                 {r.shop ? (
                   <p className="inline-flex items-center gap-1">
@@ -98,7 +98,7 @@ export function CustomerReviewsClient() {
                   {r.shop.slug ? (
                     <Link
                       href={`/s/${r.shop.slug}/book`}
-                      className="rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white dark:bg-rose-100 dark:text-zinc-900"
+                      className="rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
                     >
                       Book again
                     </Link>

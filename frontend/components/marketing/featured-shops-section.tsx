@@ -10,10 +10,10 @@ export async function FeaturedShopsSection() {
   if (rows.length === 0) {
     return (
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6" aria-labelledby="featured-heading">
-        <h2 id="featured-heading" className="text-2xl font-semibold text-white">
+        <h2 id="featured-heading" className="text-2xl font-semibold text-[color:var(--foreground)]">
           Featured barbershops
         </h2>
-        <p className="mt-2 text-sm text-slate-300">
+        <p className="mt-2 text-sm text-[color:var(--paragraph)]">
           No public shops yet — check back soon or ask your salon to go live on the platform.
         </p>
       </section>
@@ -30,13 +30,13 @@ export async function FeaturedShopsSection() {
           <h2 id="featured-heading" className="text-2xl font-semibold text-white">
             Popular nearby shops
           </h2>
-          <p className="mt-1 text-sm text-slate-300">
+          <p className="mt-1 text-sm text-[color:var(--paragraph)]">
             Real registered barbershops with open booking slots.
           </p>
         </div>
         <Link
           href="/shops"
-          className="text-sm font-semibold text-blue-300 hover:underline"
+          className="text-sm font-semibold text-[color:var(--brand-primary)] hover:underline"
         >
           View all shops
         </Link>
@@ -48,16 +48,16 @@ export async function FeaturedShopsSection() {
               href={`/shops/${s.id}`}
               className="card-clean flex h-full flex-col p-5 transition hover:border-blue-400"
             >
-              <h3 className="text-lg font-semibold text-white">{s.name}</h3>
+              <h3 className="text-lg font-semibold text-[color:var(--foreground)]">{s.name}</h3>
               {s.address ? (
-                <p className="mt-2 flex items-start gap-2 text-sm text-slate-300">
-                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-300" />
+                <p className="mt-2 flex items-start gap-2 text-sm text-[color:var(--paragraph)]">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--brand-primary)]" />
                   <span>{s.address}</span>
                 </p>
               ) : (
-                <p className="mt-2 text-sm text-slate-400">Online booking available</p>
+                <p className="mt-2 text-sm text-[color:var(--caption)]">Online booking available</p>
               )}
-              <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-blue-300">
+              <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[color:var(--brand-primary)]">
                 <Star className="h-4 w-4" aria-hidden />
                 View &amp; book
               </span>

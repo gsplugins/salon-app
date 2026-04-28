@@ -13,20 +13,20 @@ export default async function ShopBookPage({ params }: { params: Promise<{ slug:
   const { slug } = await params;
 
   return (
-    <div className="min-h-screen text-slate-100">
-      <header className="border-b border-slate-800 bg-[#0a1220]/95 backdrop-blur-md">
+    <div className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
+      <header className="border-b border-[color:var(--border)] bg-[color:color-mix(in srgb, var(--background) 92%, transparent)] backdrop-blur-md">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-blue-300">
+            <p className="text-xs font-medium uppercase tracking-wider text-[color:var(--brand-primary)]">
               Online booking
             </p>
-            <h1 className="font-semibold tracking-tight text-white">
-              Book with <span className="text-blue-300">{slug}</span>
+            <h1 className="font-semibold tracking-tight text-[color:var(--foreground)]">
+              Book with <span className="text-[color:var(--brand-primary)]">{slug}</span>
             </h1>
           </div>
           <Link
             href="/"
-            className="shrink-0 text-sm font-medium text-blue-300 hover:underline"
+            className="shrink-0 text-sm font-medium text-[color:var(--brand-primary)] hover:underline"
           >
             Home
           </Link>

@@ -91,10 +91,10 @@ function Body({ accessToken }: { accessToken: string }) {
         <>
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Bookings</p>
-              <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-white">{data.total_bookings}</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-800">Bookings</p>
+              <p className="mt-1 text-2xl font-semibold text-zinc-800 dark:text-white">{data.total_bookings}</p>
               {data.comparison ? (
-                <p className="mt-1 text-xs text-zinc-500">
+                <p className="mt-1 text-xs text-zinc-800">
                   Prior: {data.comparison.total_bookings}{" "}
                   {data.comparison.total_bookings
                     ? `(${Math.round(((data.total_bookings - data.comparison.total_bookings) / data.comparison.total_bookings) * 100)}%)`
@@ -103,21 +103,21 @@ function Body({ accessToken }: { accessToken: string }) {
               ) : null}
             </div>
             <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Revenue (completed)</p>
-              <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-white">
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-800">Revenue (completed)</p>
+              <p className="mt-1 text-2xl font-semibold text-zinc-800 dark:text-white">
                 {(data.revenue_cents_completed / 100).toLocaleString(undefined, { style: "currency", currency: "BDT" })}
               </p>
             </div>
             <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Cancel + no-show rate</p>
-              <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-white">
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-800">Cancel + no-show rate</p>
+              <p className="mt-1 text-2xl font-semibold text-zinc-800 dark:text-white">
                 {data.cancellation_rate_percent != null ? `${data.cancellation_rate_percent}%` : "—"}
               </p>
             </div>
           </div>
 
           <section className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-            <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Top services (bookings)</h2>
+            <h2 className="text-sm font-semibold text-zinc-800 dark:text-white">Top services (bookings)</h2>
             <div className="mt-4 h-64 w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={barData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
@@ -132,7 +132,7 @@ function Body({ accessToken }: { accessToken: string }) {
           </section>
 
           <section className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-            <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Comparison vs previous period</h2>
+            <h2 className="text-sm font-semibold text-zinc-800 dark:text-white">Comparison vs previous period</h2>
             <div className="mt-4 h-56 w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={compareData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
@@ -151,12 +151,12 @@ function Body({ accessToken }: { accessToken: string }) {
 
           {data.top_staff && data.top_staff.length > 0 ? (
             <section className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
-              <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Top staff</h2>
+              <h2 className="text-sm font-semibold text-zinc-800 dark:text-white">Top staff</h2>
               <ul className="mt-3 divide-y divide-zinc-100 dark:divide-zinc-800">
                 {data.top_staff.map((s) => (
                   <li key={s.name} className="flex justify-between py-2 text-sm">
                     <span>{s.name}</span>
-                    <span className="text-zinc-500">{s.bookings} bookings</span>
+                    <span className="text-zinc-800">{s.bookings} bookings</span>
                   </li>
                 ))}
               </ul>

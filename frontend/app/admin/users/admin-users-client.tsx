@@ -184,7 +184,7 @@ function Body({ token }: { token: string }) {
             <TR key={u.id}>
               <TD>
                 <div className="font-medium">{u.name}</div>
-                <div className="text-xs text-zinc-500">{u.mobile}</div>
+                <div className="text-xs text-zinc-800">{u.mobile}</div>
               </TD>
               <TD className="text-xs">{u.role}</TD>
               <TD>{u.is_locked ? "Locked" : "Active"}</TD>

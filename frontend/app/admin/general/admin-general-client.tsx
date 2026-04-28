@@ -153,8 +153,8 @@ function Body({ token }: { token: string }) {
             </div>
             <div className="flex items-center justify-between gap-4 sm:col-span-2">
               <div>
-                <p className="text-sm font-medium text-zinc-900 dark:text-white">Maintenance mode</p>
-                <p className="text-xs text-zinc-500">When on, block new sessions from non–super-admins (API enforcement next).</p>
+                <p className="text-sm font-medium text-zinc-800 dark:text-white">Maintenance mode</p>
+                <p className="text-xs text-zinc-800">When on, block new sessions from non–super-admins (API enforcement next).</p>
               </div>
               <Switch checked={form.watch("maintenance_mode")} onCheckedChange={(v) => form.setValue("maintenance_mode", v, { shouldDirty: true })} />
             </div>

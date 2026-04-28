@@ -105,8 +105,8 @@ function Body({ accessToken }: { accessToken: string }) {
       <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Loyalty program</h2>
-            <p className="mt-1 text-xs text-zinc-500">Stored in shop settings until dedicated loyalty tables ship.</p>
+            <h2 className="text-base font-semibold text-zinc-800 dark:text-white">Loyalty program</h2>
+            <p className="mt-1 text-xs text-zinc-800">Stored in shop settings until dedicated loyalty tables ship.</p>
           </div>
           <Switch checked={form.watch("is_active")} onCheckedChange={(v) => form.setValue("is_active", v)} disabled={!canEdit} />
         </div>
@@ -114,7 +114,7 @@ function Body({ accessToken }: { accessToken: string }) {
           <div>
             <Label htmlFor="ppc">Spend per point (minor units, e.g. paisa / cents)</Label>
             <Input id="ppc" type="number" className="mt-1" disabled={!canEdit} {...form.register("points_per_spend_cents")} />
-            <p className="mt-1 text-[11px] text-zinc-500">Example: 10000 = 1 point per 100.00 BDT if currency uses minor units.</p>
+            <p className="mt-1 text-[11px] text-zinc-800">Example: 10000 = 1 point per 100.00 BDT if currency uses minor units.</p>
           </div>
           <div>
             <Label htmlFor="prr">Redemption value (currency per point)</Label>

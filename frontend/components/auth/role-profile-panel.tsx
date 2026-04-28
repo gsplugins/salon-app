@@ -62,8 +62,8 @@ export function RoleProfilePanel({
             <p className="text-xs font-medium uppercase tracking-wide text-rose-800/90 dark:text-rose-200/90">
               Signed in as
             </p>
-            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">{me.name}</h3>
-            <p className="font-mono text-sm text-zinc-500">{me.mobile}</p>
+            <h3 className="text-lg font-semibold text-zinc-800 dark:text-white">{me.name}</h3>
+            <p className="font-mono text-sm text-zinc-800">{me.mobile}</p>
             <div className="mt-2 flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-950 dark:bg-rose-950/50 dark:text-rose-100">
                 <UserCircle className="h-3.5 w-3.5" aria-hidden />
@@ -84,7 +84,7 @@ export function RoleProfilePanel({
         </div>
         <Link
           href={dash}
-          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 active:scale-[0.99] dark:bg-rose-100 dark:text-zinc-900 dark:hover:bg-white touch-manipulation"
+          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 active:scale-[0.99] dark:bg-rose-100 dark:text-zinc-800 dark:hover:bg-white touch-manipulation"
         >
           <LayoutDashboard className="h-4 w-4" aria-hidden />
           Open my dashboard
@@ -94,17 +94,17 @@ export function RoleProfilePanel({
 
       {showProfile && me.role === "customer" ? (
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900/40">
-          <div className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
+          <div className="flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
             <Sparkles className="h-4 w-4 text-rose-600 dark:text-rose-300" aria-hidden />
             Customer profile
           </div>
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mt-2 text-sm text-zinc-800 dark:text-zinc-400">
             Book appointments, track visits, and use loyalty points. Your data stays tied to your mobile number.
           </p>
-          <ul className="mt-3 space-y-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+          <ul className="mt-3 space-y-1.5 text-sm text-zinc-800 dark:text-zinc-400">
             <li className="flex items-center gap-2">
               <span className="text-rose-600 dark:text-rose-300">✓</span> Loyalty points:{" "}
-              <strong className="text-zinc-900 dark:text-white">{me.loyalty_points ?? 0}</strong>
+              <strong className="text-zinc-800 dark:text-white">{me.loyalty_points ?? 0}</strong>
             </li>
           </ul>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -132,17 +132,17 @@ export function RoleProfilePanel({
             variant === "session" ? "p-4" : "p-5"
           }`}
         >
-          <div className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
+          <div className="flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-white">
             <Building2 className="h-4 w-4 text-rose-600 dark:text-rose-300" aria-hidden />
             {variant === "session" ? "Shop access" : "Salon workspace"}
           </div>
           {variant === "session" ? (
-            <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-              Use the primary <strong className="text-zinc-900 dark:text-white">Shop</strong> tab above for
+            <p className="mt-2 text-sm leading-relaxed text-zinc-800 dark:text-zinc-400">
+              Use the primary <strong className="text-zinc-800 dark:text-white">Shop</strong> tab above for
               bookings, services, team, and shop settings.
             </p>
           ) : (
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">
               {me.is_manager || me.role === "manager"
                 ? "You have operational access: bookings, services, inventory, and reports. Billing and subscription are visible to the shop owner only."
                 : me.is_shop_owner || me.role === "shop_owner"
@@ -153,12 +153,12 @@ export function RoleProfilePanel({
             </p>
           )}
           <div className="mt-3 rounded-xl bg-zinc-50 px-3 py-2 text-sm dark:bg-zinc-800/50">
-            <span className="text-zinc-500">Active shop:</span>{" "}
-            <strong className="text-zinc-900 dark:text-white">{me.shop.name}</strong>
-            <span className="ml-2 font-mono text-xs text-zinc-500">/{me.shop.slug}</span>
+            <span className="text-zinc-800">Active shop:</span>{" "}
+            <strong className="text-zinc-800 dark:text-white">{me.shop.name}</strong>
+            <span className="ml-2 font-mono text-xs text-zinc-800">/{me.shop.slug}</span>
           </div>
           {canViewShopBilling(me) && me.subscription ? (
-            <div className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+            <div className="mt-3 text-sm text-zinc-800 dark:text-zinc-400">
               <span className="font-medium text-zinc-800 dark:text-zinc-200">Subscription:</span>{" "}
               {me.subscription.plan_key} ({me.subscription.status})
             </div>
@@ -170,7 +170,7 @@ export function RoleProfilePanel({
           <div className="mt-4 flex flex-wrap gap-2">
             <Link
               href={me.shop?.slug ? ownerShopBase(me.shop.slug) : "/owner/dashboard"}
-              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white active:scale-[0.99] dark:bg-rose-100 dark:text-zinc-900 touch-manipulation"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white active:scale-[0.99] dark:bg-rose-100 dark:text-zinc-800 touch-manipulation"
             >
               <LayoutDashboard className="h-4 w-4" aria-hidden />
               Owner / ops dashboard
