@@ -131,7 +131,7 @@ export default async function ShopDetailPage(props: Props) {
 
         <section className="mt-8 section-wrap p-5">
           <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--caption)]">Shop details</p>
-          <h2 className="mt-2 text-2xl font-semibold">Business and contact info</h2>
+          <h2 className="mt-2 text-2xl text-blue-300 font-semibold">Business and contact info</h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {shop.email ? (
               <p className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-elevated)] p-3 text-sm">
@@ -197,10 +197,10 @@ export default async function ShopDetailPage(props: Props) {
 
         <section className="mt-8 section-wrap p-5">
           <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Shop services</p>
-          <h2 className="mt-2 text-2xl font-semibold">Crafted for every style</h2>
+          <h2 className="mt-2 text-2xl text-blue-300 font-semibold">Crafted for every style</h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {servicePreview.map((s) => (
-              <article key={s.id} className="rounded-xl border border-zinc-700 bg-[#2c2c2c] p-4">
+              <article key={s.id} className="rounded-xl border border-zinc-700 bg-[radial-gradient(circle_at_70%_0%,rgba(179,92,111,0.14)_0%,rgba(255,246,248,0)_55%),linear-gradient(135deg,#fff6f8_0%,#fff1f4_100%)] p-4">
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-medium">{s.name}</p>
                   <span className="text-sm text-[#C8973A]">{money(s.price_cents)}</span>
@@ -218,15 +218,15 @@ export default async function ShopDetailPage(props: Props) {
 
         <section className="mt-8 section-wrap p-5">
           <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Meet the team</p>
-          <h2 className="mt-2 text-2xl font-semibold">Master barbers</h2>
+          <h2 className="mt-2 text-2xl text-blue-300 font-semibold">Master barbers</h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {staffPreview.map((member) => (
               <Link
                 key={member.id}
                 href={`/barbers/${member.id}`}
-                className="rounded-xl border border-zinc-700 bg-[#2c2c2c] p-4 transition hover:border-[#C8973A]"
+                className="rounded-xl border border-zinc-700 bg-[radial-gradient(circle_at_70%_0%,rgba(179,92,111,0.14)_0%,rgba(255,246,248,0)_55%),linear-gradient(135deg,#fff6f8_0%,#fff1f4_100%)] p-4 transition hover:border-[#C8973A]"
               >
-                <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-[#4A4A4A] text-sm font-semibold">
+                <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white border border-zinc-700 text-sm font-semibold">
                   {member.photo_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={member.photo_url} alt={member.name} className="h-full w-full object-cover" />
@@ -244,7 +244,7 @@ export default async function ShopDetailPage(props: Props) {
 
         <section className="mt-8 section-wrap p-5">
           <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Reviews</p>
-          <h2 className="mt-2 text-2xl font-semibold">What clients say</h2>
+          <h2 className="mt-2 text-2xl text-blue-300 font-semibold">What clients say</h2>
           {reviewsPreview.length === 0 ? (
             <p className="mt-4 text-sm text-zinc-400">No reviews yet.</p>
           ) : (
@@ -264,7 +264,7 @@ export default async function ShopDetailPage(props: Props) {
         </section>
 
         <section className="mt-8 section-wrap p-6">
-          <h2 className="text-2xl font-semibold">Book your appointment</h2>
+          <h2 className="text-2xl text-blue-300 font-semibold">Book your appointment</h2>
           <p className="mt-2 text-sm text-zinc-300">Pick services, barber preference, and preferred time in minutes.</p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <div className="rounded-lg border border-zinc-700 bg-[#f5f0e8] px-3 py-2 text-sm text-zinc-700">Your name</div>

@@ -12,6 +12,7 @@ import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import {
   fetchAdminBookings,
+  fetchShopProfile,
   fetchStaffCatalog,
   fetchOwnerCustomerRiskProfile,
   formatApiError,
@@ -26,11 +27,27 @@ function isoDate(d: Date): string {
 }
 
 const STATUS_KEYS = ["confirmed", "completed", "cancelled", "pending", "no_show"] as const;
+const DAY_WINDOW = 6; // today + previous 5 days
+
+function statusBadgeClass(status: string): string {
+  if (status === "pending") return "bg-amber-100 text-amber-800";
+  if (status === "confirmed") return "bg-blue-100 text-blue-800";
+  if (status === "completed") return "bg-emerald-100 text-emerald-800";
+  if (status === "cancelled") return "bg-rose-100 text-rose-800";
+  return "bg-zinc-200 text-zinc-700";
+}
+
+function statusLabel(status: string): string {
+  if (status === "confirmed") return "Booked";
+  if (status === "no_show") return "No-show";
+  if (!status) return "Unknown";
+  return status.charAt(0).toUpperCase() + status.slice(1).replace("_", " ");
+}
 
 function FormBody({ accessToken }: { accessToken: string }) {
-  const [from, setFrom] = useState(() => {
+  const [from] = useState(() => {
     const d = new Date();
-    d.setDate(d.getDate() - 7);
+    d.setDate(d.getDate() - (DAY_WINDOW - 1));
     return isoDate(d);
   });
   const [to, setTo] = useState(() => isoDate(new Date()));
@@ -38,6 +55,7 @@ function FormBody({ accessToken }: { accessToken: string }) {
   const [staffId, setStaffId] = useState<string>("");
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [staff, setStaff] = useState<CatalogStaffRow[]>([]);
+  const [canViewAppointments, setCanViewAppointments] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState<BookingRow | null>(null);
   const [notes, setNotes] = useState("");
@@ -48,6 +66,15 @@ function FormBody({ accessToken }: { accessToken: string }) {
   const loadStaff = useCallback(async () => {
     const res = await fetchStaffCatalog(accessToken);
     if (res.ok) setStaff(res.data);
+  }, [accessToken]);
+
+  const loadPermissions = useCallback(async () => {
+    const res = await fetchShopProfile(accessToken);
+    if (!res.ok) {
+      setCanViewAppointments(false);
+      return;
+    }
+    setCanViewAppointments(res.data.permissions?.can_edit_booking_rules === true);
   }, [accessToken]);
 
   const load = useCallback(async () => {
@@ -68,16 +95,33 @@ function FormBody({ accessToken }: { accessToken: string }) {
   }, [accessToken, from, to, status, staffId]);
 
   useEffect(() => {
-     
+    void loadPermissions();
     void loadStaff();
-  }, [loadStaff]);
+  }, [loadPermissions, loadStaff]);
 
   useEffect(() => {
-     
+    if (canViewAppointments !== true) return;
     void load();
-  }, [load]);
+  }, [load, canViewAppointments]);
 
   const sorted = useMemo(() => [...rows].sort((a, b) => a.starts_at.localeCompare(b.starts_at)), [rows]);
+  const slotsByDay = useMemo(() => {
+    const map = new Map<string, BookingRow[]>();
+    for (let i = 0; i < DAY_WINDOW; i += 1) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      map.set(isoDate(d), []);
+    }
+    for (const b of sorted) {
+      const day = b.starts_at.slice(0, 10);
+      const bucket = map.get(day);
+      if (bucket) bucket.push(b);
+    }
+    return [...map.entries()].map(([day, bookings]) => ({
+      day,
+      bookings: [...bookings].sort((a, b) => a.starts_at.localeCompare(b.starts_at))
+    }));
+  }, [sorted]);
   const scheduleByStaff = useMemo(() => {
     const grouped = new Map<
       number,
@@ -150,16 +194,26 @@ function FormBody({ accessToken }: { accessToken: string }) {
     void load();
   }
 
+  if (canViewAppointments === null) {
+    return <Skeleton className="h-64 w-full rounded-2xl" />;
+  }
+
+  if (canViewAppointments === false) {
+    return (
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
+        Only shop admin/manager can view appointment slots.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
         <div>
-          <Label htmlFor="from">From</Label>
-          <Input id="from" type="date" className="mt-1 w-40" value={from} onChange={(e) => setFrom(e.target.value)} />
-        </div>
-        <div>
-          <Label htmlFor="to">To</Label>
-          <Input id="to" type="date" className="mt-1 w-40" value={to} onChange={(e) => setTo(e.target.value)} />
+          <Label>Range</Label>
+          <p className="mt-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700">
+            {new Date(from).toLocaleDateString()} - {new Date(to).toLocaleDateString()} (last 5 days + today)
+          </p>
         </div>
         <div>
           <Label htmlFor="st">Status</Label>
@@ -197,6 +251,45 @@ function FormBody({ accessToken }: { accessToken: string }) {
           Refresh
         </Button>
       </div>
+
+      {canViewAppointments === true ? (
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
+          <h2 className="text-sm font-semibold text-zinc-800 dark:text-white">Daily booking slots (today + last 5 days)</h2>
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
+            {slotsByDay.map((dayRow) => (
+              <div key={dayRow.day} className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-700">
+                <p className="text-sm font-semibold text-zinc-800 dark:text-white">
+                  {new Date(dayRow.day).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}
+                </p>
+                {dayRow.bookings.length === 0 ? (
+                  <p className="mt-2 text-xs text-zinc-800">No slots booked.</p>
+                ) : (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {dayRow.bookings.map((b) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => {
+                          setActive(b);
+                          setNotes(b.notes ?? "");
+                        }}
+                        className="rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-left text-xs hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-950"
+                      >
+                        <span className="block font-medium">
+                          {new Date(b.starts_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                        </span>
+                        <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 ${statusBadgeClass(b.status)}`}>
+                          {statusLabel(b.status)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
         <h2 className="text-sm font-semibold text-zinc-800 dark:text-white">Staff schedule by status</h2>
@@ -277,9 +370,11 @@ function FormBody({ accessToken }: { accessToken: string }) {
         </div>
       )}
 
-      <p className="text-xs text-zinc-800">
-        Drag-and-drop reschedule and FullCalendar views can plug into the same <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">PATCH /my/shop/bookings/:id</code> endpoint.
-      </p>
+      {canViewAppointments === true ? (
+        <p className="text-xs text-zinc-800">
+          Click any slot to view who booked and manage status/notes.
+        </p>
+      ) : null}
 
       <Dialog open={active !== null} onOpenChange={(o) => !o && setActive(null)}>
         <DialogContent className="max-w-md">

@@ -77,6 +77,72 @@ function inferPlanKey(raw: string | null | undefined): PlanKey {
   return "free";
 }
 
+async function notifyStaffAndManagersAboutBooking(args: {
+  shopId: number;
+  assignedStaffId: number;
+  bookingId: number;
+  customerName: string;
+  startsAtIso: string;
+  status: string;
+}): Promise<void> {
+  const { shopId, assignedStaffId, bookingId, customerName, startsAtIso, status } = args;
+  try {
+    const normalizedStatus = String(status ?? "").trim().toLowerCase();
+    const isPending = normalizedStatus === "pending";
+
+    const recipients = new Set<number>([assignedStaffId]);
+
+    // 1) Shop-level staff rows marked as manager.
+    const managerByRole = await supabaseAdmin
+      .from("salon_staff")
+      .select("id")
+      .eq("shop_id", shopId)
+      .eq("is_active", true)
+      .eq("staff_role", "manager");
+    for (const row of (managerByRole.data ?? []) as { id: number }[]) recipients.add(row.id);
+
+    // 2) Users added as managers through shop_members.
+    const managerMembers = await supabaseAdmin
+      .from("shop_members")
+      .select("user_id")
+      .eq("shop_id", shopId)
+      .eq("is_active", true)
+      .eq("role", "manager");
+    const managerUserIds = (managerMembers.data ?? [])
+      .map((r: { user_id: string | null }) => r.user_id)
+      .filter((x): x is string => Boolean(x));
+    if (managerUserIds.length) {
+      const managerStaffRows = await supabaseAdmin
+        .from("salon_staff")
+        .select("id")
+        .eq("shop_id", shopId)
+        .eq("is_active", true)
+        .in("user_id", managerUserIds);
+      for (const row of (managerStaffRows.data ?? []) as { id: number }[]) recipients.add(row.id);
+    }
+
+    const startsLabel = new Date(startsAtIso).toLocaleString();
+    const type = isPending ? "booking_pending" : "booking_confirmed";
+    const title = isPending ? "New pending booking" : "New confirmed booking";
+    const body = isPending
+      ? `${customerName} requested a booking for ${startsLabel}.`
+      : `${customerName} booked an appointment for ${startsLabel}.`;
+
+    const rows = [...recipients].map((sid) => ({
+      salon_staff_id: sid,
+      type,
+      title,
+      body,
+      metadata: { booking_id: bookingId, shop_id: shopId, status: normalizedStatus || null },
+      is_read: false
+    }));
+
+    if (rows.length) await supabaseAdmin.from("staff_notifications").insert(rows);
+  } catch {
+    // Do not fail booking creation if notification fan-out fails.
+  }
+}
+
 function normalizedPlanAccess(input: unknown): PlanAccessMap {
   const next = JSON.parse(JSON.stringify(DEFAULT_PLAN_ACCESS)) as PlanAccessMap;
   if (!input || typeof input !== "object") return next;
@@ -1470,7 +1536,16 @@ export function mountMyShopRoutes(router: Router): void {
       .select("id")
       .single();
     if (ins.error || !ins.data) return fail(res, 500, "Could not create booking.");
-    const row = await bookingToRow((ins.data as { id: number }).id);
+    const bookingId = (ins.data as { id: number }).id;
+    await notifyStaffAndManagersAboutBooking({
+      shopId: shop.id,
+      assignedStaffId: staffId,
+      bookingId,
+      customerName: parsed.data.customer_name,
+      startsAtIso: starts.toISOString(),
+      status: parsed.data.status ?? "confirmed"
+    });
+    const row = await bookingToRow(bookingId);
     return okData(res, row, 201);
   });
 
