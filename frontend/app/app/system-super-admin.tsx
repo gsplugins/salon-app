@@ -16,6 +16,13 @@ import {
   type SystemShopFilter,
   type SystemShopRow,
 } from "@/lib/salon-api";
+import {
+  fetchAdminIntegrations,
+  patchAdminBkash,
+  patchAdminMerchant,
+  postAdminBkashCheck,
+  type AdminBkashIntegration,
+} from "@/lib/admin-api";
 
 const FILTERS: { id: SystemShopFilter; label: string }[] = [
   { id: "all", label: "All" },
@@ -55,7 +62,8 @@ function approvalBadge(status: string | undefined): string {
   return "Pending";
 }
 
-type Tab = "salons" | "bkash";
+type Tab = "salons" | "bkash" | "settings";
+type MerchantGateway = "bkash" | "nagad" | "card" | "bank_transfer";
 
 export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
   const [tab, setTab] = useState<Tab>("salons");
@@ -85,6 +93,21 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
   const [editSlug, setEditSlug] = useState("");
   const [editStaffLimit, setEditStaffLimit] = useState("30");
   const [editApproval, setEditApproval] = useState<"pending" | "approved" | "rejected">("pending");
+  const [merchantGateway, setMerchantGateway] = useState<MerchantGateway>("bkash");
+  const [merchantAccountName, setMerchantAccountName] = useState("");
+  const [merchantAccountNumber, setMerchantAccountNumber] = useState("");
+  const [merchantSettlementNote, setMerchantSettlementNote] = useState("");
+  const [merchantAutoActivate, setMerchantAutoActivate] = useState(true);
+  const [bkashEnabled, setBkashEnabled] = useState(true);
+  const [bkashBaseUrl, setBkashBaseUrl] = useState("https://tokenized.sandbox.bka.sh/v1.2.0-beta");
+  const [bkashUsername, setBkashUsername] = useState("");
+  const [bkashPassword, setBkashPassword] = useState("");
+  const [bkashAppKey, setBkashAppKey] = useState("");
+  const [bkashAppSecret, setBkashAppSecret] = useState("");
+  const [bkashCallbackUrl, setBkashCallbackUrl] = useState("");
+  const [bkashWebhookUrl, setBkashWebhookUrl] = useState("");
+  const [bkashSandbox, setBkashSandbox] = useState(true);
+  const [bkashCheckMessage, setBkashCheckMessage] = useState("");
 
   const loadShops = useCallback(async () => {
     setBusy(true);
@@ -121,6 +144,29 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
      
     void loadBkash();
   }, [tab, loadBkash]);
+
+  useEffect(() => {
+    void (async () => {
+      const res = await fetchAdminIntegrations(accessToken);
+      if (!res.ok) return;
+      const bkash = (res.data.bkash ?? {}) as AdminBkashIntegration;
+      if (typeof bkash.enabled === "boolean") setBkashEnabled(bkash.enabled);
+      if (typeof bkash.base_url === "string" && bkash.base_url.trim() !== "") setBkashBaseUrl(bkash.base_url);
+      if (typeof bkash.username === "string") setBkashUsername(bkash.username);
+      if (typeof bkash.password === "string") setBkashPassword(bkash.password);
+      if (typeof bkash.app_key === "string") setBkashAppKey(bkash.app_key);
+      if (typeof bkash.app_secret === "string") setBkashAppSecret(bkash.app_secret);
+      if (typeof bkash.callback_url === "string") setBkashCallbackUrl(bkash.callback_url);
+      if (typeof bkash.webhook_url === "string") setBkashWebhookUrl(bkash.webhook_url);
+      if (typeof bkash.sandbox === "boolean") setBkashSandbox(bkash.sandbox);
+      const merchant = (res.data.merchant ?? {}) as Record<string, unknown>;
+      if (typeof merchant.gateway === "string") setMerchantGateway(merchant.gateway as MerchantGateway);
+      if (typeof merchant.account_name === "string") setMerchantAccountName(merchant.account_name);
+      if (typeof merchant.account_number === "string") setMerchantAccountNumber(merchant.account_number);
+      if (typeof merchant.settlement_note === "string") setMerchantSettlementNote(merchant.settlement_note);
+      if (typeof merchant.auto_activate === "boolean") setMerchantAutoActivate(merchant.auto_activate);
+    })();
+  }, [accessToken]);
 
   async function toggleShopActive(s: SystemShopRow) {
     setBusy(true);
@@ -227,6 +273,73 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
     void loadBkash();
   }
 
+  async function saveMerchantSettings() {
+    if (merchantAccountName.trim() === "" || merchantAccountNumber.trim() === "") {
+      setNotice({ type: "err", text: "Merchant account name and number are required." });
+      return;
+    }
+    setBusy(true);
+    const [bkashRes, merchantRes] = await Promise.all([
+      patchAdminBkash(accessToken, {
+        enabled: bkashEnabled,
+        base_url: bkashBaseUrl.trim(),
+        username: bkashUsername.trim(),
+        password: bkashPassword.trim(),
+        app_key: bkashAppKey.trim(),
+        app_secret: bkashAppSecret.trim(),
+        callback_url: bkashCallbackUrl.trim(),
+        webhook_url: bkashWebhookUrl.trim(),
+        sandbox: bkashSandbox,
+      }),
+      patchAdminMerchant(accessToken, {
+        gateway: merchantGateway,
+        account_name: merchantAccountName.trim(),
+        account_number: merchantAccountNumber.trim(),
+        settlement_note: merchantSettlementNote.trim(),
+        auto_activate: merchantAutoActivate,
+      }),
+    ]);
+    setBusy(false);
+    if (!bkashRes.ok) {
+      setNotice({ type: "err", text: formatApiError(bkashRes.body) });
+      return;
+    }
+    if (!merchantRes.ok) {
+      setNotice({ type: "err", text: "bKash saved, but merchant settings update failed." });
+      return;
+    }
+    setNotice({ type: "ok", text: "Merchant and bKash integration settings saved." });
+  }
+
+  async function checkBkashConnection() {
+    setBusy(true);
+    const saveRes = await patchAdminBkash(accessToken, {
+      enabled: bkashEnabled,
+      base_url: bkashBaseUrl.trim(),
+      username: bkashUsername.trim(),
+      password: bkashPassword.trim(),
+      app_key: bkashAppKey.trim(),
+      app_secret: bkashAppSecret.trim(),
+      callback_url: bkashCallbackUrl.trim(),
+      webhook_url: bkashWebhookUrl.trim(),
+      sandbox: bkashSandbox,
+    });
+    if (!saveRes.ok) {
+      setBusy(false);
+      setNotice({ type: "err", text: formatApiError(saveRes.body) });
+      return;
+    }
+    const checkRes = await postAdminBkashCheck(accessToken);
+    setBusy(false);
+    if (!checkRes.ok) {
+      setBkashCheckMessage("");
+      setNotice({ type: "err", text: formatApiError(checkRes.body) });
+      return;
+    }
+    setBkashCheckMessage(`${checkRes.data.message} (${new Date(checkRes.data.granted_at).toLocaleString()})`);
+    setNotice({ type: "ok", text: "bKash connection successful." });
+  }
+
   async function submitEditShop() {
     if (!editShop) return;
     const lim = Number.parseInt(editStaffLimit, 10);
@@ -299,6 +412,17 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
           }`}
         >
           bKash payments
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("settings")}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium ${
+            tab === "settings"
+              ? "bg-zinc-900 text-white dark:bg-rose-100 dark:text-zinc-800"
+              : "border border-zinc-200 text-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
+          }`}
+        >
+          Settings
         </button>
       </div>
 
@@ -650,6 +774,155 @@ export function SystemSuperAdmin({ accessToken }: { accessToken: string }) {
             </div>
           ) : null}
         </>
+      )}
+
+      {tab === "settings" && (
+        <div className="grid gap-5">
+          <section className="rounded-2xl border border-rose-100/80 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
+            <h3 className="text-base font-semibold text-zinc-800 dark:text-white">Merchant account + bKash credentials</h3>
+            <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">
+              Configure full bKash API credentials and merchant settlement details.
+            </p>
+            <div className="mt-4 grid gap-3">
+              <label className="flex items-center gap-2 text-sm text-zinc-800 dark:text-zinc-300">
+                <input type="checkbox" checked={bkashEnabled} onChange={(e) => setBkashEnabled(e.target.checked)} />
+                Enable bKash gateway integration
+              </label>
+              <label className="text-xs font-medium text-zinc-800">
+                Gateway
+                <select
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={merchantGateway}
+                  onChange={(e) => setMerchantGateway(e.target.value as MerchantGateway)}
+                >
+                  <option value="bkash">bKash</option>
+                  {/* <option value="nagad">Nagad</option> */}
+                  {/* <option value="card">Card gateway</option> */}
+                  {/* <option value="bank_transfer">Bank transfer</option> */}
+                </select>
+              </label>
+              <label className="text-xs font-medium text-zinc-800">
+                bKash Base URL
+                <input
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={bkashBaseUrl}
+                  onChange={(e) => setBkashBaseUrl(e.target.value)}
+                  placeholder="https://tokenized.sandbox.bka.sh/v1.2.0-beta"
+                />
+              </label>
+              <label className="text-xs font-medium text-zinc-800">
+                bKash Username
+                <input
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={bkashUsername}
+                  onChange={(e) => setBkashUsername(e.target.value)}
+                />
+              </label>
+              <label className="text-xs font-medium text-zinc-800">
+                bKash Password
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={bkashPassword}
+                  onChange={(e) => setBkashPassword(e.target.value)}
+                />
+              </label>
+              <label className="text-xs font-medium text-zinc-800">
+                bKash App Key
+                <input
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={bkashAppKey}
+                  onChange={(e) => setBkashAppKey(e.target.value)}
+                />
+              </label>
+              <label className="text-xs font-medium text-zinc-800">
+                bKash App Secret
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={bkashAppSecret}
+                  onChange={(e) => setBkashAppSecret(e.target.value)}
+                />
+              </label>
+              <label className="text-xs font-medium text-zinc-800">
+                Callback URL (optional)
+                <input
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={bkashCallbackUrl}
+                  onChange={(e) => setBkashCallbackUrl(e.target.value)}
+                />
+              </label>
+              <label className="text-xs font-medium text-zinc-800">
+                Webhook URL (optional)
+                <input
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={bkashWebhookUrl}
+                  onChange={(e) => setBkashWebhookUrl(e.target.value)}
+                />
+              </label>
+              <label className="flex items-center gap-2 text-sm text-zinc-800 dark:text-zinc-300">
+                <input type="checkbox" checked={bkashSandbox} onChange={(e) => setBkashSandbox(e.target.checked)} />
+                Use sandbox environment
+              </label>
+              <label className="text-xs font-medium text-zinc-800">
+                Merchant account name
+                <input
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={merchantAccountName}
+                  onChange={(e) => setMerchantAccountName(e.target.value)}
+                  placeholder="e.g. Salon App Ltd"
+                />
+              </label>
+              <label className="text-xs font-medium text-zinc-800">
+                Merchant account number / wallet
+                <input
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={merchantAccountNumber}
+                  onChange={(e) => setMerchantAccountNumber(e.target.value)}
+                  placeholder="e.g. 01XXXXXXXXX"
+                />
+              </label>
+              <label className="text-xs font-medium text-zinc-800">
+                Settlement note (optional)
+                <input
+                  className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={merchantSettlementNote}
+                  onChange={(e) => setMerchantSettlementNote(e.target.value)}
+                  placeholder="e.g. Weekly settlement every Sunday"
+                />
+              </label>
+              <label className="flex items-center gap-2 text-sm text-zinc-800 dark:text-zinc-300">
+                <input
+                  type="checkbox"
+                  checked={merchantAutoActivate}
+                  onChange={(e) => setMerchantAutoActivate(e.target.checked)}
+                />
+                Auto-activate shop after successful payment
+              </label>
+            </div>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void saveMerchantSettings()}
+              className="mt-4 rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
+            >
+              Save full integration
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void checkBkashConnection()}
+              className="mt-2 rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 dark:border-zinc-600 dark:text-zinc-200"
+            >
+              Check connection status
+            </button>
+            {bkashCheckMessage ? (
+              <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-300">{bkashCheckMessage}</p>
+            ) : null}
+          </section>
+        </div>
       )}
 
       {extendRow ? (

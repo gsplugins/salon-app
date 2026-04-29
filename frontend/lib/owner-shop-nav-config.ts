@@ -1,6 +1,7 @@
 import type { AuthMePayload } from "@/lib/auth-api";
 import type { ShopProfile } from "@/lib/salon-api";
 import { canViewShopBilling } from "@/lib/role-access";
+import { isSegmentAllowedForProfile, planTierLabel, requiredPlanForSegment } from "@/lib/shop-plan-access";
 import { shopPlanHasLoyalty, shopPlanHasMultiBranch } from "@/lib/shop-plan-features";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -30,6 +31,8 @@ export type OwnerNavEntry = {
   label: string;
   icon: LucideIcon;
   hint?: string;
+  disabled?: boolean;
+  disabledHint?: string;
 };
 
 export type OwnerNavGroup = { id: string; title: string; items: OwnerNavEntry[] };
@@ -89,6 +92,18 @@ export function buildOwnerShopNavGroups(input: OwnerShopNavBuildInput): OwnerNav
   const showLoyalty = !profileLoading && profile !== null && shopPlanHasLoyalty(profile);
   const showMultiBranchNav = !profileLoading && profile !== null && shopPlanHasMultiBranch(profile);
 
+  const withPlanState = (entry: OwnerNavEntry): OwnerNavEntry => {
+    if (profileLoading || profile === null) return entry;
+    const seg = entry.href.split("/").pop() ?? "";
+    const required = requiredPlanForSegment(seg);
+    if (isSegmentAllowedForProfile(profile, seg)) return entry;
+    return {
+      ...entry,
+      disabled: true,
+      disabledHint: `Upgrade to ${planTierLabel(required)} plan to unlock ${entry.label}.`,
+    };
+  };
+
   return [
     {
       id: "main",
@@ -112,10 +127,10 @@ export function buildOwnerShopNavGroups(input: OwnerShopNavBuildInput): OwnerNav
       id: "catalog",
       title: "Menu & team",
       items: [
-        { href: o("services"), label: "Services", icon: Scissors, hint: "Catalog, duration, prices" },
-        { href: o("staff"), label: "Staff", icon: Users, hint: "Team, roles, services" },
+        withPlanState({ href: o("services"), label: "Services", icon: Scissors, hint: "Catalog, duration, prices" }),
+        withPlanState({ href: o("staff"), label: "Staff", icon: Users, hint: "Team, roles, services" }),
         ...(showMultiBranchNav
-          ? [{ href: o("branches"), label: "Branches", icon: Store, hint: "Other locations" } as const]
+          ? [withPlanState({ href: o("branches"), label: "Branches", icon: Store, hint: "Other locations" } as const)]
           : []),
       ],
     },
@@ -123,9 +138,9 @@ export function buildOwnerShopNavGroups(input: OwnerShopNavBuildInput): OwnerNav
       id: "ops",
       title: "Operations",
       items: [
-        { href: o("appointments"), label: "Appointments", icon: CalendarDays, hint: "Calendar and list" },
-        { href: o("customers"), label: "Customers", icon: UserRound, hint: "Directory and visits" },
-        { href: o("payments"), label: "Payments", icon: CreditCard, hint: "Transactions and refunds" },
+        withPlanState({ href: o("appointments"), label: "Appointments", icon: CalendarDays, hint: "Calendar and list" }),
+        withPlanState({ href: o("customers"), label: "Customers", icon: UserRound, hint: "Directory and visits" }),
+        withPlanState({ href: o("payments"), label: "Payments", icon: CreditCard, hint: "Transactions and refunds" }),
         { href: o("queue"), label: "Walk-in queue", icon: ListOrdered, hint: "Live queue" },
         { href: o("reviews"), label: "Reviews", icon: MessageSquare, hint: "Ratings and replies" },
       ],
@@ -147,9 +162,9 @@ export function buildOwnerShopNavGroups(input: OwnerShopNavBuildInput): OwnerNav
       id: "insights",
       title: "Insights",
       items: [
-        { href: o("analytics"), label: "Analytics", icon: LineChart, hint: "Revenue and performance" },
-        { href: o("reports"), label: "Reports", icon: BarChart3, hint: "Legacy reports" },
-        { href: o("inventory"), label: "Inventory", icon: Package, hint: "Products & stock" },
+        withPlanState({ href: o("analytics"), label: "Analytics", icon: LineChart, hint: "Revenue and performance" }),
+        withPlanState({ href: o("reports"), label: "Reports", icon: BarChart3, hint: "Legacy reports" }),
+        withPlanState({ href: o("inventory"), label: "Inventory", icon: Package, hint: "Products & stock" }),
       ],
     },
     {
@@ -159,7 +174,7 @@ export function buildOwnerShopNavGroups(input: OwnerShopNavBuildInput): OwnerNav
         { href: o("account"), label: "Account", icon: UserRound, hint: "Your profile and roles" },
         { href: o("settings"), label: "Shop preferences", icon: Settings2, hint: "Legacy hub (hours, billing)" },
         ...(showLoyalty
-          ? [{ href: o("loyalty"), label: "Loyalty", icon: Gift, hint: "Points rules and balances" } as const]
+          ? [withPlanState({ href: o("loyalty"), label: "Loyalty", icon: Gift, hint: "Points rules and balances" } as const)]
           : []),
         ...(showSubscription
           ? [{ href: o("subscription"), label: "Subscription", icon: CreditCard, hint: "Plan and usage" } as const]

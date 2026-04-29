@@ -1,11 +1,9 @@
 import Link from "next/link";
 import { MapPin, Star } from "lucide-react";
-import { serverFetchJson } from "@/lib/server-api";
-import type { Paginated, PublicShopListRow } from "@/lib/salon-api";
+import type { PublicShopListRow } from "@/lib/salon-api";
 
-export async function FeaturedShopsSection() {
-  const raw = await serverFetchJson<Paginated<PublicShopListRow>>(`/public/shops?per_page=6`);
-  const rows = raw?.data ?? [];
+export function FeaturedShopsSection({ shops }: { shops: PublicShopListRow[] }) {
+  const rows = shops.slice(0, 6);
 
   if (rows.length === 0) {
     return (
@@ -27,7 +25,7 @@ export async function FeaturedShopsSection() {
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 id="featured-heading" className="text-2xl font-semibold text-white">
+          <h2 id="featured-heading" className="text-2xl font-semibold text-[color:var(--foreground)]">
             Popular nearby shops
           </h2>
           <p className="mt-1 text-sm text-[color:var(--paragraph)]">

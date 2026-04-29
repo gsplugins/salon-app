@@ -1,6 +1,8 @@
 import { createApp } from "./app";
 
-let baseUrlPromise: Promise<string> | null = null;
+declare global {
+  var __localApiBaseUrl: Promise<string> | undefined;
+}
 
 async function startServer(): Promise<string> {
   const app = createApp();
@@ -16,6 +18,6 @@ async function startServer(): Promise<string> {
 }
 
 export function getLocalApiBaseUrl(): Promise<string> {
-  if (!baseUrlPromise) baseUrlPromise = startServer();
-  return baseUrlPromise;
+  if (!global.__localApiBaseUrl) global.__localApiBaseUrl = startServer();
+  return global.__localApiBaseUrl;
 }

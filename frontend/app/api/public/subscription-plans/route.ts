@@ -1,7 +1,8 @@
 import { createRouteHandlers } from "@/lib/api-server/next-route-proxy";
 
 export const runtime = "nodejs";
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
-const { GET } = createRouteHandlers("/shops/:slug/meta", ["GET"]);
+const { GET } = createRouteHandlers("/public/subscription-plans", ["GET"]);
 export { GET };
+

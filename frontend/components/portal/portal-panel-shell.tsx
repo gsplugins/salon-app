@@ -14,6 +14,8 @@ export type PortalNavItem = {
   label: string;
   icon: LucideIcon;
   exact?: boolean;
+  disabled?: boolean;
+  disabledHint?: string;
 };
 
 export type PortalPanelHeaderModel =
@@ -184,20 +186,30 @@ export function PortalPanelShell(props: {
       <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-[color:var(--border)] bg-[color:color-mix(in srgb, var(--surface) 92%, transparent)] pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
         <ul className="mx-auto flex max-w-lg items-stretch justify-between gap-0 px-1 pt-1">
           {props.primaryNav.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const active = !item.disabled && (pathname === item.href || pathname.startsWith(`${item.href}/`));
             const Icon = item.icon;
             return (
               <li key={item.href} className="min-w-0 flex-1">
-                <Link
-                  href={item.href}
-                  className={cn(
-                    "flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 py-1 text-[10px] font-semibold",
-                    active ? "text-[color:var(--brand-primary)]" : "text-[color:var(--caption)]"
-                  )}
-                >
-                  <Icon className={cn("h-5 w-5 shrink-0", active ? "text-[color:var(--brand-primary)]" : "")} />
-                  <span className="truncate text-center leading-tight">{item.label}</span>
-                </Link>
+                {item.disabled ? (
+                  <div
+                    className="flex min-h-[52px] cursor-not-allowed flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 py-1 text-[10px] font-semibold text-zinc-400 opacity-70"
+                    title={item.disabledHint}
+                  >
+                    <Icon className="h-5 w-5 shrink-0" />
+                    <span className="truncate text-center leading-tight">{item.label}</span>
+                  </div>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 py-1 text-[10px] font-semibold",
+                      active ? "text-[color:var(--brand-primary)]" : "text-[color:var(--caption)]"
+                    )}
+                  >
+                    <Icon className={cn("h-5 w-5 shrink-0", active ? "text-[color:var(--brand-primary)]" : "")} />
+                    <span className="truncate text-center leading-tight">{item.label}</span>
+                  </Link>
+                )}
               </li>
             );
           })}
@@ -208,6 +220,18 @@ export function PortalPanelShell(props: {
 }
 
 function PortalNavLink(props: PortalNavItem & { pathname: string; onClick?: () => void }) {
+  if (props.disabled) {
+    const Icon = props.icon;
+    return (
+      <div
+        className="flex min-h-11 cursor-not-allowed items-center gap-3 rounded-xl border border-dashed border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-400 opacity-80 dark:border-zinc-700 dark:text-zinc-500"
+        title={props.disabledHint}
+      >
+        <Icon className="h-4 w-4 shrink-0 opacity-70" />
+        <span className="truncate">{props.label}</span>
+      </div>
+    );
+  }
   const active = props.exact
     ? props.pathname === props.href || props.pathname === `${props.href}/`
     : props.pathname === props.href || props.pathname.startsWith(`${props.href}/`);

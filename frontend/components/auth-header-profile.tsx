@@ -183,26 +183,7 @@ export function AuthHeaderProfile(props: {
             <User className="h-4 w-4 shrink-0 opacity-70" />
             My dashboard
           </Link>
-          {canAccessSalonManagement(me) ? (
-            <Link
-              href="/app"
-              role="menuitem"
-              className="flex items-center gap-2 px-4 py-2.5 text-sm text-[color:var(--paragraph)] transition hover:bg-[color:var(--brand-primary)] hover:text-white"
-              onClick={() => setOpen(false)}
-            >
-              Calendar &amp; bookings
-            </Link>
-          ) : null}
-          {canAccessSuperAdmin(me) ? (
-            <Link
-              href="/admin/dashboard"
-              role="menuitem"
-              className="flex items-center gap-2 px-4 py-2.5 text-sm text-[color:var(--paragraph)] transition hover:bg-[color:var(--brand-primary)] hover:text-white"
-              onClick={() => setOpen(false)}
-            >
-              Platform admin
-            </Link>
-          ) : null}
+
           {me.role === "customer" ? (
             <Link
               href="/shops"

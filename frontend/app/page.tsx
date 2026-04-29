@@ -105,8 +105,10 @@ const services = [
 ];
 
 export default async function Home() {
-  const status = await fetchBackendJson();
-  const shopsRaw = await serverFetchJson<Paginated<PublicShopListRow>>("/public/shops?per_page=60");
+  const [status, shopsRaw] = await Promise.all([
+    fetchBackendJson(),
+    serverFetchJson<Paginated<PublicShopListRow>>("/public/shops?per_page=60"),
+  ]);
   const mapShops = (shopsRaw?.data ?? []).map((s) => ({
     id: s.id,
     name: s.name,
@@ -161,7 +163,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <FeaturedShopsSection />
+        <FeaturedShopsSection shops={shopsRaw?.data ?? []} />
         <HomeShopsMapSection shops={mapShops} />
 
         <section
@@ -312,7 +314,7 @@ export default async function Home() {
           <div className="max-w-2xl">
             <h2
               id="account-heading"
-              className="text-2xl font-semibold tracking-tight text-white"
+              className="text-2xl font-semibold tracking-tight text-[color:var(--foreground)]"
             >
               Why people book here
             </h2>

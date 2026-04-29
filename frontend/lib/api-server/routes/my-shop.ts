@@ -18,6 +18,106 @@ const SERVICE_SELECT_BASE = "id,name,category,duration_minutes,buffer_after_minu
 const SERVICE_SELECT_FULL =
   "id,name,category,description,duration_minutes,buffer_after_minutes,price_cents,is_active,sort_order,audience,staff_notes,aftercare,requires_patch_test,consultation_first,min_notice_hours,online_bookable,deposit_cents";
 
+type PlanKey = "free" | "starter" | "pro" | "enterprise";
+type ModuleKey = "booking_calendar" | "client_list" | "staff_management" | "payments_pos" | "api_webhooks" | "audit_log";
+type PlanAccessMap = Record<PlanKey, Record<ModuleKey, string[]>>;
+
+const MODULE_OPTIONS: Record<ModuleKey, string[]> = {
+  booking_calendar: ["own", "team", "region", "all"],
+  client_list: ["own", "capped_50", "unlimited"],
+  staff_management: ["blocked_barber_receptionist", "owner_manager_only"],
+  payments_pos: ["checkout_only", "view_refund", "full"],
+  api_webhooks: ["none", "read_key", "full"],
+  audit_log: ["none", "own_staff", "region", "global"]
+};
+
+const DEFAULT_PLAN_ACCESS: PlanAccessMap = {
+  free: {
+    booking_calendar: ["own"],
+    client_list: ["capped_50"],
+    staff_management: ["blocked_barber_receptionist"],
+    payments_pos: ["checkout_only"],
+    api_webhooks: ["none"],
+    audit_log: ["none"]
+  },
+  starter: {
+    booking_calendar: ["own", "team"],
+    client_list: ["unlimited"],
+    staff_management: ["owner_manager_only"],
+    payments_pos: ["checkout_only", "view_refund"],
+    api_webhooks: ["read_key"],
+    audit_log: ["none"]
+  },
+  pro: {
+    booking_calendar: ["own", "team", "region"],
+    client_list: ["unlimited"],
+    staff_management: ["owner_manager_only"],
+    payments_pos: ["checkout_only", "view_refund", "full"],
+    api_webhooks: ["read_key", "full"],
+    audit_log: ["own_staff", "region"]
+  },
+  enterprise: {
+    booking_calendar: ["own", "team", "region", "all"],
+    client_list: ["unlimited"],
+    staff_management: ["owner_manager_only"],
+    payments_pos: ["checkout_only", "view_refund", "full"],
+    api_webhooks: ["read_key", "full"],
+    audit_log: ["own_staff", "region", "global"]
+  }
+};
+
+function inferPlanKey(raw: string | null | undefined): PlanKey {
+  const segs = String(raw ?? "")
+    .toLowerCase()
+    .split(/[-_]/)
+    .filter(Boolean);
+  if (segs.includes("enterprise")) return "enterprise";
+  if (segs.includes("pro")) return "pro";
+  if (segs.includes("starter")) return "starter";
+  return "free";
+}
+
+function normalizedPlanAccess(input: unknown): PlanAccessMap {
+  const next = JSON.parse(JSON.stringify(DEFAULT_PLAN_ACCESS)) as PlanAccessMap;
+  if (!input || typeof input !== "object") return next;
+  for (const plan of Object.keys(next) as PlanKey[]) {
+    const planRaw = (input as Record<string, unknown>)[plan];
+    if (!planRaw || typeof planRaw !== "object") continue;
+    for (const moduleKey of Object.keys(MODULE_OPTIONS) as ModuleKey[]) {
+      const values = (planRaw as Record<string, unknown>)[moduleKey];
+      if (!Array.isArray(values)) continue;
+      const allowed = MODULE_OPTIONS[moduleKey].filter((opt) => {
+        if (moduleKey === "api_webhooks" && (plan === "free" || plan === "starter")) return opt !== "full";
+        if (moduleKey === "audit_log" && plan !== "enterprise") return opt === "none";
+        return true;
+      });
+      const picked = values.filter((v): v is string => typeof v === "string" && allowed.includes(v));
+      if (picked.length > 0) next[plan][moduleKey] = picked;
+    }
+  }
+  return next;
+}
+
+function moduleEnabled(values: string[] | undefined): boolean {
+  if (!Array.isArray(values) || values.length === 0) return false;
+  return values.some((v) => v !== "none");
+}
+
+async function loadPlanAccessForPlan(planKey: PlanKey): Promise<Record<ModuleKey, string[]>> {
+  const row = await supabaseAdmin.from("platform_general").select("role_permissions").eq("id", 1).maybeSingle();
+  const rolePermissions = (row.data as { role_permissions?: Record<string, unknown> | null } | null)?.role_permissions ?? {};
+  const overrides = (rolePermissions as Record<string, unknown>).plan_access;
+  const map = normalizedPlanAccess(overrides);
+  return map[planKey];
+}
+
+async function isPlanModuleEnabledForShop(shopId: number, moduleKey: ModuleKey): Promise<boolean> {
+  const sub = await supabaseAdmin.from("subscriptions").select("plan_key").eq("shop_id", shopId).maybeSingle();
+  const planKey = inferPlanKey((sub.data as { plan_key?: string | null } | null)?.plan_key ?? "free");
+  const modules = await loadPlanAccessForPlan(planKey);
+  return moduleEnabled(modules[moduleKey]);
+}
+
 function isMissingServiceFieldError(err: unknown): boolean {
   if (!err || typeof err !== "object") return false;
   const msg = String((err as { message?: unknown }).message ?? "").toLowerCase();
@@ -99,6 +199,28 @@ async function attachSubscription(shopId: number, payload: Record<string, unknow
   };
 }
 
+async function applyPlanAccessPermissions(
+  payload: Record<string, unknown>,
+  user: { role: string },
+  memberRole: "owner" | "manager" | "barber" | null
+): Promise<void> {
+  const permissions = (payload.permissions as Record<string, unknown> | undefined) ?? {};
+  payload.permissions = permissions;
+
+  const roleCanManage = user.role === "super_admin" || user.role === "shop_owner" || memberRole === "owner" || memberRole === "manager";
+  if (!roleCanManage) return;
+
+  const sub = (payload.subscription as { plan_key?: string | null } | null) ?? null;
+  const planKey = inferPlanKey(sub?.plan_key ?? "free");
+  const modules = await loadPlanAccessForPlan(planKey);
+
+  permissions.plan_access_tier = planKey;
+  permissions.plan_access_modules = modules;
+  permissions.can_edit_booking_rules = moduleEnabled(modules.booking_calendar);
+  permissions.can_manage_payments = moduleEnabled(modules.payments_pos);
+  permissions.can_view_subscription = moduleEnabled(modules.payments_pos);
+}
+
 async function customerRiskProfileByMobile(shopId: number, mobile: string) {
   const rows = await supabaseAdmin
     .from("salon_bookings")
@@ -142,12 +264,16 @@ async function customerRiskProfileByMobile(shopId: number, mobile: string) {
 
 async function canManageCustomers(user: { id: string; role: string }, shopId: number): Promise<boolean> {
   if (user.role === "super_admin") return true;
+  const moduleOn = await isPlanModuleEnabledForShop(shopId, "client_list");
+  if (!moduleOn) return false;
   const role = await shopMemberRole(user.id, shopId);
   return role === "owner" || role === "manager" || user.role === "shop_owner";
 }
 
 async function canManageCatalog(user: { id: string; role: string }, shopId: number): Promise<boolean> {
   if (user.role === "super_admin") return true;
+  const moduleOn = await isPlanModuleEnabledForShop(shopId, "staff_management");
+  if (!moduleOn) return false;
   if (user.role === "shop_owner") return true;
   const role = await shopMemberRole(user.id, shopId);
   return role === "owner" || role === "manager";
@@ -202,6 +328,7 @@ export function mountMyShopRoutes(router: Router): void {
     const memberRole = await shopMemberRole(user.id, shop.id);
     const payload = shopPayload(shop, user, memberRole);
     await attachSubscription(shop.id, payload);
+    await applyPlanAccessPermissions(payload, user, memberRole);
     return okData(res, payload);
   });
 
@@ -232,6 +359,7 @@ export function mountMyShopRoutes(router: Router): void {
     const memberRole = await shopMemberRole(user.id, fresh.id);
     const payload = shopPayload(fresh, user, memberRole);
     await attachSubscription(fresh.id, payload);
+    await applyPlanAccessPermissions(payload, user, memberRole);
     return okData(res, payload);
   });
 
@@ -918,7 +1046,7 @@ export function mountMyShopRoutes(router: Router): void {
   });
 
   r.get("/my/shop/staff-catalog", async (req: Request, res: Response) => {
-    const { shop, user, staffScopeId } = req.salon!;
+    const { shop, staffScopeId } = req.salon!;
     let q = supabaseAdmin.from("salon_staff").select("id").eq("shop_id", shop.id).order("sort_order");
     if (staffScopeId != null) q = q.eq("id", staffScopeId);
     const ids = await q;
@@ -1798,6 +1926,9 @@ export function mountMyShopRoutes(router: Router): void {
   r.get("/my/shop/payments", async (req: Request, res: Response) => {
     const { shop, user } = req.salon!;
     if (user.role === "barber") return fail(res, 403, "Staff accounts cannot manage shop payments.");
+    if (!(await isPlanModuleEnabledForShop(shop.id, "payments_pos"))) {
+      return fail(res, 403, "Payments are not available on the current subscription plan.");
+    }
     const page = Math.max(1, Number(req.query.page ?? 1));
     const perPage = Math.min(50, Math.max(5, Number(req.query.per_page ?? 20)));
     const from = (page - 1) * perPage;
@@ -1821,6 +1952,9 @@ export function mountMyShopRoutes(router: Router): void {
   r.post("/my/shop/payments", async (req: Request, res: Response) => {
     const { shop, user } = req.salon!;
     if (user.role === "barber") return fail(res, 403, "Staff accounts cannot manage shop payments.");
+    if (!(await isPlanModuleEnabledForShop(shop.id, "payments_pos"))) {
+      return fail(res, 403, "Payments are not available on the current subscription plan.");
+    }
     const schema = z.object({
       amount_cents: z.number().int().positive(),
       method: z.string(),
@@ -1856,6 +1990,9 @@ export function mountMyShopRoutes(router: Router): void {
   r.patch("/my/shop/payments/:payment/refund", async (req: Request, res: Response) => {
     const { shop, user } = req.salon!;
     if (user.role === "barber") return fail(res, 403, "Staff accounts cannot manage shop payments.");
+    if (!(await isPlanModuleEnabledForShop(shop.id, "payments_pos"))) {
+      return fail(res, 403, "Payments are not available on the current subscription plan.");
+    }
     const paymentId = Number(req.params.payment);
     const pay = await supabaseAdmin.from("salon_payments").select("*").eq("id", paymentId).eq("shop_id", shop.id).maybeSingle();
     if (!pay.data) return fail(res, 404, "Not found.");

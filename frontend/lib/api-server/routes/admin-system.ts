@@ -34,6 +34,32 @@ function paginate<T>(items: T[], page: number, perPage: number) {
   };
 }
 
+function readBkashConfig(integrations: Record<string, unknown>): {
+  enabled: boolean;
+  base_url: string;
+  username: string;
+  password: string;
+  app_key: string;
+  app_secret: string;
+  callback_url: string;
+  webhook_url: string;
+  sandbox: boolean;
+} {
+  const raw = (integrations.bkash ?? {}) as Record<string, unknown>;
+  const fallbackSandbox = "https://tokenized.sandbox.bka.sh/v1.2.0-beta";
+  return {
+    enabled: Boolean(raw.enabled),
+    base_url: String(raw.base_url ?? fallbackSandbox).trim(),
+    username: String(raw.username ?? "").trim(),
+    password: String(raw.password ?? "").trim(),
+    app_key: String(raw.app_key ?? "").trim(),
+    app_secret: String(raw.app_secret ?? "").trim(),
+    callback_url: String(raw.callback_url ?? "").trim(),
+    webhook_url: String(raw.webhook_url ?? "").trim(),
+    sandbox: Boolean(raw.sandbox ?? true),
+  };
+}
+
 async function logAudit(adminUserId: string, action: string, targetType?: string, targetId?: string, ip?: string | null) {
   await supabaseAdmin.from("audit_logs").insert({
     admin_user_id: adminUserId,
@@ -178,7 +204,7 @@ export function mountAdminSystemRoutes(router: Router): void {
     return okData(res, (row.data as { integrations: Record<string, unknown> }).integrations ?? {});
   });
 
-  for (const key of ["stripe", "smtp", "sms", "google-calendar", "whatsapp"] as const) {
+  for (const key of ["stripe", "smtp", "sms", "google-calendar", "whatsapp", "bkash", "merchant"] as const) {
     router.patch(`/admin/integrations/${key}`, async (req, res) => {
       const row = await supabaseAdmin.from("platform_general").select("integrations").eq("id", 1).single();
       const integrations = ((row.data as { integrations: Record<string, unknown> }).integrations ?? {}) as Record<string, unknown>;
@@ -187,6 +213,52 @@ export function mountAdminSystemRoutes(router: Router): void {
       return okData(res, merged);
     });
   }
+
+  router.post("/admin/integrations/bkash/check", async (_req, res) => {
+    const row = await supabaseAdmin.from("platform_general").select("integrations").eq("id", 1).single();
+    const integrations = ((row.data as { integrations: Record<string, unknown> }).integrations ?? {}) as Record<string, unknown>;
+    const cfg = readBkashConfig(integrations);
+    if (!cfg.enabled) return fail(res, 422, "bKash integration is disabled.");
+    if (!cfg.base_url || !cfg.username || !cfg.password || !cfg.app_key || !cfg.app_secret) {
+      return fail(res, 422, "Missing bKash credentials. Fill base URL, username, password, app key, and app secret.");
+    }
+
+    try {
+      const tokenUrl = `${cfg.base_url.replace(/\/$/, "")}/tokenized/checkout/token/grant`;
+      const grant = await fetch(tokenUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          username: cfg.username,
+          password: cfg.password,
+        },
+        body: JSON.stringify({
+          app_key: cfg.app_key,
+          app_secret: cfg.app_secret,
+        }),
+      });
+      const payload = (await grant.json().catch(() => ({}))) as Record<string, unknown>;
+      const statusCode = String(payload.statusCode ?? "");
+      const isOk = grant.ok && (statusCode === "0000" || payload.id_token != null || payload.access_token != null);
+      if (!isOk) {
+        const msg =
+          String(payload.statusMessage ?? payload.message ?? "").trim() ||
+          `bKash token grant failed with HTTP ${grant.status}`;
+        return fail(res, 422, msg);
+      }
+      return okData(res, {
+        ok: true,
+        message: String(payload.statusMessage ?? "bKash credentials are valid."),
+        granted_at: new Date().toISOString(),
+        base_url: cfg.base_url,
+        token_expires_in: payload.expires_in ?? null,
+      });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Network error while reaching bKash.";
+      return fail(res, 502, msg);
+    }
+  });
 
   router.get("/admin/webhooks", async (_req, res) => {
     const rows = await supabaseAdmin.from("admin_webhooks").select("*").order("id");

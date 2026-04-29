@@ -370,6 +370,8 @@ export type ShopProfile = {
     can_edit_currency?: boolean;
     can_manage_payments?: boolean;
     can_view_subscription?: boolean;
+    plan_access_tier?: "free" | "starter" | "pro" | "enterprise";
+    plan_access_modules?: Record<string, string[]>;
   };
 };
 

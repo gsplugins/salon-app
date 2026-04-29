@@ -259,6 +259,16 @@ function paginationMeta(page: number, perPage: number, total: number) {
 }
 
 export function mountPublicRoutes(router: Router): void {
+  router.get("/public/subscription-plans", async (_req: Request, res: Response) => {
+    const rows = await supabaseAdmin
+      .from("subscription_plans")
+      .select("id,slug,name,description,price_cents,currency,billing_cycle,trial_days,features,is_active,sort_order")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+    if (rows.error) return fail(res, 500, "Could not load plans.");
+    return okData(res, rows.data ?? []);
+  });
+
   router.get("/public/shops", async (req: Request, res: Response) => {
     const query = z.object({
       search: z.string().optional(),

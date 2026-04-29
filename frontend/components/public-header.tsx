@@ -53,6 +53,12 @@ export function PublicHeader({ showMarketingNav }: Props) {
               Live queue
             </Link>
             <Link
+              href="/plans"
+              className="text-[color:var(--caption)] transition hover:text-[color:var(--brand-primary)]"
+            >
+              Plans
+            </Link>
+            <Link
               href="/app"
               className="font-medium text-[color:var(--brand-primary)] transition hover:text-[color:var(--brand-primary-hover)]"
             >
@@ -64,6 +70,9 @@ export function PublicHeader({ showMarketingNav }: Props) {
           <nav className="flex items-center gap-2 sm:hidden" aria-label="Mobile quick links">
             <Link href="/shops" className="text-sm font-medium text-[color:var(--brand-primary)]">
               Barbershops
+            </Link>
+            <Link href="/plans" className="text-sm font-medium text-[color:var(--caption)]">
+              Plans
             </Link>
           </nav>
           <AuthHeaderProfile />

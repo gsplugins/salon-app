@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Bell, ShieldAlert } from "lucide-react";
 import { AuthHeaderProfile } from "@/components/auth-header-profile";
 import { PortalPanelShell, type PortalNavItem } from "@/components/portal/portal-panel-shell";
 import type { AuthMePayload } from "@/lib/auth-api";
 import type { ShopProfile } from "@/lib/salon-api";
 import { buildOwnerShopNavGroups } from "@/lib/owner-shop-nav-config";
+import { isSegmentAllowedForProfile, planTierLabel, requiredPlanForSegment } from "@/lib/shop-plan-access";
 
 export function OwnerShopSidebarShell(props: {
   shopSlug: string;
@@ -18,6 +20,7 @@ export function OwnerShopSidebarShell(props: {
   children: React.ReactNode;
 }) {
   const { shopSlug, shopName, me, actingAsSuperAdmin, shopProfile, profileLoading, children } = props;
+  const pathname = usePathname();
   const groups = buildOwnerShopNavGroups({
     shopSlug,
     me,
@@ -29,12 +32,23 @@ export function OwnerShopSidebarShell(props: {
     label: i.label,
     icon: i.icon,
     exact: i.href === `/owner/shop/${encodeURIComponent(shopSlug)}`,
+    disabled: i.disabled,
+    disabledHint: i.disabledHint,
   }));
   const primaryNav = navAll.slice(0, 5);
   const secondaryNav = navAll.slice(5);
   const shopInactive = shopProfile?.is_active === false;
   const planLabel = shopProfile?.subscription?.plan_name?.trim() || shopProfile?.subscription?.plan_key || null;
   const shopLogo = typeof shopProfile?.settings?.logo_url === "string" ? shopProfile.settings.logo_url : null;
+  const pathParts = pathname.split("/").filter(Boolean);
+  const seg = pathParts[3] ?? null;
+  const lockedByPlan =
+    !actingAsSuperAdmin &&
+    !shopInactive &&
+    !profileLoading &&
+    shopProfile !== null &&
+    !isSegmentAllowedForProfile(shopProfile, seg);
+  const requiredPlan = requiredPlanForSegment(seg);
 
   return (
     <PortalPanelShell
@@ -102,6 +116,23 @@ export function OwnerShopSidebarShell(props: {
           </div>
         </div>
       ) : null}
+      {lockedByPlan ? (
+        <div className="mb-4 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-4 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+          <p className="font-semibold">Feature locked on your current plan</p>
+          <p className="mt-1">
+            This module requires the {requiredPlan ? planTierLabel(requiredPlan) : "higher"} plan. Upgrade to unlock
+            access for your shop manager team.
+          </p>
+          <div className="mt-3">
+            <Link
+              href={`/owner/shop/${encodeURIComponent(shopSlug)}/subscription`}
+              className="inline-flex rounded-full bg-zinc-900 px-4 py-2 text-xs font-semibold text-white dark:bg-rose-100 dark:text-zinc-800"
+            >
+              Upgrade to {requiredPlan ? planTierLabel(requiredPlan) : "higher"} plan
+            </Link>
+          </div>
+        </div>
+      ) : null}
       {actingAsSuperAdmin ? (
         <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/25 dark:text-amber-50">
           <ShieldAlert className="h-4 w-4 shrink-0" aria-hidden />
@@ -116,7 +147,7 @@ export function OwnerShopSidebarShell(props: {
           </Link>
         </div>
       ) : null}
-      {shopInactive ? null : children}
+      {shopInactive || lockedByPlan ? null : children}
     </PortalPanelShell>
   );
 }

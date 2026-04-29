@@ -5,6 +5,15 @@ import { useCallback, useEffect, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import {
+  inferPlanKeyFromSlug,
+  normalizePlanAccess,
+  PlanAccessModuleGrid,
+  PLAN_LABELS,
+  togglePlanAccessFeature,
+  type PlanAccessMap,
+  type PlanKey,
+} from "@/components/admin/plan-access-settings-card";
 import { SuperAdminGate } from "@/components/auth/super-admin-gate";
 import { AdminWorkspaceFrame } from "@/components/platform/admin-workspace-frame";
 import { Badge } from "@/components/ui/badge";
@@ -18,10 +27,12 @@ import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import {
   deleteSubscriptionPlan,
+  fetchAdminPermissions,
   fetchSubscriptionPlans,
   formatApiError,
   patchSubscriptionPlan,
   postSubscriptionPlan,
+  putAdminPermissions,
   type SubscriptionPlanRow,
 } from "@/lib/admin-api";
 import { fetchSystemShops, type Paginated, type SystemShopRow } from "@/lib/salon-api";
@@ -43,6 +54,16 @@ function daysLeftUntil(iso: string | null | undefined): number | null {
   return Math.ceil(diffMs / 86_400_000);
 }
 
+function parseFeatureJson(input: string): Record<string, unknown> | null {
+  try {
+    const parsed: unknown = JSON.parse(input);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    return parsed as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
 const planSchema = z.object({
   slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(64),
   name: z.string().min(1).max(255),
@@ -51,10 +72,10 @@ const planSchema = z.object({
   currency: z.string().max(8),
   billing_cycle: z.enum(["monthly", "yearly"]),
   trial_days: z.coerce.number().int().min(0).max(3650),
-  max_staff: z.coerce.number().int().min(1),
-  max_branches: z.coerce.number().int().min(1),
-  sms_enabled: z.boolean(),
-  analytics_enabled: z.boolean(),
+  features_json: z
+    .string()
+    .min(2)
+    .refine((v) => parseFeatureJson(v) !== null, "Features must be a valid JSON object"),
   is_active: z.boolean(),
   sort_order: z.coerce.number().int().min(0),
 });
@@ -71,6 +92,9 @@ function Body({ token }: { token: string }) {
   const [subscriberSearchDraft, setSubscriberSearchDraft] = useState("");
   const [subscriberSearch, setSubscriberSearch] = useState("");
   const [subscriberStatus, setSubscriberStatus] = useState<"all" | "active" | "expired" | "trialing">("all");
+  /** Full plan_access map while plan dialog is open; persisted with Save. */
+  const [dialogPlanAccess, setDialogPlanAccess] = useState<PlanAccessMap | null>(null);
+  const [accessTier, setAccessTier] = useState<PlanKey>("free");
 
   const load = useCallback(async () => {
     const res = await fetchSubscriptionPlans(token);
@@ -103,6 +127,29 @@ function Body({ token }: { token: string }) {
     void loadSubscribers();
   }, [loadSubscribers]);
 
+  useEffect(() => {
+    if (editing === null) {
+      setDialogPlanAccess(null);
+      return;
+    }
+    setAccessTier(editing === "new" ? "free" : inferPlanKeyFromSlug(editing.slug));
+    let cancelled = false;
+    void (async () => {
+      const res = await fetchAdminPermissions(token);
+      if (cancelled) return;
+      if (!res.ok) {
+        toast.error(formatApiError(res.body));
+        setDialogPlanAccess(null);
+        return;
+      }
+      const overrides = (res.data.overrides ?? {}) as Record<string, unknown>;
+      setDialogPlanAccess(normalizePlanAccess(overrides.plan_access));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editing, token]);
+
   const form = useForm<PlanForm>({
     resolver: zodResolver(planSchema) as Resolver<PlanForm>,
     defaultValues: {
@@ -113,10 +160,16 @@ function Body({ token }: { token: string }) {
       currency: "BDT",
       billing_cycle: "monthly",
       trial_days: 0,
-      max_staff: 10,
-      max_branches: 1,
-      sms_enabled: false,
-      analytics_enabled: true,
+      features_json: JSON.stringify(
+        {
+          max_staff: 10,
+          max_branches: 1,
+          sms_enabled: false,
+          analytics_enabled: true,
+        },
+        null,
+        2,
+      ),
       is_active: true,
       sort_order: 0,
     },
@@ -132,15 +185,20 @@ function Body({ token }: { token: string }) {
         currency: "BDT",
         billing_cycle: "monthly",
         trial_days: 7,
-        max_staff: 10,
-        max_branches: 1,
-        sms_enabled: false,
-        analytics_enabled: true,
+        features_json: JSON.stringify(
+          {
+            max_staff: 10,
+            max_branches: 1,
+            sms_enabled: false,
+            analytics_enabled: true,
+          },
+          null,
+          2,
+        ),
         is_active: true,
         sort_order: (rows?.length ?? 0) * 10 + 10,
       });
     } else if (editing) {
-      const f = (editing.features ?? {}) as Record<string, unknown>;
       form.reset({
         slug: editing.slug,
         name: editing.name,
@@ -149,10 +207,7 @@ function Body({ token }: { token: string }) {
         currency: editing.currency,
         billing_cycle: editing.billing_cycle as "monthly" | "yearly",
         trial_days: editing.trial_days,
-        max_staff: Number(f.max_staff ?? 10),
-        max_branches: Number(f.max_branches ?? 1),
-        sms_enabled: Boolean(f.sms_enabled),
-        analytics_enabled: Boolean(f.analytics_enabled ?? true),
+        features_json: JSON.stringify((editing.features ?? {}) as Record<string, unknown>, null, 2),
         is_active: editing.is_active,
         sort_order: editing.sort_order,
       });
@@ -160,12 +215,11 @@ function Body({ token }: { token: string }) {
   }, [editing, form, rows?.length]);
 
   async function submit(values: PlanForm) {
-    const features = {
-      max_staff: values.max_staff,
-      max_branches: values.max_branches,
-      sms_enabled: values.sms_enabled,
-      analytics_enabled: values.analytics_enabled,
-    };
+    const features = parseFeatureJson(values.features_json);
+    if (!features) {
+      toast.error("Features must be a valid JSON object.");
+      return;
+    }
     const payload = {
       slug: values.slug,
       name: values.name,
@@ -184,6 +238,15 @@ function Body({ token }: { token: string }) {
         toast.error(formatApiError(res.body));
         return;
       }
+      if (dialogPlanAccess) {
+        const permRes = await putAdminPermissions(token, { plan_access: dialogPlanAccess });
+        if (!permRes.ok) {
+          toast.error(`Plan created, but plan access rules failed to save: ${formatApiError(permRes.body)}`);
+          setEditing(null);
+          void load();
+          return;
+        }
+      }
       toast.success("Plan created.");
     } else if (editing) {
       const { slug: _s, ...patchBody } = payload;
@@ -192,6 +255,15 @@ function Body({ token }: { token: string }) {
       if (!res.ok) {
         toast.error(formatApiError(res.body));
         return;
+      }
+      if (dialogPlanAccess) {
+        const permRes = await putAdminPermissions(token, { plan_access: dialogPlanAccess });
+        if (!permRes.ok) {
+          toast.error(`Plan updated, but plan access rules failed to save: ${formatApiError(permRes.body)}`);
+          setEditing(null);
+          void load();
+          return;
+        }
       }
       toast.success("Plan updated.");
     }
@@ -235,7 +307,7 @@ function Body({ token }: { token: string }) {
   return (
     <AdminWorkspaceFrame
       title="Subscription plans"
-      subtitle="Create and manage Free, Basic, Pro, and Enterprise-style plans. Shops reference these rows via manual assignment or future checkout."
+      subtitle="Catalog pricing and trials. Plan access (by tier) is edited inside each plan’s create/edit dialog."
     >
       <div className="mb-4 space-y-4">
         <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
@@ -401,10 +473,13 @@ function Body({ token }: { token: string }) {
       </Table>
 
       <Dialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent className="max-h-[90dvh] overflow-y-auto">
+        <DialogContent className="max-h-[90dvh] max-w-4xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing === "new" ? "Create plan" : "Edit plan"}</DialogTitle>
-            <DialogDescription>Feature flags are stored as JSON on the plan record.</DialogDescription>
+            <DialogDescription>
+              Catalog fields and features JSON are stored on the plan row. Plan access (by tier) updates platform
+              role-permission overrides (<span className="font-mono">plan_access</span>).
+            </DialogDescription>
           </DialogHeader>
           <form className="grid gap-3" onSubmit={form.handleSubmit(submit)}>
             <div className="grid gap-2 sm:grid-cols-2">
@@ -451,28 +526,67 @@ function Body({ token }: { token: string }) {
                 <Input type="number" {...form.register("sort_order")} />
               </div>
             </div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <div className="grid gap-2">
-                <Label>Max staff</Label>
-                <Input type="number" {...form.register("max_staff")} />
-              </div>
-              <div className="grid gap-2">
-                <Label>Max branches</Label>
-                <Input type="number" {...form.register("max_branches")} />
-              </div>
+            <div className="grid gap-2">
+              <Label>All features JSON</Label>
+              <Textarea
+                className="min-h-[180px] font-mono text-xs"
+                placeholder='{"max_staff":10,"max_branches":1,"sms_enabled":false,"analytics_enabled":true}'
+                {...form.register("features_json")}
+              />
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Advanced: this JSON is stored directly on the plan as <span className="font-mono">features</span>. Add any
+                extra flags needed for this tier.
+              </p>
             </div>
+
+            <div className="rounded-2xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-700 dark:bg-zinc-900/50">
+              <div className="mb-3">
+                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Plan access (by tier)</p>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                  Choose which tier you are configuring, then set module access. This is saved when you click Save below
+                  (stored with other plan access overrides).
+                </p>
+              </div>
+              <div className="mb-4 grid gap-2 sm:max-w-xs">
+                <Label htmlFor="plan-access-tier">Tier to edit</Label>
+                <select
+                  id="plan-access-tier"
+                  className="h-10 rounded-xl border border-zinc-200 bg-white px-3 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={accessTier}
+                  onChange={(e) => setAccessTier(e.target.value as PlanKey)}
+                >
+                  {(Object.keys(PLAN_LABELS) as PlanKey[]).map((k) => (
+                    <option key={k} value={k}>
+                      {PLAN_LABELS[k]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {dialogPlanAccess ? (
+                <>
+                  <div className="mb-3 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
+                    Editing <span className="font-semibold">{PLAN_LABELS[accessTier]}</span> · Multi-select per module.
+                  </div>
+                  <PlanAccessModuleGrid
+                    planKey={accessTier}
+                    planAccess={dialogPlanAccess}
+                    onToggle={(plan, moduleKey, option) =>
+                      setDialogPlanAccess((prev) => (prev ? togglePlanAccessFeature(prev, plan, moduleKey, option) : prev))
+                    }
+                  />
+                </>
+              ) : (
+                <div className="space-y-2">
+                  <Skeleton className="h-24 w-full rounded-xl" />
+                  <Skeleton className="h-24 w-full rounded-xl" />
+                  <p className="text-xs text-amber-700 dark:text-amber-400">
+                    Loading plan access rules… If this stays empty, fix permissions API and try again.
+                  </p>
+                </div>
+              )}
+            </div>
+
             <div className="flex flex-wrap items-center gap-6">
-              <div className="flex items-center gap-2">
-                <Switch checked={form.watch("sms_enabled")} onCheckedChange={(v) => form.setValue("sms_enabled", v)} />
-                <span className="text-sm">SMS enabled</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={form.watch("analytics_enabled")}
-                  onCheckedChange={(v) => form.setValue("analytics_enabled", v)}
-                />
-                <span className="text-sm">Analytics</span>
-              </div>
               <div className="flex items-center gap-2">
                 <Switch checked={form.watch("is_active")} onCheckedChange={(v) => form.setValue("is_active", v)} />
                 <span className="text-sm">Plan active</span>

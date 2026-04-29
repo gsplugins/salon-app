@@ -62,7 +62,7 @@ export function QueuePageClient(props: { shopId: number; shopName?: string }) {
     <div className="min-h-screen text-slate-100">
       <PublicHeader />
       <main className="mx-auto max-w-lg px-4 py-10 sm:px-6">
-        <h1 className="text-2xl font-semibold text-white">
+        <h1 className="text-2xl font-semibold text-blue-300">
           {props.shopName ? `Queue — ${props.shopName}` : "Live queue"}
         </h1>
         <p className="mt-2 text-sm text-slate-300">
@@ -128,13 +128,13 @@ export function QueuePageClient(props: { shopId: number; shopName?: string }) {
         )}
 
         <form onSubmit={join} className="section-wrap mt-10 p-5">
-          <h2 className="text-sm font-semibold text-white">Join the queue</h2>
+          <h2 className="text-sm font-semibold text-blue-300">Join the queue</h2>
           <label className="mt-3 block text-xs font-medium text-slate-400">
             Name
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-100"
               required
             />
           </label>
@@ -143,7 +143,7 @@ export function QueuePageClient(props: { shopId: number; shopName?: string }) {
             <input
               value={mobile}
               onChange={(e) => setMobile(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+              className="mt-1 w-full rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-100"
             />
           </label>
           <button

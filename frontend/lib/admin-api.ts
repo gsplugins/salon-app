@@ -266,6 +266,63 @@ export async function patchAdminStripe(
   return { ok: true, data: res.data };
 }
 
+export type AdminBkashIntegration = {
+  enabled?: boolean;
+  base_url?: string;
+  username?: string;
+  password?: string;
+  app_key?: string;
+  app_secret?: string;
+  callback_url?: string;
+  webhook_url?: string;
+  sandbox?: boolean;
+};
+
+export type AdminBkashConnectionStatus = {
+  ok: boolean;
+  message: string;
+  granted_at: string;
+  base_url?: string;
+  token_expires_in?: string | number | null;
+};
+
+export async function patchAdminBkash(
+  accessToken: string,
+  body: AdminBkashIntegration
+): Promise<{ ok: true; data: unknown } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson("/admin/integrations/bkash", {
+    method: "PATCH",
+    accessToken,
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data };
+}
+
+export async function patchAdminMerchant(
+  accessToken: string,
+  body: Record<string, unknown>
+): Promise<{ ok: true; data: unknown } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson("/admin/integrations/merchant", {
+    method: "PATCH",
+    accessToken,
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data };
+}
+
+export async function postAdminBkashCheck(
+  accessToken: string
+): Promise<{ ok: true; data: AdminBkashConnectionStatus } | { ok: false; body: ApiErrorBody }> {
+  const res = await authJson<{ data: AdminBkashConnectionStatus }>("/admin/integrations/bkash/check", {
+    method: "POST",
+    accessToken,
+  });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
 export async function fetchAdminWebhooks(
   accessToken: string
 ): Promise<{ ok: true; data: AdminWebhookRow[] } | { ok: false; body: ApiErrorBody }> {
