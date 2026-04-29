@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { SalonManagementGate } from "@/components/auth/salon-management-gate";
@@ -20,7 +21,7 @@ import {
 import { fetchShopProfile, formatApiError, patchShopProfile, type ShopProfile } from "@/lib/salon-api";
 
 const schema = z.object({
-  name: z.string().min(1, "Name is required").max(255),
+  name: z.string().max(255).optional(),
   description: z.string().max(5000).optional(),
   category: z.string().max(120).optional(),
   phone: z.string().max(32).optional(),
@@ -247,6 +248,12 @@ function FormBody({ accessToken }: { accessToken: string }) {
 
   async function onSubmit(values: FormValues) {
     if (!canSubmit) return;
+    const trimmedName = (values.name ?? "").trim();
+    if (canEditBasics && trimmedName.length === 0) {
+      form.setError("name", { type: "manual", message: "Name is required" });
+      toast.error("Shop name is required.");
+      return;
+    }
     const settings: Record<string, unknown> = {
       business_hours: hoursToPayload(hours),
       min_lead_time_hours: values.min_lead_time_hours,
@@ -282,20 +289,29 @@ function FormBody({ accessToken }: { accessToken: string }) {
     if (perms.can_edit_currency === true) {
       settings.currency = (values.currency ?? "BDT").trim() || "BDT";
     }
-    const res = await patchShopProfile(accessToken, {
-      name: values.name.trim(),
-      description: values.description?.trim() === "" ? null : values.description?.trim() ?? null,
-      phone: values.phone?.trim() === "" ? null : values.phone?.trim() ?? null,
-      email: values.email?.trim() === "" ? null : values.email?.trim() ?? null,
-      address: values.address?.trim() === "" ? null : values.address?.trim() ?? null,
-      settings,
-    });
+    const payload: {
+      name?: string;
+      description?: string | null;
+      phone?: string | null;
+      email?: string | null;
+      address?: string | null;
+      settings: Record<string, unknown>;
+    } = { settings };
+    if (canEditBasics) {
+      payload.name = trimmedName;
+      payload.description = values.description?.trim() === "" ? null : values.description?.trim() ?? null;
+      payload.phone = values.phone?.trim() === "" ? null : values.phone?.trim() ?? null;
+      payload.email = values.email?.trim() === "" ? null : values.email?.trim() ?? null;
+      payload.address = values.address?.trim() === "" ? null : values.address?.trim() ?? null;
+    }
+    const res = await patchShopProfile(accessToken, payload);
     if (!res.ok) {
       toast.error(formatApiError(res.body));
       return;
     }
     setProfile(res.data);
     toast.success("Shop profile saved");
+    void load();
   }
 
   async function handleLogoUpload(file: File | null) {
@@ -722,8 +738,15 @@ function FormBody({ accessToken }: { accessToken: string }) {
         </section>
 
         <div className="flex justify-end">
-          <Button type="submit" disabled={!canSubmit || form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? "Saving…" : "Save changes"}
+          <Button type="submit" className="min-w-[148px] active:scale-100" disabled={!canSubmit || form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save changes"
+            )}
           </Button>
         </div>
       </form>
