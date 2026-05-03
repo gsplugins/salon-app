@@ -302,9 +302,11 @@ export async function patchBooking(
 export async function fetchBlockedSlots(
   fromIsoDate: string,
   toIsoDate: string,
-  accessToken: string
+  accessToken: string,
+  staffId?: number | null
 ): Promise<{ ok: true; data: BlockedSlotRow[] } | { ok: false; body: ApiErrorBody }> {
   const q = new URLSearchParams({ from: fromIsoDate, to: toIsoDate });
+  if (staffId != null && Number.isFinite(staffId)) q.set("staff_id", String(staffId));
   const res = await authJson<{ data: BlockedSlotRow[] }>(`/my/shop/blocked-slots?${q.toString()}`, {
     accessToken,
   });
@@ -433,6 +435,10 @@ export type CatalogStaffRow = {
   login_mobile?: string | null;
   is_active: boolean;
   sort_order: number;
+  /** Weekly template for online booking when this staff member is selected. */
+  weekly_schedule?: Record<string, unknown>;
+  /** Slot step (minutes) for this staff member's online booking grid. */
+  online_slot_interval_minutes?: number;
   services: { id: number; name: string }[];
 };
 
@@ -867,6 +873,8 @@ export async function updateStaffCatalog(
     is_active: boolean;
     sort_order: number;
     service_ids: number[];
+    weekly_schedule?: Record<string, unknown>;
+    online_slot_interval_minutes?: number;
   }>
 ): Promise<{ ok: true; data: CatalogStaffRow } | { ok: false; body: ApiErrorBody }> {
   const res = await authJson<{ data: CatalogStaffRow }>(`/my/shop/staff-catalog/${staffId}`, {

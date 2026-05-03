@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { supabaseAdmin } from "../lib/supabase";
 import { fail, okData } from "../lib/http";
 import { normalizeMobile } from "../lib/mobile";
-import { bookingToRow } from "../presenters/booking";
+import { bookingToRow, bookingsToRows } from "../presenters/booking";
 import {
   notifyCustomerBookingEvent,
   notifyCustomerBookingStatusChange,
@@ -13,6 +13,8 @@ import {
 } from "../lib/customer-notifications";
 import type { ShopRow } from "../salon-types";
 import { shopMemberRole } from "../lib/shop-resolution";
+import { purgeCustomerDataFromShop, purgeSalonStaffAndRelated } from "../lib/cascade-delete";
+import { staffOnlineSlotStepMinutes } from "../lib/staff-booking-window";
 
 const SERVICE_SELECT_BASE = "id,name,category,duration_minutes,buffer_after_minutes,price_cents,is_active,sort_order";
 const SERVICE_SELECT_FULL =
@@ -382,6 +384,8 @@ async function staffCatalogRow(staffId: number): Promise<Record<string, unknown>
     login_mobile,
     is_active: s.is_active,
     sort_order: s.sort_order,
+    weekly_schedule: s.weekly_schedule ?? {},
+    online_slot_interval_minutes: staffOnlineSlotStepMinutes(s.portal_settings),
     services
   };
 }
@@ -831,6 +835,23 @@ export function mountMyShopRoutes(router: Router): void {
       .safeParse(req.body);
     if (!parsed.success) return fail(res, 422, "Validation failed.");
 
+    if (parsed.data.action === "remove") {
+      await purgeCustomerDataFromShop(shop.id, mobile);
+      await supabaseAdmin.from("shop_customers").delete().eq("shop_id", shop.id).eq("customer_mobile", mobile);
+      await supabaseAdmin.from("shop_customer_controls").delete().eq("shop_id", shop.id).eq("customer_mobile", mobile);
+      await notifyCustomerStatusChange({
+        shopId: shop.id,
+        customerMobile: mobile,
+        action: "remove",
+        note: parsed.data.note ?? null
+      });
+      return okData(res, {
+        customer_mobile: mobile,
+        is_suspended: false,
+        is_removed: true
+      });
+    }
+
     const existing = await supabaseAdmin
       .from("shop_customer_controls")
       .select("id,is_suspended,is_removed")
@@ -840,7 +861,7 @@ export function mountMyShopRoutes(router: Router): void {
     const base = (existing.data as { id: number; is_suspended: boolean; is_removed: boolean } | null) ?? null;
     const merged = {
       is_suspended: parsed.data.action === "unsuspend" ? false : parsed.data.action === "suspend" ? true : Boolean(base?.is_suspended),
-      is_removed: parsed.data.action === "restore" ? false : parsed.data.action === "remove" ? true : Boolean(base?.is_removed)
+      is_removed: parsed.data.action === "restore" ? false : Boolean(base?.is_removed)
     };
 
     const upsert = await supabaseAdmin.from("shop_customer_controls").upsert(
@@ -1300,6 +1321,30 @@ export function mountMyShopRoutes(router: Router): void {
       const rows = (patch.service_ids as number[]).map((service_id) => ({ shop_id: shop.id, staff_id: staffId, service_id }));
       if (rows.length) await supabaseAdmin.from("salon_staff_services").insert(rows);
     }
+    if (patch.weekly_schedule != null && typeof patch.weekly_schedule === "object" && patch.weekly_schedule !== null && !Array.isArray(patch.weekly_schedule)) {
+      await supabaseAdmin
+        .from("salon_staff")
+        .update({ weekly_schedule: patch.weekly_schedule as Record<string, unknown> })
+        .eq("id", staffId)
+        .eq("shop_id", shop.id);
+    }
+    if (patch.online_slot_interval_minutes !== undefined) {
+      const n = Number(patch.online_slot_interval_minutes);
+      if (!Number.isFinite(n) || n < 5 || n > 60) {
+        return fail(res, 422, "online_slot_interval_minutes must be between 5 and 60.");
+      }
+      const curPortal = (cur.data as { portal_settings?: unknown }).portal_settings;
+      const base = curPortal && typeof curPortal === "object" ? (curPortal as Record<string, unknown>) : {};
+      const ob =
+        base.online_booking && typeof base.online_booking === "object"
+          ? (base.online_booking as Record<string, unknown>)
+          : {};
+      const nextPortal = {
+        ...base,
+        online_booking: { ...ob, slot_interval_minutes: n }
+      };
+      await supabaseAdmin.from("salon_staff").update({ portal_settings: nextPortal }).eq("id", staffId).eq("shop_id", shop.id);
+    }
     const row = await staffCatalogRow(staffId);
     return okData(res, row);
   });
@@ -1311,15 +1356,8 @@ export function mountMyShopRoutes(router: Router): void {
       return fail(res, 403, "Only owner or manager can manage staff.");
     }
     const staffId = Number(req.params.staffId);
-    const bk = await supabaseAdmin.from("salon_bookings").select("id").eq("salon_staff_id", staffId).limit(1).maybeSingle();
-    if (bk.data) {
-      await supabaseAdmin.from("salon_staff").update({ is_active: false }).eq("id", staffId).eq("shop_id", shop.id);
-      const row = await staffCatalogRow(staffId);
-      return res.json({ message: "Staff member has bookings; deactivated instead of deleted.", data: row });
-    }
-    await supabaseAdmin.from("salon_staff_services").delete().eq("staff_id", staffId);
-    await supabaseAdmin.from("salon_staff").delete().eq("id", staffId).eq("shop_id", shop.id);
-    return res.json({ message: "Team member removed." });
+    await purgeSalonStaffAndRelated(shop.id, staffId);
+    return res.json({ message: "Team member and related bookings removed." });
   });
 
   r.get("/my/shop/bookings", async (req: Request, res: Response) => {
@@ -1340,11 +1378,8 @@ export function mountMyShopRoutes(router: Router): void {
     if (staffId != null && Number.isFinite(staffId)) q = q.eq("salon_staff_id", staffId);
     if (staffScopeId != null) q = q.eq("salon_staff_id", staffScopeId);
     const ids = await q;
-    const list: Record<string, unknown>[] = [];
-    for (const row of (ids.data ?? []) as { id: number }[]) {
-      const b = await bookingToRow(row.id);
-      if (b) list.push(b);
-    }
+    const idList = ((ids.data ?? []) as { id: number }[]).map((row) => row.id);
+    const list = await bookingsToRows(idList);
     return okData(res, list);
   });
 
@@ -1509,8 +1544,9 @@ export function mountMyShopRoutes(router: Router): void {
       .maybeSingle();
     if (!svc.data) return fail(res, 422, "Invalid service.");
     const duration = Math.max(1, (svc.data as { duration_minutes: number }).duration_minutes);
+    const bufferAfter = Math.max(0, Number((svc.data as { buffer_after_minutes?: number | null }).buffer_after_minutes ?? 0));
     const starts = new Date(parsed.data.starts_at);
-    const ends = new Date(starts.getTime() + duration * 60_000);
+    const ends = new Date(starts.getTime() + (duration + bufferAfter) * 60_000);
     let staffId = staffScopeId ?? parsed.data.salon_staff_id ?? null;
     if (staffId == null) {
       const fb = await supabaseAdmin.from("salon_staff").select("id").eq("shop_id", shop.id).eq("is_active", true).limit(1).maybeSingle();
@@ -1607,7 +1643,12 @@ export function mountMyShopRoutes(router: Router): void {
       .lt("starts_at", new Date(to).toISOString())
       .gt("ends_at", new Date(from).toISOString())
       .order("starts_at");
-    if (staffScopeId != null) q = q.eq("salon_staff_id", staffScopeId);
+    if (staffScopeId != null) {
+      q = q.eq("salon_staff_id", staffScopeId);
+    } else if (req.query.staff_id != null && String(req.query.staff_id).trim() !== "") {
+      const fid = Number(req.query.staff_id);
+      if (Number.isFinite(fid)) q = q.eq("salon_staff_id", fid);
+    }
     const rows = await q;
     const data = [];
     for (const row of (rows.data ?? []) as {

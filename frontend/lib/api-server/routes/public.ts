@@ -4,6 +4,7 @@ import { supabaseAdmin } from "../lib/supabase";
 import { fail, okData } from "../lib/http";
 import { verifyAccessToken } from "../lib/jwt";
 import { normalizeMobile } from "../lib/mobile";
+import { intersectShopAndStaffWorkingUtc, staffOnlineSlotStepMinutes } from "../lib/staff-booking-window";
 
 function optionalCustomerUserId(req: Request): string | null {
   const auth = req.headers.authorization;
@@ -106,6 +107,34 @@ function hasAnyOverlap(start: Date, end: Date, ranges: TimeRange[]): boolean {
   return ranges.some((r) => rangesOverlap(start, end, r.start, r.end));
 }
 
+/** DB `ends_at` may be null/legacy; always derive a sensible end from service duration + buffer for overlap checks. */
+type BookingRowForEffectiveRange = {
+  starts_at: string;
+  ends_at: string | null;
+  salon_services?:
+    | { duration_minutes: number | null; buffer_after_minutes: number | null }
+    | { duration_minutes: number | null; buffer_after_minutes: number | null }[]
+    | null;
+};
+
+function effectiveBookingRange(row: BookingRowForEffectiveRange): TimeRange {
+  const start = new Date(row.starts_at);
+  const svc = row.salon_services;
+  const svcObj = Array.isArray(svc) ? svc[0] : svc;
+  const dm = Number(svcObj?.duration_minutes ?? 30);
+  const buf = Number(svcObj?.buffer_after_minutes ?? 0);
+  const fallbackMin = Math.max(15, dm + buf);
+  const fallbackEnd = new Date(start.getTime() + fallbackMin * 60_000);
+  let end = row.ends_at ? new Date(row.ends_at) : null;
+  if (!end || end.getTime() <= start.getTime()) {
+    end = fallbackEnd;
+  } else if (end.getTime() < fallbackEnd.getTime()) {
+    // Legacy / bad rows (e.g. ends_at only 15 min while service is 45 min) would leave phantom slots.
+    end = fallbackEnd;
+  }
+  return { start, end };
+}
+
 async function isStaffFreeAt(shopId: number, staffId: number, startsAt: Date, endsAt: Date): Promise<boolean> {
   const blockedConflict = await supabaseAdmin
     .from("salon_blocked_slots")
@@ -118,17 +147,17 @@ async function isStaffFreeAt(shopId: number, staffId: number, startsAt: Date, en
     .maybeSingle();
   if (blockedConflict.data) return false;
 
-  const bookingConflict = await supabaseAdmin
+  const bookingRes = await supabaseAdmin
     .from("salon_bookings")
-    .select("id")
+    .select("starts_at,ends_at,salon_services(duration_minutes,buffer_after_minutes)")
     .eq("shop_id", shopId)
     .eq("salon_staff_id", staffId)
     .in("status", ["pending", "confirmed"])
-    .lt("starts_at", endsAt.toISOString())
-    .gt("ends_at", startsAt.toISOString())
-    .limit(1)
-    .maybeSingle();
-  if (bookingConflict.data) return false;
+    .lt("starts_at", endsAt.toISOString());
+  for (const row of (bookingRes.data ?? []) as BookingRowForEffectiveRange[]) {
+    const r = effectiveBookingRange(row);
+    if (rangesOverlap(startsAt, endsAt, r.start, r.end)) return false;
+  }
 
   return true;
 }
@@ -817,6 +846,26 @@ export function mountPublicRoutes(router: Router): void {
 
     const dayStart = combineDateAndMinutesUtc(date, openMins);
     const dayEnd = combineDateAndMinutesUtc(date, closeMins);
+    let slotDayStart = dayStart;
+    let slotDayEnd = dayEnd;
+    let slotStepMin = 15;
+    if (requestedStaffId != null && Number.isFinite(requestedStaffId)) {
+      const stRow = await supabaseAdmin
+        .from("salon_staff")
+        .select("weekly_schedule,portal_settings")
+        .eq("id", requestedStaffId)
+        .eq("shop_id", shopId)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (!stRow.data) return okData(res, []);
+      const weekly = (stRow.data as { weekly_schedule?: unknown }).weekly_schedule;
+      const portal = (stRow.data as { portal_settings?: unknown }).portal_settings;
+      const intersected = intersectShopAndStaffWorkingUtc(date, dayKey, dayStart, dayEnd, weekly);
+      if (!intersected) return okData(res, []);
+      slotDayStart = intersected.start;
+      slotDayEnd = intersected.end;
+      slotStepMin = staffOnlineSlotStepMinutes(portal);
+    }
     const minLeadHoursRaw = settings.min_lead_time_hours;
     const minLeadHours = typeof minLeadHoursRaw === "number" ? minLeadHoursRaw : Number(minLeadHoursRaw ?? 0);
     const shopLeadCutoff =
@@ -834,14 +883,27 @@ export function mountPublicRoutes(router: Router): void {
       .or(`salon_staff_id.is.null,salon_staff_id.in.(${targetStaffIds.join(",")})`)
       .lt("starts_at", dayEnd.toISOString())
       .gt("ends_at", dayStart.toISOString());
-    const bookingRes = await supabaseAdmin
-      .from("salon_bookings")
-      .select("salon_staff_id,starts_at,ends_at,status")
-      .eq("shop_id", shopId)
-      .in("salon_staff_id", targetStaffIds)
-      .in("status", ["pending", "confirmed"])
-      .lt("starts_at", dayEnd.toISOString())
-      .gt("ends_at", dayStart.toISOString());
+    const bookingSelect =
+      "id,salon_staff_id,starts_at,ends_at,status,salon_services(duration_minutes,buffer_after_minutes)";
+    const [bookingOverlapRes, bookingNullEndRes] = await Promise.all([
+      supabaseAdmin
+        .from("salon_bookings")
+        .select(bookingSelect)
+        .eq("shop_id", shopId)
+        .in("salon_staff_id", targetStaffIds)
+        .in("status", ["pending", "confirmed"])
+        .lt("starts_at", dayEnd.toISOString())
+        .gt("ends_at", dayStart.toISOString()),
+      supabaseAdmin
+        .from("salon_bookings")
+        .select(bookingSelect)
+        .eq("shop_id", shopId)
+        .in("salon_staff_id", targetStaffIds)
+        .in("status", ["pending", "confirmed"])
+        .is("ends_at", null)
+        .lt("starts_at", dayEnd.toISOString())
+        .gte("starts_at", new Date(dayStart.getTime() - 6 * 3600_000).toISOString())
+    ]);
 
     const shopWideBlocks: TimeRange[] = [];
     const staffBlocked = new Map<number, TimeRange[]>();
@@ -857,20 +919,36 @@ export function mountPublicRoutes(router: Router): void {
         staffBlocked.set(row.salon_staff_id, arr);
       }
     }
-    for (const row of (bookingRes.data ?? []) as { salon_staff_id: number; starts_at: string; ends_at: string; status: string }[]) {
+    const bookingById = new Map<number, BookingRowForEffectiveRange & { salon_staff_id: number; status: string }>();
+    for (const row of (bookingOverlapRes.data ?? []) as (BookingRowForEffectiveRange & {
+      id: number;
+      salon_staff_id: number;
+      status: string;
+    })[]) {
+      bookingById.set(row.id, row);
+    }
+    for (const row of (bookingNullEndRes.data ?? []) as (BookingRowForEffectiveRange & {
+      id: number;
+      salon_staff_id: number;
+      status: string;
+    })[]) {
+      bookingById.set(row.id, row);
+    }
+    for (const row of bookingById.values()) {
+      const eff = effectiveBookingRange(row);
+      if (eff.end <= dayStart || eff.start >= dayEnd) continue;
       const status = String(row.status ?? "").toLowerCase();
       const bucket = status === "pending" ? staffPending : staffBooked;
       const arr = bucket.get(row.salon_staff_id) ?? [];
-      arr.push({ start: new Date(row.starts_at), end: new Date(row.ends_at) });
+      arr.push(eff);
       bucket.set(row.salon_staff_id, arr);
     }
 
-    const stepMin = 15;
     const out: { starts_at: string; status: "available" | "in_process" | "booked" }[] = [];
     for (
-      let cursor = new Date(dayStart.getTime());
-      cursor.getTime() + requiredDurationMin * 60_000 <= dayEnd.getTime();
-      cursor = new Date(cursor.getTime() + stepMin * 60_000)
+      let cursor = new Date(slotDayStart.getTime());
+      cursor.getTime() + requiredDurationMin * 60_000 <= slotDayEnd.getTime();
+      cursor = new Date(cursor.getTime() + slotStepMin * 60_000)
     ) {
       const slotStart = new Date(cursor.getTime());
       const slotEnd = new Date(cursor.getTime() + requiredDurationMin * 60_000);

@@ -6,6 +6,7 @@ import { fail, okData } from "../lib/http";
 import { verifyAccessToken, signAccessToken, issueRefreshToken, hashToken } from "../lib/jwt";
 import { config } from "../config";
 import { seedDefaultServicesForShop } from "../lib/default-services";
+import { purgeShopTree } from "../lib/cascade-delete";
 
 async function adminUser(req: Request): Promise<{ id: string; role: string; name: string; mobile: string } | null> {
   const auth = req.headers.authorization;
@@ -491,7 +492,9 @@ export function mountAdminSystemRoutes(router: Router): void {
   });
 
   router.delete("/system/shops/:id", async (req, res) => {
-    await supabaseAdmin.from("shops").delete().eq("id", Number(req.params.id));
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) return fail(res, 422, "Invalid shop id.");
+    await purgeShopTree(id);
     return res.json({ message: "Deleted." });
   });
 

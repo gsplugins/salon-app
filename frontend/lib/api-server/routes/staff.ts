@@ -2,8 +2,9 @@ import type { Request, Response, Router } from "express";
 import { z } from "zod";
 import { supabaseAdmin } from "../lib/supabase";
 import { fail, okData } from "../lib/http";
-import { bookingToRow } from "../presenters/booking";
+import { bookingToRow, bookingsToRows } from "../presenters/booking";
 import { notifyCustomerBookingEvent, notifyCustomerBookingStatusChange } from "../lib/customer-notifications";
+import { staffOnlineSlotStepMinutes } from "../lib/staff-booking-window";
 
 function normalizePhotoGalleryUrls(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -51,12 +52,8 @@ async function staffBookingRows(staffId: number, query?: { from?: string; to?: s
   if (query?.to) q = q.lte("starts_at", query.to);
   if (query?.status) q = q.eq("status", query.status);
   const rows = await q;
-  const data = [];
-  for (const row of (rows.data ?? []) as { id: number }[]) {
-    const b = await bookingToRow(row.id);
-    if (b) data.push(b);
-  }
-  return data;
+  const ids = ((rows.data ?? []) as { id: number }[]).map((row) => row.id);
+  return bookingsToRows(ids);
 }
 
 async function customerRiskProfileByMobile(shopId: number, mobile: string) {
@@ -263,7 +260,7 @@ export function mountStaffRoutes(router: Router): void {
     if (!staff) return fail(res, 403, "No staff profile for this shop.");
     const sp = await supabaseAdmin
       .from("salon_staff")
-      .select("weekly_schedule")
+      .select("weekly_schedule,portal_settings")
       .eq("id", staff.id)
       .single();
     const shop = await supabaseAdmin.from("shops").select("settings").eq("id", staff.shop_id).single();
@@ -280,8 +277,10 @@ export function mountStaffRoutes(router: Router): void {
       .order("starts_at", { ascending: false })
       .limit(200);
     const settings = (shop.data as { settings: Record<string, unknown> | null } | null)?.settings ?? {};
+    const portal = (sp.data as { portal_settings?: unknown } | null)?.portal_settings;
     return okData(res, {
       weekly_schedule: (sp.data as { weekly_schedule: unknown } | null)?.weekly_schedule ?? {},
+      online_slot_interval_minutes: staffOnlineSlotStepMinutes(portal),
       shop_business_hours: (settings as Record<string, unknown>).business_hours ?? {},
       shop_holidays: (settings as Record<string, unknown>).holidays ?? [],
       leave_requests: leave.data ?? [],
@@ -289,6 +288,66 @@ export function mountStaffRoutes(router: Router): void {
         ...b
       }))
     });
+  });
+
+  router.patch("/staff/schedule", async (req: Request, res: Response) => {
+    const staff = await staffFromContext(req);
+    if (!staff) return fail(res, 403, "No staff profile for this shop.");
+    const dayPart = z.object({
+      closed: z.boolean().optional(),
+      open: z.string().max(8).optional(),
+      close: z.string().max(8).optional()
+    });
+    const schema = z.object({
+      weekly_schedule: z.record(z.string(), dayPart).optional(),
+      online_slot_interval_minutes: z.number().int().min(5).max(60).optional()
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return fail(res, 422, "Validation failed.");
+    if (parsed.data.weekly_schedule == null && parsed.data.online_slot_interval_minutes === undefined) {
+      return fail(res, 422, "Provide weekly_schedule and/or online_slot_interval_minutes.");
+    }
+    if (
+      parsed.data.weekly_schedule != null &&
+      Object.keys(parsed.data.weekly_schedule).length === 0 &&
+      parsed.data.online_slot_interval_minutes === undefined
+    ) {
+      return fail(res, 422, "weekly_schedule cannot be empty.");
+    }
+
+    const cur = await supabaseAdmin
+      .from("salon_staff")
+      .select("weekly_schedule,portal_settings")
+      .eq("id", staff.id)
+      .maybeSingle();
+    const curRow = cur.data as { weekly_schedule?: unknown; portal_settings?: unknown } | null;
+    const prevWeekly =
+      curRow?.weekly_schedule && typeof curRow.weekly_schedule === "object" && curRow.weekly_schedule !== null
+        ? (curRow.weekly_schedule as Record<string, unknown>)
+        : {};
+    const mergedWeekly =
+      parsed.data.weekly_schedule != null ? { ...prevWeekly, ...parsed.data.weekly_schedule } : prevWeekly;
+
+    let nextPortal: unknown = curRow?.portal_settings ?? {};
+    if (parsed.data.online_slot_interval_minutes !== undefined) {
+      const base = nextPortal && typeof nextPortal === "object" ? (nextPortal as Record<string, unknown>) : {};
+      const ob =
+        base.online_booking && typeof base.online_booking === "object"
+          ? (base.online_booking as Record<string, unknown>)
+          : {};
+      nextPortal = {
+        ...base,
+        online_booking: { ...ob, slot_interval_minutes: parsed.data.online_slot_interval_minutes }
+      };
+    }
+
+    const patch: Record<string, unknown> = {};
+    if (parsed.data.weekly_schedule != null) patch.weekly_schedule = mergedWeekly;
+    if (parsed.data.online_slot_interval_minutes !== undefined) patch.portal_settings = nextPortal;
+
+    const upd = await supabaseAdmin.from("salon_staff").update(patch).eq("id", staff.id).select("weekly_schedule,portal_settings").single();
+    if (upd.error || !upd.data) return fail(res, 500, "Could not update schedule.");
+    return okData(res, upd.data);
   });
 
   router.get("/staff/leave-requests", async (req: Request, res: Response) => {
@@ -355,11 +414,8 @@ export function mountStaffRoutes(router: Router): void {
       .eq("customer_mobile", mobile)
       .order("starts_at", { ascending: false })
       .limit(200);
-    const data = [];
-    for (const row of (rows.data ?? []) as { id: number }[]) {
-      const b = await bookingToRow(row.id);
-      if (b) data.push(b);
-    }
+    const ids = ((rows.data ?? []) as { id: number }[]).map((r) => r.id);
+    const data = await bookingsToRows(ids);
     return okData(res, data);
   });
 

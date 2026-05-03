@@ -44,6 +44,15 @@ function formatSlotLabel(iso: string): string {
   }).format(d);
 }
 
+function formatSlotWindowLabel(startIso: string, totalMinutes: number): string {
+  const start = parseIsoLocal(startIso);
+  if (Number.isNaN(start.getTime())) return "Time unavailable";
+  const end = new Date(start.getTime() + Math.max(1, totalMinutes) * 60_000);
+  const fmt = (d: Date) =>
+    new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(d);
+  return `${fmt(start)}–${fmt(end)}`;
+}
+
 function slotStatusLabel(status: AvailabilitySlot["status"]): string {
   if (status === "in_process") return "In process";
   if (status === "booked") return "Booked";
@@ -277,8 +286,12 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
       return;
     }
     setSlots(res.data);
-    // Prevent stale availability refreshes from clearing chosen time on step 5.
-    if (stepRef.current === 4) setStartsAt(null);
+    // On the time step, only clear the selection if that start is no longer available (e.g. someone else booked it).
+    setStartsAt((prev) => {
+      if (stepRef.current !== 4 || prev == null) return prev;
+      const stillOk = res.data.some((s) => s.starts_at === prev && s.status === "available");
+      return stillOk ? prev : null;
+    });
   }, [orderedServiceIds, dateYmd, staffId, shopSlug]);
 
   useEffect(() => {
@@ -597,6 +610,19 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
         {step === 4 && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-white">Available times</h2>
+            {staffId !== null ? (
+              <p className="text-xs text-sky-200/90">
+                Times for <span className="font-medium text-white">{staff.find((s) => s.id === staffId)?.name ?? "this stylist"}</span>{" "}
+                follow their saved weekly hours inside the shop schedule (and their online slot spacing).
+              </p>
+            ) : null}
+            {bookingTotals.duration > 0 ? (
+              <p className="text-xs text-slate-400">
+                Each option is when your visit <span className="font-medium text-slate-300">starts</span> — the full
+                block is <span className="font-medium text-slate-300">{bookingTotals.duration} minutes</span> (services
+                + buffers), so nearby start times disappear once that window is taken.
+              </p>
+            ) : null}
             {queueStatus ? (
               <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
                 <p>
@@ -657,7 +683,11 @@ export function BookingFlow({ shopSlug }: { shopSlug: string }) {
                             : "cursor-not-allowed border-zinc-300 bg-zinc-100 text-zinc-800"
                       }`}
                     >
-                      <span className="block">{formatSlotLabel(slot.starts_at)}</span>
+                      <span className="block leading-tight">
+                        {bookingTotals.duration > 0
+                          ? formatSlotWindowLabel(slot.starts_at, bookingTotals.duration)
+                          : formatSlotLabel(slot.starts_at)}
+                      </span>
                       <span className="mt-0.5 block text-[10px] uppercase tracking-wide">
                         {slotStatusLabel(slot.status)}
                       </span>

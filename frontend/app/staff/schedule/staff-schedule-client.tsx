@@ -7,9 +7,19 @@ import { useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { formatApiError } from "@/lib/auth-api";
-import { SHOP_BUSINESS_DAYS, type DayHoursState, hoursFromSettings } from "@/lib/shop-business-hours";
+import {
+  SHOP_BUSINESS_DAYS,
+  type DayHoursState,
+  hoursFromSettings,
+  hoursToPayload
+} from "@/lib/shop-business-hours";
 import { formatStaffDate, formatStaffDateTime, formatStaffTime } from "@/lib/staff-ui";
-import { createStaffLeaveRequest, fetchStaffSchedule, type StaffSchedulePayload } from "@/lib/staff-api";
+import {
+  createStaffLeaveRequest,
+  fetchStaffSchedule,
+  patchStaffSchedule,
+  type StaffSchedulePayload
+} from "@/lib/staff-api";
 import { useSalonAccessToken } from "@/hooks/use-salon-access-token";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,6 +118,9 @@ export function StaffScheduleClient() {
   const token = useSalonAccessToken();
   const [data, setData] = useState<StaffSchedulePayload | null>(null);
   const [busy, setBusy] = useState(true);
+  const [scheduleSaving, setScheduleSaving] = useState(false);
+  const [editHours, setEditHours] = useState<DayHoursState | null>(null);
+  const [slotInterval, setSlotInterval] = useState("15");
   const [loadError, setLoadError] = useState<string | null>(null);
   /** Set when schedule payload is received so block split is pure (no `Date.now` in render). */
   const [blocksAsOfMs, setBlocksAsOfMs] = useState(0);
@@ -127,11 +140,41 @@ export function StaffScheduleClient() {
     }
     setBlocksAsOfMs(Date.now());
     setData(res.data);
+    setEditHours(dayScheduleFromObject(res.data.weekly_schedule, true));
+    setSlotInterval(String(res.data.online_slot_interval_minutes ?? 15));
   }, [token]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  function setDayHours(key: string, patch: Partial<{ closed: boolean; open: string; close: string }>) {
+    setEditHours((prev) => {
+      if (!prev) return prev;
+      return { ...prev, [key]: { ...prev[key], ...patch } };
+    });
+  }
+
+  async function saveOnlineSchedule() {
+    if (!token || !editHours) return;
+    const n = Number.parseInt(slotInterval, 10);
+    if (!Number.isFinite(n) || n < 5 || n > 60) {
+      toast.error("Slot spacing must be between 5 and 60 minutes.");
+      return;
+    }
+    setScheduleSaving(true);
+    const res = await patchStaffSchedule(token, {
+      weekly_schedule: hoursToPayload(editHours),
+      online_slot_interval_minutes: n
+    });
+    setScheduleSaving(false);
+    if (!res.ok) {
+      toast.error(formatApiError(res.body));
+      return;
+    }
+    toast.success("Your online-booking hours were saved.");
+    void load();
+  }
 
   const form = useForm<LeaveForm>({
     resolver: zodResolver(leaveSchema) as Resolver<LeaveForm>,
@@ -141,11 +184,6 @@ export function StaffScheduleClient() {
   const shopDayHours = useMemo(() => {
     if (!data) return null;
     return hoursFromSettings({ business_hours: data.shop_business_hours } as Record<string, unknown>);
-  }, [data]);
-
-  const myTemplateHours = useMemo(() => {
-    if (!data) return null;
-    return dayScheduleFromObject(data.weekly_schedule, false);
   }, [data]);
 
   const holidays = useMemo(() => (data ? parseHolidays(data.shop_holidays) : []), [data]);
@@ -208,7 +246,7 @@ export function StaffScheduleClient() {
     );
   }
 
-  if (!data || !shopDayHours || !myTemplateHours) {
+  if (!data || !shopDayHours) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-10 w-48" />
@@ -223,13 +261,13 @@ export function StaffScheduleClient() {
         <div>
           <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">Schedule</h1>
           <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-400">
-            Shop hours, your weekly template, time off, and personal blocks. Edit live availability in Availability.
+            Shop hours, your online-booking week (editable below), time off, and personal blocks. Day-to-day blocks live
+            under Availability.
           </p>
         </div>
         <Button
           type="button"
           variant="outline"
-          size="sm"
           className="min-h-9 gap-1.5"
           disabled={busy}
           onClick={() => void load()}
@@ -241,15 +279,86 @@ export function StaffScheduleClient() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <ScheduleHoursTable
-          title="Your weekly template"
-          caption="Default hours your manager set for you. Bookings may still respect shop hours and holidays."
-          hours={myTemplateHours}
-        />
-        <ScheduleHoursTable
           title="Shop business hours"
-          caption="When the shop is open to clients."
+          caption="Salon opening times. Your personal hours below are clipped to this window."
           hours={shopDayHours}
         />
+        <Card className="border-zinc-200/80 dark:border-zinc-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold">Your online-booking week</CardTitle>
+            <p className="text-sm font-normal text-zinc-800 dark:text-zinc-400">
+              When a customer chooses you by name, they only see start times inside these hours (and still cannot book
+              on shop holidays). Leave a day open with times matching the shop if you work full shop hours that day.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-0">
+            {editHours ? (
+              <div className="overflow-x-auto rounded-xl border border-zinc-100 dark:border-zinc-800">
+                <table className="w-full min-w-[320px] text-left text-sm">
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    {SHOP_BUSINESS_DAYS.map(({ key, label }) => (
+                      <tr key={key}>
+                        <th className="w-[28%] py-2 pl-3 pr-2 font-medium text-zinc-700 dark:text-zinc-300">{label}</th>
+                        <td className="py-2 pr-2">
+                          <label className="flex items-center gap-2 text-zinc-800 dark:text-zinc-200">
+                            <input
+                              type="checkbox"
+                              checked={editHours[key].closed}
+                              onChange={() => setDayHours(key, { closed: !editHours[key].closed })}
+                            />
+                            Closed
+                          </label>
+                        </td>
+                        <td className="py-2 pr-3">
+                          <div className="flex flex-wrap items-center gap-1">
+                            <Input
+                              className="h-9 w-[5.5rem] px-2 text-xs"
+                              disabled={editHours[key].closed}
+                              value={editHours[key].open}
+                              onChange={(e) => setDayHours(key, { open: e.target.value.slice(0, 5) })}
+                              placeholder="09:00"
+                            />
+                            <span className="text-zinc-500">–</span>
+                            <Input
+                              className="h-9 w-[5.5rem] px-2 text-xs"
+                              disabled={editHours[key].closed}
+                              value={editHours[key].close}
+                              onChange={(e) => setDayHours(key, { close: e.target.value.slice(0, 5) })}
+                              placeholder="18:00"
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+            <div className="space-y-1">
+              <Label htmlFor="slot-interval">Minutes between start times online (5–60)</Label>
+              <Input
+                id="slot-interval"
+                type="number"
+                min={5}
+                max={60}
+                className="max-w-[8rem] min-h-11"
+                value={slotInterval}
+                onChange={(e) => setSlotInterval(e.target.value)}
+              />
+              <p className="text-xs text-zinc-800 dark:text-zinc-500">
+                Example: 30 for half-hourly starts. Applies when you are selected in the booking flow.
+              </p>
+            </div>
+            <Button
+              type="button"
+              className="min-h-11 w-full sm:w-auto"
+              disabled={scheduleSaving || !editHours}
+              onClick={() => void saveOnlineSchedule()}
+            >
+              {scheduleSaving ? "Saving…" : "Save hours & slot spacing"}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="border-zinc-200/80 dark:border-zinc-800">

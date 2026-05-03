@@ -49,6 +49,8 @@ export type StaffBookingRow = {
 
 export type StaffSchedulePayload = {
   weekly_schedule: unknown;
+  /** Minutes between offered start times for online booking when this staff is selected (5–60). */
+  online_slot_interval_minutes: number;
   shop_business_hours: unknown;
   shop_holidays: unknown;
   leave_requests: { id: number; date: string; reason: string; status: string; manager_note: string | null }[];
@@ -214,6 +216,24 @@ export async function fetchStaffSchedule(
   accessToken: string
 ): Promise<{ ok: true; data: StaffSchedulePayload } | { ok: false; body: ApiErrorBody }> {
   const res = await authJson<{ data: StaffSchedulePayload }>("/staff/schedule", { accessToken });
+  if (!res.ok) return { ok: false, body: res.body };
+  return { ok: true, data: res.data.data };
+}
+
+export async function patchStaffSchedule(
+  accessToken: string,
+  body: {
+    weekly_schedule?: Record<string, { closed?: boolean; open?: string; close?: string }>;
+    online_slot_interval_minutes?: number;
+  }
+): Promise<
+  { ok: true; data: { weekly_schedule: unknown; portal_settings: unknown } } | { ok: false; body: ApiErrorBody }
+> {
+  const res = await authJson<{ data: { weekly_schedule: unknown; portal_settings: unknown } }>("/staff/schedule", {
+    method: "PATCH",
+    accessToken,
+    body: JSON.stringify(body)
+  });
   if (!res.ok) return { ok: false, body: res.body };
   return { ok: true, data: res.data.data };
 }

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { LocateFixed, MapPin, Search, Store } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { PublicHeader } from "@/components/public-header";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -12,6 +12,11 @@ import { fetchPublicShopsDirectory, formatApiError, type PublicShopListRow } fro
 
 type UserCoords = { lat: number; lng: number };
 type ShopWithDistance = PublicShopListRow & { distanceKm?: number };
+
+export type ShopsBrowseClientProps = {
+  /** When set, first paint uses server data and skips one duplicate client fetch on mount. */
+  initialRows?: PublicShopListRow[] | null;
+};
 
 function toNumber(v: unknown): number | null {
   if (typeof v === "number" && Number.isFinite(v)) return v;
@@ -40,7 +45,7 @@ function googleMapDirectionsUrl(origin: UserCoords, dest: UserCoords): string {
   return `https://www.google.com/maps/dir/?api=1&origin=${origin.lat},${origin.lng}&destination=${dest.lat},${dest.lng}&travelmode=driving`;
 }
 
-export function ShopsBrowseClient() {
+export function ShopsBrowseClient({ initialRows = null }: ShopsBrowseClientProps) {
   const sp = useSearchParams();
   const initialQ = sp.get("q") ?? "";
   const initialDivision = sp.get("division") ?? "";
@@ -51,10 +56,11 @@ export function ShopsBrowseClient() {
   const [division, setDivision] = useState(initialDivision);
   const [district, setDistrict] = useState(initialDistrict);
   const [city, setCity] = useState(initialCity);
-  const [rows, setRows] = useState<PublicShopListRow[] | null>(null);
+  const [rows, setRows] = useState<PublicShopListRow[] | null>(initialRows);
   const [sortedRows, setSortedRows] = useState<ShopWithDistance[] | null>(null);
   const [selectedMapShopId, setSelectedMapShopId] = useState<number | null>(null);
-  const [busy, setBusy] = useState(true);
+  const [busy, setBusy] = useState(initialRows === null);
+  const skipInitialClientFetch = useRef(initialRows !== null);
   const [coords, setCoords] = useState<UserCoords | null>(null);
   const [locating, setLocating] = useState(false);
 
@@ -101,7 +107,10 @@ export function ShopsBrowseClient() {
   );
 
   useEffect(() => {
-     
+    if (skipInitialClientFetch.current) {
+      skipInitialClientFetch.current = false;
+      return;
+    }
     void load();
   }, [load]);
 

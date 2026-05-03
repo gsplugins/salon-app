@@ -3,7 +3,7 @@ import { z } from "zod";
 import { verifyAccessToken } from "../lib/jwt";
 import { supabaseAdmin } from "../lib/supabase";
 import { fail, okData } from "../lib/http";
-import { bookingToRow } from "../presenters/booking";
+import { bookingToRow, bookingsToRows } from "../presenters/booking";
 
 async function authUser(req: Request): Promise<{ id: string; mobile: string } | null> {
   const auth = req.headers.authorization;
@@ -121,11 +121,8 @@ export function mountCustomerRoutes(router: Router): void {
       .or(`customer_user_id.eq.${user.id},customer_mobile.eq.${user.mobile}`)
       .order("starts_at", { ascending: false })
       .limit(300);
-    const data = [];
-    for (const row of (rows.data ?? []) as { id: number }[]) {
-      const b = await bookingToRow(row.id);
-      if (b) data.push(b);
-    }
+    const ids = ((rows.data ?? []) as { id: number }[]).map((r) => r.id);
+    const data = await bookingsToRows(ids);
     return okData(res, data);
   });
 

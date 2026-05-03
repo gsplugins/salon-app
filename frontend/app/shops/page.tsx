@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { fetchPublicShopsDirectoryOnServer } from "@/lib/server/fetch-public-shops-directory";
 import { ShopsBrowseClient } from "./shops-browse-client";
 
 export const metadata: Metadata = {
   title: "Browse shops — Salon",
   description: "Find a barbershop location and book online.",
 };
+
+/** Align with `/api/public/shops` ISR so HTML often includes the first directory paint. */
+export const revalidate = 60;
 
 function BrowseFallback() {
   return (
@@ -23,10 +27,26 @@ function BrowseFallback() {
   );
 }
 
-export default function ShopsBrowsePage() {
+export default async function ShopsBrowsePage(props: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await props.searchParams;
+  const q = typeof sp.q === "string" ? sp.q : "";
+  const division = typeof sp.division === "string" ? sp.division : "";
+  const district = typeof sp.district === "string" ? sp.district : "";
+  const city = typeof sp.city === "string" ? sp.city : "";
+  const dir = await fetchPublicShopsDirectoryOnServer({
+    search: q || undefined,
+    division: division || undefined,
+    district: district || undefined,
+    city: city || undefined,
+    perPage: 48
+  });
+  const initialRows = dir.ok ? dir.rows : null;
+
   return (
     <Suspense fallback={<BrowseFallback />}>
-      <ShopsBrowseClient />
+      <ShopsBrowseClient initialRows={initialRows} />
     </Suspense>
   );
 }

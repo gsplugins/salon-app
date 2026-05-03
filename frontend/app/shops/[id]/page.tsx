@@ -273,7 +273,7 @@ export default async function ShopDetailPage(props: Props) {
             <div className="rounded-lg border border-zinc-700 bg-[#f5f0e8] px-3 py-2 text-sm text-zinc-700">Preferred date</div>
           </div>
           <div className="mt-5 flex flex-wrap gap-3">
-            <Link href={`/book/${shop.id}`} className="inline-flex items-center gap-2 rounded-full bg-[#C8973A] px-5 py-2.5 text-sm font-semibold text-[#1a1a1a] hover:bg-[#b9872d]">
+            <Link href={`/book/${shop.id}`} className="inline-flex items-center gap-2 rounded-full bg-blue-500 px-5 py-2.5 text-sm font-semibold text-[#1a1a1a] hover:bg-white hover:text-blue-500">
               <Calendar className="h-4 w-4" />
               Open booking flow
             </Link>

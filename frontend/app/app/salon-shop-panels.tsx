@@ -276,7 +276,7 @@ export function ShopServicesPanel({ accessToken }: { accessToken: string }) {
   }
 
   async function onDelete(s: CatalogServiceRow) {
-    if (!confirm(`Remove “${s.name}”? If it has past bookings it will be deactivated instead.`)) return;
+    if (!confirm(`Remove “${s.name}”? Their bookings and related records for this shop will be permanently deleted.`)) return;
     setBusy(true);
     const res = await deleteServiceCatalog(accessToken, s.id);
     setBusy(false);
@@ -613,7 +613,7 @@ export function ShopTeamPanel({ accessToken }: { accessToken: string }) {
   }
 
   async function onDelete(s: CatalogStaffRow) {
-    if (!confirm(`Remove ${s.name}? If they have bookings they will be deactivated instead.`)) return;
+    if (!confirm(`Remove ${s.name}? Their bookings and related records for this shop will be permanently deleted.`)) return;
     setBusy(true);
     const res = await deleteStaffCatalog(accessToken, s.id);
     setBusy(false);

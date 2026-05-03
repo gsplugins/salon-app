@@ -20,6 +20,7 @@ import {
   type CatalogStaffRow,
 } from "@/lib/salon-api";
 import { setStaffActAsStaffId } from "@/lib/staff-act-as";
+import { OwnerStaffBookingSettings } from "./owner-staff-booking-settings";
 
 type StaffRoleOption = { value: string; label: string };
 const STAFF_ROLE_OPTIONS: StaffRoleOption[] = [
@@ -230,7 +231,9 @@ function Body({ token }: { token: string }) {
   }
 
   async function removeRow(row: CatalogStaffRow) {
-    const ok = confirm(`Remove ${row.name}?`);
+    const ok = confirm(
+      `Remove ${row.name}? Their bookings and related records for this shop will be permanently deleted.`
+    );
     if (!ok) return;
     setSaving(true);
     const res = await deleteStaffCatalog(token, row.id);
@@ -523,6 +526,7 @@ function Body({ token }: { token: string }) {
                 </div>
               </div>
               {editingId === row.id ? (
+                <>
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <input
                     value={editForm.name}
@@ -652,6 +656,15 @@ function Body({ token }: { token: string }) {
                     </fieldset>
                   ) : null}
                 </div>
+                <OwnerStaffBookingSettings
+                  accessToken={token}
+                  staffId={row.id}
+                  staffName={row.name}
+                  weeklySchedule={row.weekly_schedule ?? {}}
+                  onlineSlotIntervalMinutes={row.online_slot_interval_minutes ?? 15}
+                  onBookingSettingsSaved={() => void load()}
+                />
+                </>
               ) : null}
             </li>
           ))}

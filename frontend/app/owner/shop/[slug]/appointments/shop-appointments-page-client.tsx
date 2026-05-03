@@ -63,46 +63,61 @@ function FormBody({ accessToken }: { accessToken: string }) {
   const [riskProfile, setRiskProfile] = useState<OwnerCustomerRiskProfile | null>(null);
   const [riskBusy, setRiskBusy] = useState(false);
 
-  const loadStaff = useCallback(async () => {
-    const res = await fetchStaffCatalog(accessToken);
-    if (res.ok) setStaff(res.data);
-  }, [accessToken]);
-
-  const loadPermissions = useCallback(async () => {
-    const res = await fetchShopProfile(accessToken);
-    if (!res.ok) {
-      setCanViewAppointments(false);
-      return;
-    }
-    setCanViewAppointments(res.data.permissions?.can_edit_booking_rules === true);
-  }, [accessToken]);
-
-  const load = useCallback(async () => {
-    setLoading(true);
+  const fetchBookings = useCallback(async () => {
     const selectedStaffId = staffId ? Number.parseInt(staffId, 10) : undefined;
-    const res = await fetchAdminBookings(accessToken, {
+    return fetchAdminBookings(accessToken, {
       from: `${from}T00:00:00`,
       to: `${to}T23:59:59`,
       status: status || undefined,
       ...(selectedStaffId && !Number.isNaN(selectedStaffId) ? { staff_id: selectedStaffId } : {}),
     });
+  }, [accessToken, from, to, status, staffId]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const res = await fetchBookings();
     setLoading(false);
     if (!res.ok) {
       toast.error(formatApiError(res.body));
       return;
     }
     setRows(res.data);
-  }, [accessToken, from, to, status, staffId]);
+  }, [fetchBookings]);
 
+  /** Permissions + staff + bookings in one flow (avoids waiting on React state between permission and list fetches). */
   useEffect(() => {
-    void loadPermissions();
-    void loadStaff();
-  }, [loadPermissions, loadStaff]);
-
-  useEffect(() => {
-    if (canViewAppointments !== true) return;
-    void load();
-  }, [load, canViewAppointments]);
+    let cancelled = false;
+    void (async () => {
+      setLoading(true);
+      const [permRes, staffRes] = await Promise.all([fetchShopProfile(accessToken), fetchStaffCatalog(accessToken)]);
+      if (cancelled) return;
+      if (staffRes.ok) setStaff(staffRes.data);
+      if (!permRes.ok) {
+        setCanViewAppointments(false);
+        setLoading(false);
+        setRows([]);
+        return;
+      }
+      const canView = permRes.data.permissions?.can_edit_booking_rules === true;
+      setCanViewAppointments(canView);
+      if (!canView) {
+        setLoading(false);
+        setRows([]);
+        return;
+      }
+      const res = await fetchBookings();
+      if (cancelled) return;
+      setLoading(false);
+      if (!res.ok) {
+        toast.error(formatApiError(res.body));
+        return;
+      }
+      setRows(res.data);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, fetchBookings]);
 
   const sorted = useMemo(() => [...rows].sort((a, b) => a.starts_at.localeCompare(b.starts_at)), [rows]);
   const slotsByDay = useMemo(() => {
