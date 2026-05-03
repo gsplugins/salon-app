@@ -24,7 +24,19 @@ export const hasSupabaseAdminEnv = Boolean(
 
 function makeClient(): SupabaseClient {
   return createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false }
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+    db: { schema: "public" },
+    global: {
+      fetch: (input, init) =>
+        fetch(input, {
+          ...init,
+          cache: "no-store",
+        }),
+    },
   });
 }
 

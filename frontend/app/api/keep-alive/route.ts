@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
 
 /**
  * Lightweight DB touch for Supabase free-tier pause prevention.
- * Vercel Cron should call this route; set `CRON_SECRET` and the same value in the Vercel cron auth header.
+ * Uses anon `createClient()` first; falls back to service role if RLS blocks anon reads.
  */
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const secret = process.env.CRON_SECRET?.trim();
@@ -18,11 +19,28 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const { error, count } = await supabaseAdmin.from("shops").select("id", { count: "exact", head: true }).limit(1);
-    if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    const time = new Date().toISOString();
+    const supabase = await createClient();
+    const anonProbe = await supabase.from("shops").select("id").limit(1);
+    if (!anonProbe.error) {
+      return NextResponse.json({ ok: true, time, path: "anon" });
     }
-    return NextResponse.json({ ok: true, at: new Date().toISOString(), shops_probe: count ?? 0 });
+    const shops = await supabaseAdmin.from("shops").select("id", { count: "exact", head: true }).limit(1);
+    if (shops.error) {
+      return NextResponse.json({ ok: false, error: shops.error.message }, { status: 500 });
+    }
+    const plans = await supabaseAdmin.from("subscription_plans").select("id", { count: "exact", head: true }).limit(1);
+    if (plans.error) {
+      return NextResponse.json({ ok: false, error: plans.error.message }, { status: 500 });
+    }
+    return NextResponse.json({
+      ok: true,
+      time,
+      path: "service_role_fallback",
+      shops_probe: shops.count ?? 0,
+      plans_probe: plans.count ?? 0,
+      anon_error: anonProbe.error.message,
+    });
   } catch (e) {
     const message = e instanceof Error ? e.message : "keep-alive failed";
     return NextResponse.json({ ok: false, error: message }, { status: 500 });

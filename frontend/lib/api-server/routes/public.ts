@@ -229,18 +229,6 @@ type ShopRow = {
   settings: Record<string, unknown> | null;
 };
 
-type ServiceRow = {
-  id: number;
-  shop_id: number;
-  name: string;
-  category: string | null;
-  duration_minutes: number;
-  buffer_after_minutes: number;
-  price_cents: number | null;
-  is_active: boolean;
-  sort_order: number;
-};
-
 type StaffRow = {
   id: number;
   shop_id: number;
@@ -366,7 +354,12 @@ export function mountPublicRoutes(router: Router): void {
     const shopId = Number(req.params.shopId);
     if (!Number.isFinite(shopId)) return fail(res, 422, "Invalid shop id.");
 
-    const shopRes = await supabaseAdmin.from("shops").select("*").eq("id", shopId).eq("is_active", true).maybeSingle();
+    const shopRes = await supabaseAdmin
+      .from("shops")
+      .select("id,name,slug,description,address,phone,email,latitude,longitude,is_active,photos,settings")
+      .eq("id", shopId)
+      .eq("is_active", true)
+      .maybeSingle();
     const shop = shopRes.data as ShopRow | null;
     if (!shop) return fail(res, 404, "Shop not found.");
 
@@ -382,7 +375,7 @@ export function mountPublicRoutes(router: Router): void {
 
     const staffRes = await supabaseAdmin
       .from("salon_staff")
-      .select("id,name,bio,photo_url,specialties")
+      .select("id,name,bio,photo_url,specialties,position_title,availability_status")
       .eq("shop_id", shopId)
       .eq("is_active", true)
       .order("sort_order");
@@ -499,7 +492,7 @@ export function mountPublicRoutes(router: Router): void {
         division: typeof (shop.settings ?? {}).division === "string" ? String((shop.settings ?? {}).division) : null,
         district: typeof (shop.settings ?? {}).district === "string" ? String((shop.settings ?? {}).district) : null,
         city: typeof (shop.settings ?? {}).city === "string" ? String((shop.settings ?? {}).city) : null,
-        parent_shop_id: null
+        parent_shop_id: shop.parent_shop_id ?? null
       },
       offers: Array.isArray((shop.settings ?? {}).offers)
         ? ((shop.settings ?? {}).offers as unknown[])
@@ -545,7 +538,13 @@ export function mountPublicRoutes(router: Router): void {
     const staffId = Number(req.params.staffId);
     if (!Number.isFinite(staffId)) return fail(res, 422, "Invalid staff id.");
 
-    const staffRes = await supabaseAdmin.from("salon_staff").select("*").eq("id", staffId).maybeSingle();
+    const staffRes = await supabaseAdmin
+      .from("salon_staff")
+      .select(
+        "id,shop_id,name,bio,photo_url,specialties,position_title,staff_role,experience_years,address,work_mobile,is_active,portal_settings"
+      )
+      .eq("id", staffId)
+      .maybeSingle();
     const staff = staffRes.data as StaffRow | null;
     if (!staff || !staff.is_active) return fail(res, 404, "Barber not found.");
 

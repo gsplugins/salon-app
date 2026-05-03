@@ -20,6 +20,12 @@ const SERVICE_SELECT_BASE = "id,name,category,duration_minutes,buffer_after_minu
 const SERVICE_SELECT_FULL =
   "id,name,category,description,duration_minutes,buffer_after_minutes,price_cents,is_active,sort_order,audience,staff_notes,aftercare,requires_patch_test,consultation_first,min_notice_hours,online_bookable,deposit_cents";
 
+const STAFF_CATALOG_ROW_SELECT =
+  "id,user_id,name,position_title,staff_role,bio,specialties,address,age,experience_years,work_mobile,emergency_contact_name,emergency_contact_phone,is_active,sort_order,weekly_schedule,portal_settings";
+
+const QUEUE_ENTRY_SELECT =
+  "id,position,status,customer_name,estimated_wait_minutes,staff_id,customer_user_id,join_time";
+
 type PlanKey = "free" | "starter" | "pro" | "enterprise";
 type ModuleKey = "booking_calendar" | "client_list" | "staff_management" | "payments_pos" | "api_webhooks" | "audit_log";
 type PlanAccessMap = Record<PlanKey, Record<ModuleKey, string[]>>;
@@ -249,7 +255,11 @@ function shopPayload(shop: ShopRow, user: { id: string; role: string }, memberRo
 }
 
 async function attachSubscription(shopId: number, payload: Record<string, unknown>): Promise<void> {
-  const sub = await supabaseAdmin.from("subscriptions").select("*").eq("shop_id", shopId).maybeSingle();
+  const sub = await supabaseAdmin
+    .from("subscriptions")
+    .select("id,shop_id,plan_key,status,current_period_end,trial_ends_at")
+    .eq("shop_id", shopId)
+    .maybeSingle();
   if (!sub.data) return;
   const s = sub.data as {
     status: string;
@@ -349,23 +359,11 @@ async function canManageCatalog(user: { id: string; role: string }, shopId: numb
 
 const customerTypeSchema = z.enum(["regular", "other"]);
 
-async function staffCatalogRow(staffId: number): Promise<Record<string, unknown> | null> {
-  const st = await supabaseAdmin.from("salon_staff").select("*").eq("id", staffId).maybeSingle();
-  if (!st.data) return null;
-  const s = st.data as Record<string, unknown>;
-  const maps = await supabaseAdmin.from("salon_staff_services").select("service_id").eq("staff_id", staffId);
-  const svcIds = (maps.data ?? []).map((x: { service_id: number }) => x.service_id);
-  let services: { id: number; name: string }[] = [];
-  if (svcIds.length) {
-    const sv = await supabaseAdmin.from("salon_services").select("id,name").in("id", svcIds);
-    services = (sv.data ?? []) as { id: number; name: string }[];
-  }
-  const uid = s.user_id as string | null;
-  let login_mobile: string | null = null;
-  if (uid) {
-    const u = await supabaseAdmin.from("users").select("mobile").eq("id", uid).maybeSingle();
-    login_mobile = (u.data as { mobile: string } | null)?.mobile ?? null;
-  }
+function staffCatalogShape(
+  s: Record<string, unknown>,
+  services: { id: number; name: string }[],
+  login_mobile: string | null
+): Record<string, unknown> {
   return {
     id: s.id,
     user_id: s.user_id ?? null,
@@ -388,6 +386,70 @@ async function staffCatalogRow(staffId: number): Promise<Record<string, unknown>
     online_slot_interval_minutes: staffOnlineSlotStepMinutes(s.portal_settings),
     services
   };
+}
+
+async function staffCatalogRow(staffId: number): Promise<Record<string, unknown> | null> {
+  const st = await supabaseAdmin.from("salon_staff").select(STAFF_CATALOG_ROW_SELECT).eq("id", staffId).maybeSingle();
+  if (!st.data) return null;
+  const s = st.data as Record<string, unknown>;
+  const maps = await supabaseAdmin.from("salon_staff_services").select("service_id").eq("staff_id", staffId);
+  const svcIds = (maps.data ?? []).map((x: { service_id: number }) => x.service_id);
+  let services: { id: number; name: string }[] = [];
+  if (svcIds.length) {
+    const sv = await supabaseAdmin.from("salon_services").select("id,name").in("id", svcIds);
+    services = (sv.data ?? []) as { id: number; name: string }[];
+  }
+  const uid = s.user_id as string | null;
+  let login_mobile: string | null = null;
+  if (uid) {
+    const u = await supabaseAdmin.from("users").select("mobile").eq("id", uid).maybeSingle();
+    login_mobile = (u.data as { mobile: string } | null)?.mobile ?? null;
+  }
+  return staffCatalogShape(s, services, login_mobile);
+}
+
+async function staffCatalogRowsForShop(shopId: number, staffScopeId: number | null): Promise<Record<string, unknown>[]> {
+  let q = supabaseAdmin
+    .from("salon_staff")
+    .select(STAFF_CATALOG_ROW_SELECT)
+    .eq("shop_id", shopId)
+    .order("sort_order");
+  if (staffScopeId != null) q = q.eq("id", staffScopeId);
+  const staffRows = await q;
+  const rows = (staffRows.data ?? []) as Record<string, unknown>[];
+  if (!rows.length) return [];
+  const ids = rows.map((r) => r.id as number);
+  const maps = await supabaseAdmin.from("salon_staff_services").select("staff_id,service_id").in("staff_id", ids);
+  const svcIdsByStaff = new Map<number, number[]>();
+  for (const m of (maps.data ?? []) as { staff_id: number; service_id: number }[]) {
+    let arr = svcIdsByStaff.get(m.staff_id);
+    if (!arr) {
+      arr = [];
+      svcIdsByStaff.set(m.staff_id, arr);
+    }
+    arr.push(m.service_id);
+  }
+  const allSvcIds = [...new Set((maps.data ?? []).map((x: { service_id: number }) => x.service_id))];
+  const serviceMap = new Map<number, { id: number; name: string }>();
+  if (allSvcIds.length) {
+    const sv = await supabaseAdmin.from("salon_services").select("id,name").in("id", allSvcIds);
+    for (const s of (sv.data ?? []) as { id: number; name: string }[]) serviceMap.set(s.id, s);
+  }
+  const userIds = [...new Set(rows.map((r) => r.user_id).filter(Boolean))] as string[];
+  const mobileByUser = new Map<string, string>();
+  if (userIds.length) {
+    const users = await supabaseAdmin.from("users").select("id,mobile").in("id", userIds);
+    for (const u of (users.data ?? []) as { id: string; mobile: string }[]) mobileByUser.set(u.id, u.mobile);
+  }
+  const out = rows.map((s) => {
+    const sid = s.id as number;
+    const svcIds = svcIdsByStaff.get(sid) ?? [];
+    const services = svcIds.map((id) => serviceMap.get(id)).filter(Boolean) as { id: number; name: string }[];
+    const uid = s.user_id as string | null;
+    const login_mobile = uid ? mobileByUser.get(uid) ?? null : null;
+    return staffCatalogShape(s, services, login_mobile);
+  });
+  return out;
 }
 
 export function mountMyShopRoutes(router: Router): void {
@@ -1134,14 +1196,7 @@ export function mountMyShopRoutes(router: Router): void {
 
   r.get("/my/shop/staff-catalog", async (req: Request, res: Response) => {
     const { shop, staffScopeId } = req.salon!;
-    let q = supabaseAdmin.from("salon_staff").select("id").eq("shop_id", shop.id).order("sort_order");
-    if (staffScopeId != null) q = q.eq("id", staffScopeId);
-    const ids = await q;
-    const out: Record<string, unknown>[] = [];
-    for (const row of (ids.data ?? []) as { id: number }[]) {
-      const r2 = await staffCatalogRow(row.id);
-      if (r2) out.push(r2);
-    }
+    const out = await staffCatalogRowsForShop(shop.id, staffScopeId);
     if (staffScopeId == null) out.sort((a, b) => String(a.name).localeCompare(String(b.name)));
     return okData(res, out);
   });
@@ -1273,7 +1328,12 @@ export function mountMyShopRoutes(router: Router): void {
     }
     const staffId = Number(req.params.staffId);
     const patch = (req.body ?? {}) as Record<string, unknown>;
-    const cur = await supabaseAdmin.from("salon_staff").select("*").eq("id", staffId).eq("shop_id", shop.id).maybeSingle();
+    const cur = await supabaseAdmin
+      .from("salon_staff")
+      .select("user_id,portal_settings")
+      .eq("id", staffId)
+      .eq("shop_id", shop.id)
+      .maybeSingle();
     if (!cur.data) return fail(res, 404, "Not found.");
     const allowed = [
       "name",
@@ -1370,7 +1430,7 @@ export function mountMyShopRoutes(router: Router): void {
       .from("salon_bookings")
       .select("id")
       .eq("shop_id", shop.id)
-      .order("starts_at")
+      .order("starts_at", { ascending: false })
       .limit(500);
     if (from) q = q.gte("starts_at", from);
     if (to) q = q.lte("starts_at", to);
@@ -1588,7 +1648,12 @@ export function mountMyShopRoutes(router: Router): void {
   r.patch("/my/shop/bookings/:bookingId", async (req: Request, res: Response) => {
     const { shop, staffScopeId } = req.salon!;
     const bookingId = Number(req.params.bookingId);
-    const b = await supabaseAdmin.from("salon_bookings").select("*").eq("id", bookingId).eq("shop_id", shop.id).maybeSingle();
+    const b = await supabaseAdmin
+      .from("salon_bookings")
+      .select("id,salon_staff_id,status,salon_service_id,starts_at")
+      .eq("id", bookingId)
+      .eq("shop_id", shop.id)
+      .maybeSingle();
     if (!b.data) return fail(res, 404, "Not found.");
     const booking = b.data as { salon_staff_id: number; status: string };
     if (staffScopeId != null && booking.salon_staff_id !== staffScopeId) return fail(res, 403, "You can only edit your own bookings.");
@@ -1598,8 +1663,17 @@ export function mountMyShopRoutes(router: Router): void {
     if (typeof patch.status === "string") upd.status = patch.status;
     if (typeof patch.starts_at === "string" || patch.salon_staff_id !== undefined) {
       const cur = b.data as { salon_service_id: number; salon_staff_id: number; starts_at: string };
-      const svc = await supabaseAdmin.from("salon_services").select("*").eq("id", cur.salon_service_id).single();
+      const svc = await supabaseAdmin
+        .from("salon_services")
+        .select("duration_minutes,buffer_after_minutes")
+        .eq("id", cur.salon_service_id)
+        .single();
+      if (!svc.data) return fail(res, 422, "Invalid service.");
       const duration = Math.max(1, (svc.data as { duration_minutes: number }).duration_minutes);
+      const bufferAfter = Math.max(
+        0,
+        Number((svc.data as { buffer_after_minutes?: number | null }).buffer_after_minutes ?? 0)
+      );
       const starts = new Date(typeof patch.starts_at === "string" ? patch.starts_at : cur.starts_at);
       let sid = cur.salon_staff_id;
       if (patch.salon_staff_id !== undefined) {
@@ -1610,7 +1684,7 @@ export function mountMyShopRoutes(router: Router): void {
       if (!stOk.data) return fail(res, 422, "Invalid staff.");
       upd.salon_staff_id = sid;
       upd.starts_at = starts.toISOString();
-      upd.ends_at = new Date(starts.getTime() + duration * 60_000).toISOString();
+      upd.ends_at = new Date(starts.getTime() + (duration + bufferAfter) * 60_000).toISOString();
     }
     await supabaseAdmin.from("salon_bookings").update(upd).eq("id", bookingId);
     const nextStatus = typeof upd.status === "string" ? upd.status : booking.status;
@@ -1650,21 +1724,23 @@ export function mountMyShopRoutes(router: Router): void {
       if (Number.isFinite(fid)) q = q.eq("salon_staff_id", fid);
     }
     const rows = await q;
-    const data = [];
-    for (const row of (rows.data ?? []) as {
+    const rawRows = (rows.data ?? []) as {
       id: number;
       salon_staff_id: number | null;
       starts_at: string;
       ends_at: string;
       kind: string;
       reason: string | null;
-    }[]) {
-      let nm = "Staff";
-      if (row.salon_staff_id) {
-        const sn = await supabaseAdmin.from("salon_staff").select("name").eq("id", row.salon_staff_id).maybeSingle();
-        nm = (sn.data as { name: string } | null)?.name ?? "Staff";
-      }
-      data.push({
+    }[];
+    const blockStaffIds = [...new Set(rawRows.map((r) => r.salon_staff_id).filter((x): x is number => x != null))];
+    const blockStaffNameById = new Map<number, string>();
+    if (blockStaffIds.length) {
+      const sn = await supabaseAdmin.from("salon_staff").select("id,name").in("id", blockStaffIds);
+      for (const s of (sn.data ?? []) as { id: number; name: string }[]) blockStaffNameById.set(s.id, s.name);
+    }
+    const data = rawRows.map((row) => {
+      const nm = row.salon_staff_id ? blockStaffNameById.get(row.salon_staff_id) ?? "Staff" : "Staff";
+      return {
         id: row.id,
         salon_staff_id: row.salon_staff_id,
         staff: row.salon_staff_id ? { id: row.salon_staff_id, name: nm } : null,
@@ -1673,8 +1749,8 @@ export function mountMyShopRoutes(router: Router): void {
         ends_at: row.ends_at,
         kind: row.kind,
         reason: row.reason
-      });
-    }
+      };
+    });
     return okData(res, data);
   });
 
@@ -2119,7 +2195,11 @@ export function mountMyShopRoutes(router: Router): void {
 
   r.get("/my/shop/queue/manage", async (req: Request, res: Response) => {
     const { shop } = req.salon!;
-    const rows = await supabaseAdmin.from("queue_entries").select("*").eq("shop_id", shop.id).order("position");
+    const rows = await supabaseAdmin
+      .from("queue_entries")
+      .select(QUEUE_ENTRY_SELECT)
+      .eq("shop_id", shop.id)
+      .order("position");
     const raw = (rows.data ?? []) as {
       id: number;
       position: number;
@@ -2130,19 +2210,29 @@ export function mountMyShopRoutes(router: Router): void {
       customer_user_id: string | null;
       join_time: string | null;
     }[];
-    const data = [];
-    for (const row of raw) {
-      let staffLabel: { id: number; name: string } | null = null;
-      if (row.staff_id) {
-        const sn = await supabaseAdmin.from("salon_staff").select("name").eq("id", row.staff_id).maybeSingle();
-        staffLabel = { id: row.staff_id, name: (sn.data as { name: string } | null)?.name ?? "Staff" };
-      }
+    const staffIds = [...new Set(raw.map((r) => r.staff_id).filter((x): x is number => x != null))];
+    const userIds = [...new Set(raw.map((r) => r.customer_user_id).filter((x): x is string => Boolean(x)))];
+    const staffNameById = new Map<number, string>();
+    if (staffIds.length) {
+      const sn = await supabaseAdmin.from("salon_staff").select("id,name").in("id", staffIds);
+      for (const s of (sn.data ?? []) as { id: number; name: string }[]) staffNameById.set(s.id, s.name);
+    }
+    const userNameById = new Map<string, string>();
+    if (userIds.length) {
+      const urows = await supabaseAdmin.from("users").select("id,name").in("id", userIds);
+      for (const u of (urows.data ?? []) as { id: string; name: string }[]) userNameById.set(u.id, u.name);
+    }
+    const data = raw.map((row) => {
+      const staffLabel =
+        row.staff_id != null
+          ? { id: row.staff_id, name: staffNameById.get(row.staff_id) ?? "Staff" }
+          : null;
       let custName = row.customer_name;
       if (row.customer_user_id) {
-        const u = await supabaseAdmin.from("users").select("name").eq("id", row.customer_user_id).maybeSingle();
-        if (u.data) custName = (u.data as { name: string }).name;
+        const nm = userNameById.get(row.customer_user_id);
+        if (nm) custName = nm;
       }
-      data.push({
+      return {
         id: row.id,
         position: row.position,
         status: row.status,
@@ -2151,8 +2241,8 @@ export function mountMyShopRoutes(router: Router): void {
         staff: staffLabel,
         customer: { id: 0, name: custName },
         join_time: row.join_time
-      });
-    }
+      };
+    });
     return okData(res, data);
   });
 

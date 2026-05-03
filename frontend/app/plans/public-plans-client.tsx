@@ -10,18 +10,9 @@ import {
   type PublicPlanTier,
   PUBLIC_PLAN_TIER_ORDER,
 } from "@/lib/public-pricing-display";
+import type { PublicSubscriptionPlanRow } from "@/lib/server/fetch-public-subscription-plans";
 
-type PlanRow = {
-  id: number;
-  slug: string;
-  name: string;
-  description: string | null;
-  price_cents: number;
-  currency: string;
-  billing_cycle: string;
-  trial_days: number;
-  features: Record<string, unknown> | null;
-};
+type PlanRow = PublicSubscriptionPlanRow;
 
 function tierSortKey(slug: string): number {
   const t = inferPublicPlanTier(slug);
@@ -74,12 +65,23 @@ function ctaForTier(tier: PublicPlanTier, trialDays: number): { label: string; h
   return { label: "Get started", href: "/app" };
 }
 
-export function PublicPlansClient() {
-  const [plans, setPlans] = useState<PlanRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export type PublicPlansClientProps = {
+  /** When provided (including `[]`), skips the initial client `fetch` waterfall. */
+  initialPlans?: PlanRow[] | null;
+  initialError?: string | null;
+};
+
+function sortPlans(raw: PlanRow[]): PlanRow[] {
+  return [...raw].sort((a, b) => tierSortKey(a.slug) - tierSortKey(b.slug) || a.id - b.id);
+}
+
+export function PublicPlansClient({ initialPlans = null, initialError = null }: PublicPlansClientProps) {
+  const [plans, setPlans] = useState<PlanRow[]>(() => (initialPlans != null ? sortPlans(initialPlans) : []));
+  const [loading, setLoading] = useState(() => initialPlans === null && initialError === null);
+  const [error, setError] = useState<string | null>(() => initialError);
 
   useEffect(() => {
+    if (initialPlans != null || initialError != null) return;
     void (async () => {
       setLoading(true);
       const res = await fetch("/api/public/subscription-plans");
@@ -90,11 +92,10 @@ export function PublicPlansClient() {
         return;
       }
       const raw = Array.isArray(body.data) ? body.data : [];
-      raw.sort((a, b) => tierSortKey(a.slug) - tierSortKey(b.slug) || a.id - b.id);
-      setPlans(raw);
+      setPlans(sortPlans(raw));
       setLoading(false);
     })();
-  }, []);
+  }, [initialPlans, initialError]);
 
   const columns = useMemo(() => plans, [plans]);
 

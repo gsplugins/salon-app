@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PublicHeader } from "@/components/public-header";
+import { fetchPublicSubscriptionPlansOnServer } from "@/lib/server/fetch-public-subscription-plans";
 import { PublicPlansClient } from "./public-plans-client";
 
 export const metadata: Metadata = {
@@ -7,7 +8,13 @@ export const metadata: Metadata = {
   description: "Compare Free, Starter, Pro, and Enterprise plans. Scheduling, POS, analytics, and more.",
 };
 
-export default function PlansPage() {
+export const revalidate = 300;
+/** Avoid build-time static generation hanging on server `fetch` to `/api` when SITE_URL is unset. */
+export const dynamic = "force-dynamic";
+
+export default async function PlansPage() {
+  const res = await fetchPublicSubscriptionPlansOnServer();
+
   return (
     <div className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
       <PublicHeader />
@@ -21,7 +28,7 @@ export default function PlansPage() {
             Transparent pricing across scheduling, bookings, POS, and operations. Upgrade anytime from your dashboard.
           </p>
         </header>
-        <PublicPlansClient />
+        <PublicPlansClient initialPlans={res.ok ? res.plans : null} initialError={res.ok ? null : res.message} />
       </main>
     </div>
   );

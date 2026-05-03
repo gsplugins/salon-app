@@ -1,16 +1,30 @@
-import { createClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+import { createClient as createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 /**
- * Browser / client-only Supabase (anon key). Do not use for privileged server logic;
- * use `@/lib/supabaseAdmin` in API routes, Server Components, and server modules instead.
+ * Browser-only lazy singleton (back-compat). Prefer `import { createClient } from '@/lib/supabase/client'`.
+ * Server: `import { createClient } from '@/lib/supabase/server'` or `@/lib/supabaseAdmin` for service role.
  */
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const globalForSb = globalThis as unknown as { __salonBrowserSupabase?: SupabaseClient };
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY.");
+function getBrowserClient(): SupabaseClient {
+  if (typeof window === "undefined") {
+    throw new Error("Do not use @/lib/supabase on the server. Use @/lib/supabase/server or @/lib/supabaseAdmin.");
+  }
+  if (!globalForSb.__salonBrowserSupabase) {
+    globalForSb.__salonBrowserSupabase = createBrowserSupabaseClient();
+  }
+  return globalForSb.__salonBrowserSupabase;
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: { persistSession: true, autoRefreshToken: true },
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop, receiver) {
+    return Reflect.get(getBrowserClient(), prop, receiver);
+  },
+  set(_target, prop, value, receiver) {
+    return Reflect.set(getBrowserClient(), prop, value, receiver);
+  },
 });
+
+export { createClient } from "@/lib/supabase/client";

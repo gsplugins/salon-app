@@ -760,7 +760,13 @@ export function mountStaffRoutes(router: Router): void {
   router.get("/staff/profile", async (req: Request, res: Response) => {
     const staff = await staffFromContext(req);
     if (!staff) return fail(res, 403, "No staff profile for this shop.");
-    const row = await supabaseAdmin.from("salon_staff").select("*").eq("id", staff.id).single();
+    const row = await supabaseAdmin
+      .from("salon_staff")
+      .select(
+        "id,shop_id,name,bio,photo_url,work_mobile,email,specialties,portal_settings,commission_percent,availability_status"
+      )
+      .eq("id", staff.id)
+      .single();
     const shop = await supabaseAdmin.from("shops").select("id,name,slug,is_active").eq("id", staff.shop_id).single();
     const s = row.data as Record<string, unknown>;
     return okData(res, {
@@ -803,7 +809,13 @@ export function mountStaffRoutes(router: Router): void {
       upd.portal_settings = mergePortalSettingsWithPhotoGallery(existingPortalSettings, incomingGallery);
     }
     await supabaseAdmin.from("salon_staff").update(upd).eq("id", staff.id);
-    const row = await supabaseAdmin.from("salon_staff").select("*").eq("id", staff.id).single();
+    const row = await supabaseAdmin
+      .from("salon_staff")
+      .select(
+        "id,shop_id,name,bio,photo_url,work_mobile,email,specialties,portal_settings,commission_percent,availability_status"
+      )
+      .eq("id", staff.id)
+      .single();
     const s = row.data as Record<string, unknown>;
     const shop = await supabaseAdmin.from("shops").select("id,name,slug,is_active").eq("id", staff.shop_id).single();
     return okData(res, {

@@ -19,7 +19,11 @@ export function salonContextMiddleware() {
     }
     try {
       const payload = verifyAccessToken(token);
-      const userRes = await supabaseAdmin.from("users").select("*").eq("id", payload.sub).maybeSingle();
+      const userRes = await supabaseAdmin
+        .from("users")
+        .select("id,name,mobile,photo_url,password_hash,role,is_locked,loyalty_points")
+        .eq("id", payload.sub)
+        .maybeSingle();
       const user = userRes.data as DbUser | null;
       if (!user) {
         res.status(401).json({ message: "Unauthenticated." });
